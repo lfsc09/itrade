@@ -1,0 +1,27 @@
+body {padding: 0 10px 0 10px;}
+table {border-collapse: collapse}
+table, table th, table td {border: 1px solid; padding: .5em}
+table tr td {font-size: 13px;text-align: center}
+/*----------------------------------- MENU BOTTOM ------------------------------------*/
+#menu_bottom {position: fixed; bottom: 0; left: 0; width: 100%; padding: 10px 10px 10px 10px; background: rgba(0, 0, 0, 0.11)}
+#menu_bottom button[name='ativos'] {float: right;margin-right: 25px}
+/*------------------------------------ OPERACOES -------------------------------------*/
+#table_operacoes {font-size: 13px}
+#table_operacoes th input, #table_operacoes th select {width: 100%; text-align: center;}
+#table_operacoes th[name='id'] {width: 2%}
+#table_operacoes th[name='data'] {width: 5%}
+#table_operacoes th[name='hora'] {width: 4%}
+#table_operacoes th[name='ativo'] {width: 5%}
+#table_operacoes th[name='op'] {width: 5%}
+#table_operacoes th[name='cts'] {width: 3%}
+#table_operacoes th[name='entrada'] {width: 5%}
+#table_operacoes th[name='stop'] {width: 5%}
+#table_operacoes th[name='men'] {width: 5%}
+#table_operacoes th[name='saida'] {width: 5%}
+#table_operacoes th[name='mep'] {width: 5%}
+/*------------------------------------- ATIVOS ---------------------------------------*/
+#table_ativos {float: left}
+#table_ativos tr td[name='custo']:after, #table_ativos tr td[name='valor_pt']:after{content: ' BRL'; font-size: 10px}
+#table_ativos tr td[name='tick']:after{content: ' pt'; font-size: 10px}
+#table_win_series, #table_wdo_series {float: left; margin-left: 25px}
+#table_win_series td.its_me, #table_wdo_series td.its_me {background: green;}
