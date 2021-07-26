@@ -12,7 +12,7 @@
 			case "ativos":
 				include 'api__ativos.php';
 				if ($action === "get_ativos")
-					echo json_encode(Ativos::get_ativos());
+					echo json_encode(Ativos::get_ativos(null, $_SESSION["id"]));
 				else if ($action === "insert_ativos"){
 					if (!empty($params_data)){
 						$params_data["id_usuario"] = $_SESSION["id"];

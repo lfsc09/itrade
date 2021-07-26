@@ -213,7 +213,7 @@
 										<div class="card-body">
 											<div id="table_ativos_adicionar_toasts"></div>
 											<form class="row g-2 m-0" id="table_ativos_adicionar_form">
-												<div class="col-md-3 text-start text-bold">
+												<div class="col-md-3 text-start">
 													<label class="form-label">Nome</label>
 													<input type="text" name="nome" class="form-control form-control-sm">
 												</div>
@@ -222,11 +222,11 @@
 													<input type="text" name="custo" class="form-control form-control-sm">
 												</div>
 												<div class="col-md-3 text-start">
-													<label class="form-label">Valor do Pt (R$)</label>
+													<label class="form-label">Valor de 1Pt</label>
 													<input type="text" name="valor_pt" class="form-control form-control-sm">
 												</div>
 												<div class="col-md-3 text-start">
-													<label class="form-label">Pts em cada Tick</label>
+													<label class="form-label">Pts em 1Tick</label>
 													<input type="text" name="tick" class="form-control form-control-sm">
 												</div>
 												<div class="col-12 mt-2">
