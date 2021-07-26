@@ -1,12 +1,9 @@
 <?php
+	require "db_config.php";
 	class Ativos {
-		private static $username = "u631028490_master";
-		private static $pass = "2UMN~#as4!w~Ckh7";
-		private static $database = "u631028490_iTrade";
-
 		public static function get_ativos($params = []){
 			$result = [];
-			$mysqli = mysqli_connect("localhost", self::$username, self::$pass, self::$database);
+			$mysqli = mysqli_connect(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			mysqli_set_charset($mysqli, 'utf8');
 			if (mysqli_connect_errno())
 				return ["status" => 0, "error" => "Failed to connect to MySQL: " . mysqli_connect_error()];
