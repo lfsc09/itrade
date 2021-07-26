@@ -40,7 +40,7 @@ let Ativos = (function(){
 		//Dez - Fev
 		first_day = getQuartas15(ano-1, 11);
 		last_day = getQuartas15(ano, 1)-1;
-		data = `<span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano-1, 11, 1))}</span> <span class="badge bg-dark">${first_day}</span> até <span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 1, 1))}</span> <span class="badge bg-dark">${last_day}</span>`;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano-1, 11, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 1, 1))} <span class="daylish">${last_day}</span>`;
 		if (today.getFullYear() == ano){
 			serie_class = "";
 			//Para segunda parte de Dezembro
@@ -57,7 +57,7 @@ let Ativos = (function(){
 		//Fev - Abr
 		first_day = getQuartas15(ano, 1);
 		last_day = getQuartas15(ano, 3)-1;
-		data = `<span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 1, 1))}</span> <span class="badge bg-dark">${first_day}</span> até <span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 3, 1))}</span> <span class="badge bg-dark">${last_day}</span>`;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 1, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 3, 1))} <span class="daylish">${last_day}</span>`;
 		if (today.getFullYear() == ano){
 			serie_class = "";
 			//Para segunda parte de Fevereiro
@@ -74,7 +74,7 @@ let Ativos = (function(){
 		//Abr - Jun
 		first_day = getQuartas15(ano, 3);
 		last_day = getQuartas15(ano, 5)-1;
-		data = `<span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 3, 1))}</span> <span class="badge bg-dark">${first_day}</span> até <span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 5, 1))}</span> <span class="badge bg-dark">${last_day}</span>`;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 3, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 5, 1))} <span class="daylish">${last_day}</span>`;
 		if (today.getFullYear() == ano){
 			serie_class = "";
 			//Para segunda parte de Abril
@@ -91,7 +91,7 @@ let Ativos = (function(){
 		//Jun - Ago
 		first_day = getQuartas15(ano, 5);
 		last_day = getQuartas15(ano, 7)-1;
-		data = `<span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 5, 1))}</span> <span class="badge bg-dark">${first_day}</span> até <span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 7, 1))}</span> <span class="badge bg-dark">${last_day}</span>`;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 5, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 7, 1))} <span class="daylish">${last_day}</span>`;
 		if (today.getFullYear() == ano){
 			serie_class = "";
 			//Para segunda parte de Junho
@@ -108,7 +108,7 @@ let Ativos = (function(){
 		//Ago - Out
 		first_day = getQuartas15(ano, 7);
 		last_day = getQuartas15(ano, 9)-1;
-		data = `<span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 7, 1))}</span> <span class="badge bg-dark">${first_day}</span> até <span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 9, 1))}</span> <span class="badge bg-dark">${last_day}</span>`;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 7, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 9, 1))} <span class="daylish">${last_day}</span>`;
 		if (today.getFullYear() == ano){
 			serie_class = "";
 			//Para segunda parte de Agosto
@@ -125,7 +125,7 @@ let Ativos = (function(){
 		//Out - Dez
 		first_day = getQuartas15(ano, 9);
 		last_day = getQuartas15(ano, 11)-1;
-		data = `<span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 9, 1))}</span> <span class="badge bg-dark">${first_day}</span> até <span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 11, 1))}</span> <span class="badge bg-dark">${last_day}</span>`;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 9, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 11, 1))} <span class="daylish">${last_day}</span>`;
 		if (today.getFullYear() == ano){
 			serie_class = "";
 			//Para segunda parte de Outubro
@@ -152,7 +152,7 @@ let Ativos = (function(){
 		for (let m=0; m<12; m++){
 			let first_day = (new Date(ano, m, 1)).getDate(),
 				last_day = new Date(ano, m+1, 0).getDate(),
-				data = `<span class="badge bg-secondary text-capitalize">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, m, 1))}</span> <span class="badge bg-dark">${first_day} - ${last_day}</span>`,
+				data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, m, 1))} <span class="daylish">${first_day}</span> - <span class="daylish">${last_day}</span></span>`,
 				serie_class = '';
 			if (today.getFullYear() == ano && today.getMonth() == m)
 				serie_class = " class='table-success'";

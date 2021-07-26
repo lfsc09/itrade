@@ -27,3 +27,4 @@
 #table_ativos tr td[name='custo']:after, #table_ativos tr td[name='valor_pt']:after{content: ' BRL'; font-size: 10px}
 #table_ativos tr td[name='tick']:after{content: ' pt'; font-size: 10px}
 #table_win_series tr td[name='serie'], #table_wdo_series tr td[name='serie'] {text-align: center}
+#table_win_series tr td[name='data'] span.daylish:after, #table_wdo_series tr td[name='data'] span.daylish:after {content: 'th'; font-size: 8px}
