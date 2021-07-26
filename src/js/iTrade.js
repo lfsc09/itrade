@@ -5,8 +5,12 @@ let iTrade = (function(){
 		{id: 2, nome: 'WDO', custo: 1.15, valor_pt: 10, tick: 0.5}
 	];
 	let _active_section = "";
+	let _toastList = [];
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*------------------------------- Section Ativos ---------------------------------*/
+	/*
+		Constroi a tabela de vencimentos do WIN.
+	*/
 	function buildTableWinSeries(ano){
 		let tbody_win_series = $("tbody", document.getElementById("table_win_series")),
 			html = ``,
@@ -143,6 +147,9 @@ let iTrade = (function(){
 		html += `<tr><td name='data'>${data}</td><td name='serie'${serie_class}>Z</td></tr>`;
 		tbody_win_series.empty().append(html);
 	}
+	/*
+		Constroi a tabela de vencimentos do WDO.
+	*/
 	function buildTableWdoSeries(ano){
 		let tbody_wdo_series = $("tbody", document.getElementById("table_wdo_series")),
 			html = ``,
@@ -159,20 +166,34 @@ let iTrade = (function(){
 		}
 		tbody_wdo_series.empty().append(html);
 	}
-	function buildSectionAtivos(){
+	/*
+		Constroi a tabela de ativos. (Dados que recebe do BD)
+	*/
+	function buildTableAtivos(data){
 		let tbody_ativos = $("tbody", document.getElementById("table_ativos")),
-			html = ``,
-			year = (new Date()).getFullYear();
+			html = ``;
 		//Constroi tabela de informacoes dos ativos
-		for (let at in __ativos){
-			html += `<tr>`+
-					`<td name='nome'>${__ativos[at].nome}</td>`+
-					`<td name='custo'>${__ativos[at].custo}</td>`+
-					`<td name='valor_pt'>${__ativos[at].valor_pt}</td>`+
-					`<td name='tick'>${__ativos[at].tick}</td>`+
+		for (let at in data){
+			html += `<tr ativo='${data[at].id}'>`+
+					`<td name='nome'>${data[at].nome}</td>`+
+					`<td name='custo'>${data[at].custo}</td>`+
+					`<td name='valor_pt'>${data[at].valor_pt}</td>`+
+					`<td name='tick'>${data[at].tick}</td>`+
+					`<td name='editar'></td>`+
 					`</tr>`;
 		}
 		tbody_ativos.append(html);
+	}
+	/*
+		Constroi a sessao de ativos. (Basicamente apenas as tabelas de vencimento de WIN e WDO)
+	*/
+	function buildSectionAtivos(){
+		let year = (new Date()).getFullYear(),
+			inputs = $(document.getElementById("table_ativos_adicionar_form"));
+		//Inicia os inputs da tabela de ativos
+		inputs.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+		inputs.find("input[name='valor_pt']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+		inputs.find("input[name='tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
 		//Constroi a tabela de serie de contratos do WIN
 		buildTableWinSeries(year);
 		$("input[name='ano']", document.getElementById("table_win_series")).val(year);
@@ -201,6 +222,9 @@ let iTrade = (function(){
 			$(document.getElementById("table_adicionar_operacoes")).find("input[name='entrada'],input[name='stop'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "9.999", placeholder: ''});
 	});
 	/*------------------------------- Section Ativos ---------------------------------*/
+	/*
+		Alterar ano dos contratos de vencimento do WIN e WDO.
+	*/
 	$("input[name='ano']", document.getElementById("table_wdo_series")).click(function (){
 		this.focus();
 		this.select();
@@ -223,7 +247,33 @@ let iTrade = (function(){
 			this.select();
 		}
 	});
+	/*
+		Cadastrar no ativo na tabela de ativos.
+	*/
+	$(document.getElementById("table_ativos_adicionar")).click(function (){
+		let error = false,
+			data = {};
+		$("input", document.getElementById("table_ativos_adicionar_form")).each(function (i, input){
+			if (input.value !== "")
+				data[input.name] = input.value;
+			else
+				error = true;
+		});
+		if (error){
+			let toast = `<div class="toast align-items-center bg-warning border-0 w-100" role="alert" aria-live="assertive" aria-atomic="true">`+
+						`<div class="d-flex">`+
+						`<div class="toast-body">Preencha todos os campos</div>`+
+						`<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>`+
+						`</div></div>`;
+			$(document.getElementById("table_ativos_adicionar_toasts")).empty().append(toast).promise().then(function (){
+				_toastList.push(new bootstrap.Toast($(document.getElementById("table_ativos_adicionar_toasts")).find(".toast")[0], option));
+			});
+		}
+	});
 	/*------------------------------------ Menu --------------------------------------*/
+	/*
+		Processa a troca de abas no Menu.
+	*/
 	$("button", document.getElementById("menu_bottom")).click(function (){
 		let me = this.name;
 		$(this).parent().find("button.btn-primary").removeClass("btn-primary").addClass("btn-secondary");
@@ -240,8 +290,15 @@ let iTrade = (function(){
 		});
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
-	$("button[name='operacoes']", document.getElementById("menu_bottom")).click();
+	$("button[name='ativos']", document.getElementById("menu_bottom")).click();
 	buildSectionAtivos();
+	Global.connect({
+		data: {module: "ativos", action: "get_ativos"},
+		success: function (result){
+			if (result.status)
+				buildTableAtivos(result.data);
+		}
+	});
 	/*--------------------------------------------------------------------------------*/
 	return {}
 })();
