@@ -23,7 +23,7 @@
 #table_operacoes th[name='saida'] {width: 5%}
 #table_operacoes th[name='mep'] {width: 5%}
 /*------------------------------------- ATIVOS ---------------------------------------*/
-#table_ativos tr td[name='custo'], #table_ativos tr td[name='valor_pt'], #table_ativos tr td[name='tick'] {text-align: center}
+#table_ativos tr td[name='custo'], #table_ativos tr td[name='valor_pt'], #table_ativos tr td[name='tick'], #table_ativos tr td[name='action'] {text-align: center}
 #table_ativos tr td[name='custo']:after, #table_ativos tr td[name='valor_pt']:after{content: ' BRL'; font-size: 10px}
 #table_ativos tr td[name='tick']:after{content: ' pt'; font-size: 10px}
 #table_win_series tr td[name='serie'], #table_wdo_series tr td[name='serie'] {text-align: center}

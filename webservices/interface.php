@@ -21,6 +21,12 @@
 					else
 						die("No data passed");
 				}
+				else if ($action === "update_ativos"){
+					if (!empty($params_data))
+						echo json_encode(Ativos::insert_ativos($params_data, $params_data["id"]));
+					else
+						die("No data passed");
+				}
 				else
 					die("Action not found");
 				break;

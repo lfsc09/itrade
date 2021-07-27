@@ -54,10 +54,74 @@ let Global = (function(){
 			});
 		}
 	}
+	/*
+		Comanda a modificacao do modal de Update de dados.
+		Inputs do Config: {
+			#Tamanho do Modal
+			size: '(modal-sm | modal-lg | modal-xl | modal-fullscreen)' || default: 'modal-sm',
+			#Titulo do Modal 
+			title: 'string' || default: 'Atualizar',
+			#Conteúdo do Modal
+			build_body: 'function' || default: ''
+			#Funcao a ser executada no envio dos dados
+			send: 'function' || default: ''
+		}
+	*/
+	let updateModal = function (config){
+		let modalUpdate = $(document.getElementById("update_modal"));
+		//Atualiza o tamanho
+		modalUpdate.find("div.modal-dialog").attr("class", `modal-dialog modal-dialog-centered modal-dialog-scrollable ${config.size}`);
+		//Atualiza o titulo
+		modalUpdate.find("div.modal-header h5").html(config.title || "Atualizar");
+		//Atualiza o conteudo
+		if ("build_body" in config)
+			config.build_body(modalUpdate.find("div.modal-body"));
+		//Atualiza o envio de dados
+		if ("send" in config)
+			modalUpdate.find("#update_modal_enviar").on("click", config.send);
+		return modalUpdate;
+	}
+	/*
+		Comanda a modificacao do modal de Remoção de dados.
+		Inputs do Config: {
+			#Funcao a ser executada no envio dos dados
+			send: 'function' || default: ''
+		}
+	*/
+	let removeModal = function (config){
+		let removeUpdate = $(document.getElementById("remove_modal"));
+		//Atualiza o envio de dados
+		if ("send" in config)
+			removeUpdate.find("#remove_modal_enviar").on("click", config.send);
+		return removeUpdate;
+	}
+	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
+	/*
+		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
+	*/
+	$(document.getElementById("update_modal")).on("hidden.bs.modal", function (){
+		let me = $(this);
+		//Limpa o titulo 
+		me.find("div.modal-body").html("Atualizar");
+		//Limpa o Body
+		me.find("div.modal-body").empty();
+		//Limpa a funcao atrelada para o envio de dados
+		me.find("#update_modal_enviar").off("click");
+	});
+	/*
+		Evento para no fechamento do modal de remove, fazer a limpeza necessaria nele.
+	*/
+	$(document.getElementById("remove_modal")).on("hidden.bs.modal", function (){
+		let me = $(this);
+		//Limpa a funcao atrelada para o envio de dados
+		me.find("#remove_modal_enviar").off("click");
+	});
 	/*--------------------------------------------------------------------------------*/
 	return {
 		connect: connect,
 		request: request,
-		toast: toast
+		toast: toast,
+		updateModal: updateModal,
+		removeModal: removeModal
 	}
 })();

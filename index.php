@@ -208,26 +208,26 @@
 								<div class="col">
 									<div class="card mb-4 rounded-3 shadow-sm">
 										<div class="card-header py-3">
-											<h4 class="my-0">Cadastrar Ativo</h4>
+											<h4 class="my-0"><i class="fas fa-plus me-2"></i>Cadastrar Ativo</h4>
 										</div>
 										<div class="card-body">
 											<div id="table_ativos_adicionar_toasts"></div>
 											<form class="row g-2 m-0" id="table_ativos_adicionar_form">
 												<div class="col-md-3 text-start">
 													<label class="form-label">Nome</label>
-													<input type="text" name="nome" class="form-control form-control-sm">
+													<input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()">
 												</div>
 												<div class="col-md-3 text-start">
 													<label class="form-label">Custo</label>
-													<input type="text" name="custo" class="form-control form-control-sm">
+													<input type="text" name="custo" class="form-control form-control-sm" onclick="this.select()">
 												</div>
 												<div class="col-md-3 text-start">
 													<label class="form-label">Valor de 1Pt</label>
-													<input type="text" name="valor_pt" class="form-control form-control-sm">
+													<input type="text" name="valor_pt" class="form-control form-control-sm" onclick="this.select()">
 												</div>
 												<div class="col-md-3 text-start">
 													<label class="form-label">Pts em 1Tick</label>
-													<input type="text" name="tick" class="form-control form-control-sm">
+													<input type="text" name="tick" class="form-control form-control-sm" onclick="this.select()">
 												</div>
 												<div class="col-12 mt-2">
 													<button class="btn btn-sm btn-outline-primary col-md-12" type="button" id="table_ativos_adicionar">Cadastrar</button>
@@ -308,6 +308,36 @@
 					<button class="btn btn-sm btn-light me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
 				</div>
 			</footer>
+			<!-- MODAL (AREA) -->
+			<div class="modal fade" id="update_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Modal title</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body"></div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button type="button" class="btn btn-secondary btn-sm col-2" data-bs-dismiss="modal">Fechar</button>
+							<button type="button" class="btn btn-success btn-sm col-2" id="update_modal_enviar">Salvar</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal fade" id="remove_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-sm">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Confirma esta remoção?</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-footer d-flex justify-content-evenly">
+							<button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Não</button>
+							<button type="button" class="btn btn-danger btn-sm col-5" id="remove_modal_enviar">Sim</button>
+						</div>
+					</div>
+				</div>
+			</div>
 		</body>
 		<script src="src/js/global.js"></script>
 		<script src="src/js/iTrade.js"></script>
