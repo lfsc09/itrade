@@ -55,6 +55,33 @@ let Global = (function(){
 		}
 	}
 	/*
+		Comanda a modificacao do modal de Adição de dados.
+		Inputs do Config: {
+			#Tamanho do Modal
+			size: '(modal-sm | modal-lg | modal-xl | modal-fullscreen)' || default: 'modal-sm',
+			#Titulo do Modal 
+			title: 'string' || default: 'Adicionar',
+			#Conteúdo do Modal
+			build_body: 'function' || default: ''
+			#Funcao a ser executada no envio dos dados
+			send: 'function' || default: ''
+		}
+	*/
+	let insertModal = function (config){
+		let modalInsert = $(document.getElementById("insert_modal"));
+		//Atualiza o tamanho
+		modalInsert.find("div.modal-dialog").attr("class", `modal-dialog modal-dialog-centered modal-dialog-scrollable ${config.size}`);
+		//Atualiza o titulo
+		modalInsert.find("div.modal-header h5").html(config.title || "Adicionar");
+		//Atualiza o conteudo
+		if ("build_body" in config)
+			config.build_body(modalInsert.find("div.modal-body"));
+		//Atualiza o envio de dados
+		if ("send" in config)
+			modalInsert.find("#insert_modal_enviar").on("click", config.send);
+		return modalInsert;
+	}
+	/*
 		Comanda a modificacao do modal de Update de dados.
 		Inputs do Config: {
 			#Tamanho do Modal
@@ -99,6 +126,18 @@ let Global = (function(){
 	/*
 		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
 	*/
+	$(document.getElementById("insert_modal")).on("hidden.bs.modal", function (){
+		let me = $(this);
+		//Limpa o titulo 
+		me.find("div.modal-body").html("Adicionar");
+		//Limpa o Body
+		me.find("div.modal-body").empty();
+		//Limpa a funcao atrelada para o envio de dados
+		me.find("#insert_modal_enviar").off("click");
+	});
+	/*
+		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
+	*/
 	$(document.getElementById("update_modal")).on("hidden.bs.modal", function (){
 		let me = $(this);
 		//Limpa o titulo 
@@ -121,6 +160,7 @@ let Global = (function(){
 		connect: connect,
 		request: request,
 		toast: toast,
+		insertModal: insertModal,
 		updateModal: updateModal,
 		removeModal: removeModal
 	}

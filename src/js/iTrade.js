@@ -24,9 +24,9 @@ let iTrade = (function(){
 		$(this).removeClass("btn-secondary").addClass("btn-primary");
 		$("body > div[id]").each(function (i, elem){
 			if (elem.id === me){
-				if (elem.id === "operacoes"){
-					if (typeof Operacoes === 'undefined')
-						Global.request("src/js/iTrade_Operacoes.js");
+				if (elem.id === "renda_variavel"){
+					if (typeof Renda_variavel === 'undefined')
+						Global.request("src/js/iTrade_RendaVariavel.js");
 				}
 				else if (elem.id === "ativos"){
 					if (typeof Ativos === 'undefined')
@@ -40,7 +40,7 @@ let iTrade = (function(){
 		});
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
-	$("button[name='ativos']", document.getElementById("menu_bottom")).click();
+	$("button[name='renda_variavel']", document.getElementById("menu_bottom")).click();
 	/*--------------------------------------------------------------------------------*/
 	return {
 	}

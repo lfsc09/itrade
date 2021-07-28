@@ -182,13 +182,7 @@ let Ativos = (function(){
 		Constroi a sessao de ativos. (Basicamente apenas as tabelas de vencimento de WIN e WDO)
 	*/
 	function buildSectionAtivos(){
-		let year = (new Date()).getFullYear(),
-			form = $(document.getElementById("table_ativos_adicionar_form"));
-		//Inicia os inputs da tabela de ativos
-		form.find("input[name='nome']").inputmask({mask: "*{*}", definitions: {'*': {casing: 'upper'}}, placeholder: ""});
-		form.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
-		form.find("input[name='valor_pt']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
-		form.find("input[name='tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+		let year = (new Date()).getFullYear();
 		//Constroi a tabela de serie de contratos do WIN
 		buildTableWinSeries(year);
 		$("input[name='ano']", document.getElementById("table_win_series")).val(year);
@@ -224,37 +218,63 @@ let Ativos = (function(){
 		}
 	});
 	/*
-		Cadastrar no ativo na tabela de ativos.
+		Adição de ativos na tabela de ativos.
 	*/
 	$(document.getElementById("table_ativos_adicionar")).click(function (){
-		let error = false,
-			data = {};
-		$("input", document.getElementById("table_ativos_adicionar_form")).each(function (i, input){
-			if (input.value !== "")
-				data[input.name] = input.value;
-			else
-				error = true;
-		});
-		if (error)
-			Global.toast.create({location: document.getElementById("table_ativos_adicionar_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
-		else{
-			Global.connect({
-				data: {module: "ativos", action: "insert_ativos", params: data},
-				success: function (result){
-					if (result.status){
-						Global.connect({
-							data: {module: "ativos", action: "get_ativos"},
-							success: function (result){
-								if (result.status)
-									buildTableAtivos(result.data);
-							}
-						});
-					}
+		Global.updateModal({
+			size: "modal-lg",
+			title: "Adicionar Ativo",
+			build_body: function (modal_body){
+				let html = ``;
+				html += `<div id="insert_modal_toasts"></div>`+
+						`<form class="row g-2 m-0" id="insert_modal_form">`+
+						`<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>`+
+						`<div class="col-md-3 text-start"><label class="form-label">Custo (Abert. + Fech.)</label><input type="text" name="custo" class="form-control form-control-sm" onclick="this.select()"></div>`+
+						`<div class="col-md-3 text-start"><label class="form-label">Valor de 1Pt</label><input type="text" name="valor_pt" class="form-control form-control-sm" onclick="this.select()"></div>`+
+						`<div class="col-md-3 text-start"><label class="form-label">Pts em 1Tick</label><input type="text" name="tick" class="form-control form-control-sm" onclick="this.select()"></div>`+
+						`</form>`;
+				modal_body.append(html).promise().then(function (){
+					let form = modal_body.find("form");
+					form.find("input[name='nome']").inputmask({mask: "*{*}", definitions: {'*': {casing: 'upper'}}, placeholder: ""});
+					form.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+					form.find("input[name='valor_pt']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+					form.find("input[name='tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+				});
+			},
+			send: function (){
+				let error = false,
+					form = $(document.getElementById("insert_modal_form")),
+					data = {};
+				form.find("input").each(function (i, input){
+					if (input.value !== "")
+						data[input.name] = input.value;
 					else
-						Global.toast.create({location: document.getElementById("table_ativos_adicionar_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+						error = true;
+				});
+				if (error)
+					Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+				else{
+					Global.connect({
+						data: {module: "ativos", action: "insert_ativos", params: data},
+						success: function (result){
+							if (result.status){
+								Global.connect({
+									data: {module: "ativos", action: "get_ativos"},
+									success: function (result){
+										if (result.status){
+											$(document.getElementById("insert_modal")).modal("hide");
+											buildTableAtivos(result.data);
+										}
+									}
+								});
+							}
+							else
+								Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+						}
+					});		
 				}
-			});		
-		}
+			}
+		}).modal("show");
 	});
 	/*
 		Atualização / Remoção de ativos na tabela de ativos.
@@ -277,7 +297,7 @@ let Ativos = (function(){
 					html += `<div id="update_modal_toasts"></div>`+
 							`<form class="row g-2 m-0" id="update_modal_form" ativo="${data.id}">`+
 							`<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
-							`<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="custo" class="form-control form-control-sm" value="${data.custo}" onclick="this.select()"></div>`+
+							`<div class="col-md-3 text-start"><label class="form-label">Custo (Abert. + Fech.)</label><input type="text" name="custo" class="form-control form-control-sm" value="${data.custo}" onclick="this.select()"></div>`+
 							`<div class="col-md-3 text-start"><label class="form-label">Valor de 1Pt</label><input type="text" name="valor_pt" class="form-control form-control-sm" value="${data.valor_pt}" onclick="this.select()"></div>`+
 							`<div class="col-md-3 text-start"><label class="form-label">Pts em 1Tick</label><input type="text" name="tick" class="form-control form-control-sm" value="${data.tick}" onclick="this.select()"></div>`+
 							`</form>`;
@@ -287,13 +307,16 @@ let Ativos = (function(){
 						form.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
 						form.find("input[name='valor_pt']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
 						form.find("input[name='tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+						form.find("input").on("change", function (){
+							this.setAttribute("changed", "");
+						});
 					});
 				},
 				send: function (){
 					let error = false,
 						form = $(document.getElementById("update_modal_form")),
 						data = {id: form.attr("ativo")};
-					form.find("input").each(function (i, input){
+					form.find("input[changed]").each(function (i, input){
 						if (input.value !== "")
 							data[input.name] = input.value;
 						else
@@ -310,8 +333,8 @@ let Ativos = (function(){
 										data: {module: "ativos", action: "get_ativos"},
 										success: function (result){
 											if (result.status){
-												$(document.getElementById("update_modal")).modal("close");
-												Ativos.buildTableAtivos(result.data);
+												$(document.getElementById("update_modal")).modal("hide");
+												buildTableAtivos(result.data);
 											}
 										}
 									});
@@ -339,7 +362,5 @@ let Ativos = (function(){
 		}
 	});
 	/*--------------------------------------------------------------------------------*/
-	return {
-		buildTableAtivos: buildTableAtivos
-	}
+	return {}
 })();

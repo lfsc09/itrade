@@ -4,6 +4,7 @@
 		<meta http-equiv="Content-type" content="text/html;charset=utf-8" />
 		<head>
 			<title>iTrade</title>
+			<link rel="shortcut icon" href="favicon.ico">
 			<link rel="stylesheet" href="src/css/bootstrap.min.css">
 			<link rel="stylesheet" href="src/css/iTrade.css">
 			<script src="src/js/base/jquery_3.6.0.min.js"></script>
@@ -63,22 +64,25 @@
 		<meta http-equiv="Content-type" content="text/html;charset=utf-8" />
 		<head>
 			<title>iTrade | <?=explode(" ", $_SESSION["name"])[0]?></title>
+			<link rel="shortcut icon" href="favicon.ico">
 			<link rel="stylesheet" href="src/css/bootstrap.min.css">
+			<link rel="stylesheet" href="src/css/fancygrid.min.css">
 			<link rel="stylesheet" href="src/css/iTrade.css">
 			<script src="https://kit.fontawesome.com/9bb84e5d3e.js" crossorigin="anonymous"></script>
 			<script src="src/js/base/jquery_3.6.0.min.js"></script>
 			<script src="src/js/base/jquery.inputmask.min.js"></script>
 			<script src="src/js/base/bootstrap.bundle.min.js"></script>
+			<script src="src/js/base/fancygrid.min.js"></script>
 			<script src="src/js/base/Chart.bundle.min.js"></script>
 		</head>
 		<body>
-			<div class="container-fluid" id="operacoes">
+			<div class="container-fluid" id="renda_variavel">
 				<div class="row">
 					<div class="col-2">
 						<div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white">
 							<a href="#" class="d-flex align-items-center flex-shrink-0 p-3 pe-2 link-dark text-decoration-none border-bottom">
 								<span class="fs-5 fw-bold">Arcabouços</span>
-								<button class="btn btn-sm btn-secondary ms-auto align-self-end" type="button"><i class="fas fa-plus"></i></button>
+								<button class="btn btn-sm btn-primary ms-auto align-self-end" type="button"><i class="fas fa-plus"></i></button>
 							</a>
 							<div class="list-group list-group-flush border-bottom scrollarea">
 								<a href="#" class="list-group-item list-group-item-action py-3 lh-tight" aria-current="true">
@@ -204,58 +208,24 @@
 				<div class="bg-light p-5 rounded mt-3">
 					<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
 						<div class="col">
-							<div class="row row-cols-1 row-cols-md-1 mb-3">
-								<div class="col">
-									<div class="card mb-4 rounded-3 shadow-sm">
-										<div class="card-header py-3">
-											<h4 class="my-0"><i class="fas fa-plus me-2"></i>Cadastrar Ativo</h4>
-										</div>
-										<div class="card-body">
-											<div id="table_ativos_adicionar_toasts"></div>
-											<form class="row g-2 m-0" id="table_ativos_adicionar_form">
-												<div class="col-md-3 text-start">
-													<label class="form-label">Nome</label>
-													<input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()">
-												</div>
-												<div class="col-md-3 text-start">
-													<label class="form-label">Custo</label>
-													<input type="text" name="custo" class="form-control form-control-sm" onclick="this.select()">
-												</div>
-												<div class="col-md-3 text-start">
-													<label class="form-label">Valor de 1Pt</label>
-													<input type="text" name="valor_pt" class="form-control form-control-sm" onclick="this.select()">
-												</div>
-												<div class="col-md-3 text-start">
-													<label class="form-label">Pts em 1Tick</label>
-													<input type="text" name="tick" class="form-control form-control-sm" onclick="this.select()">
-												</div>
-												<div class="col-12 mt-2">
-													<button class="btn btn-sm btn-outline-primary col-md-12" type="button" id="table_ativos_adicionar">Cadastrar</button>
-												</div>
-											</form>
-										</div>
-									</div>
+							<div class="card mb-4 rounded-3 shadow-sm">
+								<div class="card-header py-3 d-flex">
+									<button type="button" class="btn btn-sm btn-primary" id="table_ativos_adicionar"><i class="fas fa-plus"></i></button>
+									<h4 class="my-0 flex-fill">Ativos</h4>
 								</div>
-								<div class="col">
-									<div class="card mb-4 rounded-3 shadow-sm">
-										<div class="card-header py-3">
-											<h4 class="my-0">Ativos</h4>
-										</div>
-										<div class="card-body">
-											<table id="table_ativos" class="table">
-												<thead>
-													<tr>
-														<th>Nome</th>
-														<th class="text-center">Custo (Abert. + Fech.)</th>
-														<th class="text-center">Valor Pt</th>
-														<th class="text-center">Tick</th>
-														<th></th>
-													</tr>
-												</thead>
-												<tbody></tbody>
-											</table>
-										</div>
-									</div>
+								<div class="card-body">
+									<table id="table_ativos" class="table">
+										<thead>
+											<tr>
+												<th>Nome</th>
+												<th class="text-center">Custo (Abert. + Fech.)</th>
+												<th class="text-center">Valor Pt</th>
+												<th class="text-center">Tick</th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody></tbody>
+									</table>
 								</div>
 							</div>
 						</div>
@@ -303,12 +273,28 @@
 			<footer class="footer mt-auto fixed-bottom py-2 bg-light">
 				<div class="container-fluid d-flex" id="menu_bottom">
 					<button class="btn btn-sm btn-secondary me-2" type="button" name="dashboard">Dashboard</button>
-					<button class="btn btn-sm btn-secondary me-2" type="button" name="operacoes">Operações</button>
+					<button class="btn btn-sm btn-secondary me-2" type="button" name="renda_variavel">Renda Variável</button>
 					<button class="btn btn-sm btn-secondary me-4 ms-auto" type="button" name="ativos">Ativos</button>
 					<button class="btn btn-sm btn-light me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
 				</div>
 			</footer>
 			<!-- MODAL (AREA) -->
+			<!-- MODAIS GENERICOS -->
+			<div class="modal fade" id="insert_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Modal title</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body"></div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button type="button" class="btn btn-secondary btn-sm col-2" data-bs-dismiss="modal">Fechar</button>
+							<button type="button" class="btn btn-success btn-sm col-2" id="insert_modal_enviar">Salvar</button>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div class="modal fade" id="update_modal" tabindex="-1" aria-hidden="true">
 				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 					<div class="modal-content">
