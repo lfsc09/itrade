@@ -92,31 +92,11 @@
 					<div class="col-10 d-flex">
 						<div class="vertical-divider"></div>
 						<div class="bg-light p-5 pt-3 rounded">
+							<div class="container-fluid d-flex mb-3 px-0" id="renda_variavel__menu">
+								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
+								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-plus me-2"></i>Adicionar Operações</button>
+							</div>
 							<div class="row row-cols-1 row-cols-md-1 mb-3 text-center">
-								<div class="col">
-									<div class="card mb-4 rounded-3 shadow-sm col-4">
-										<div class="card-header py-2">
-											<h5 class="my-0">Gerenciamentos</h5>
-										</div>
-										<div class="card-body">
-											<form class="row g-2 m-0">
-												<div class="input-group col-auto">
-													<input type="text" class="form-control" placeholder="Nome">
-													<button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastrados</button>
-													<ul class="dropdown-menu dropdown-menu-end">
-														<li><a class="dropdown-item" href="#">Action</a></li>
-														<li><a class="dropdown-item" href="#">Another action</a></li>
-														<li><a class="dropdown-item" href="#">Something else here</a></li>
-														<li><a class="dropdown-item" href="#">Separated link</a></li>
-													</ul>
-												</div>
-												<div class="col-auto">
-													<button type="button" class="btn btn-primary mb-3">Criar</button>
-												</div>
-											</form>
-										</div>
-									</div>
-								</div>
 								<div class="col">
 									<div class="card mb-4 rounded-3 shadow-sm">
 										<div class="card-header py-2">
@@ -311,6 +291,24 @@
 						<div class="modal-footer d-flex justify-content-evenly">
 							<button type="button" class="btn btn-secondary btn-sm col-5" data-bs-dismiss="modal">Não</button>
 							<button type="button" class="btn btn-danger btn-sm col-5" id="remove_modal_enviar">Sim</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- MODAIS RENDA VARIAVEL -->
+			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Cenários</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							
+						</div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button type="button" class="btn btn-secondary btn-sm col-2" data-bs-dismiss="modal">Fechar</button>
+							<button type="button" class="btn btn-success btn-sm col-2" id="cenarios_modal_enviar">Salvar</button>
 						</div>
 					</div>
 				</div>

@@ -9,43 +9,53 @@
 		$action = $_POST["action"];
 		$params_data = (array_key_exists("params", $_POST))?$_POST["params"]:[];
 		switch ($module){
-			//ATIVOS
+			/*------------------------------------ ATIVOS -------------------------------------*/
 			case "ativos":
 				include 'api__ativos.php';
 				if ($action === "get_ativos")
 					echo json_encode(Ativos::get_ativos(null, $_SESSION["id"]));
 				else if ($action === "insert_ativos"){
-					if (!empty($params_data)){
-						$params_data["id_usuario"] = $_SESSION["id"];
-						echo json_encode(Ativos::insert_ativos($params_data));
-					}
+					if (!empty($params_data))
+						echo json_encode(Ativos::insert_ativos($params_data, $_SESSION["id"]));
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				else if ($action === "update_ativos"){
 					if (!empty($params_data))
-						echo json_encode(Ativos::update_ativos($params_data, $params_data["id"]));
+						echo json_encode(Ativos::update_ativos($params_data, $params_data["id"], $_SESSION["id"]));
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				else
 					die(json_encode(["status" => 0, "error" => "Action not found"]));
 				break;
-			//RENDA VARIAVEL
+			/*-------------------------------- RENDA VARIAVEL ---------------------------------*/
 			case "renda_variavel":
 				include 'api__renda_variavel.php';
+				/*---------------------------------- Arcabouços -----------------------------------*/
 				if ($action === "get_arcaboucos")
 					echo json_encode(RendaVariavel::get_arcaboucos(null, $_SESSION["id"]));
 				else if ($action === "insert_arcaboucos"){
-					if (!empty($params_data)){
-						$params_data["id_usuario"] = $_SESSION["id"];
-						echo json_encode(RendaVariavel::insert_arcaboucos($params_data));
-					}
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::insert_arcaboucos($params_data, $_SESSION["id"]));
+					else
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
+				}
+				else if ($action === "update_arcaboucos"){
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::update_arcaboucos($params_data, $params_data["id"], $_SESSION["id"]));
+					else
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
+				}
+				/*----------------------------------- Cenários ------------------------------------*/
+				if ($action === "get_cenarios"){
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::get_cenarios($params_data, $_SESSION["id"]));
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				break;
-			//LOGOUT
+			/*------------------------------------ LOGOUT -------------------------------------*/
 			case "login":
 				include 'api__login.php';
 				if ($action === "logout"){

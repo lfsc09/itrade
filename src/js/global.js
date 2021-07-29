@@ -29,6 +29,13 @@
 let Global = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
 	/*----------------------------------- FUNCOES ------------------------------------*/
+	let isObjectEmpty = function(obj){
+		for(var prop in obj) {
+			if(obj.hasOwnProperty(prop))
+				return false;
+		}
+		return true;
+	}
 	/*
 		Requisita scripts js.
 	*/
@@ -197,6 +204,7 @@ let Global = (function(){
 	});
 	/*--------------------------------------------------------------------------------*/
 	return {
+		isObjectEmpty: isObjectEmpty,
 		connect: connect,
 		request: request,
 		toast: toast,

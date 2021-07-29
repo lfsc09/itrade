@@ -316,7 +316,7 @@ let Ativos = (function(){
 				send: function (){
 					let error = false,
 						form = $(document.getElementById("update_modal_form")),
-						data = {id: form.attr("ativo")};
+						data = {};
 					form.find("input[changed]").each(function (i, input){
 						if (input.value !== "")
 							data[input.name] = input.value;
@@ -325,7 +325,10 @@ let Ativos = (function(){
 					});
 					if (error)
 						Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+					else if (Global.isObjectEmpty(data))
+						$(document.getElementById("update_modal")).modal("hide");
 					else{
+						data.id = form.attr("ativo");
 						Global.connect({
 							data: {module: "ativos", action: "update_ativos", params: data},
 							success: function (result){
@@ -351,7 +354,8 @@ let Ativos = (function(){
 		}
 		else if (this.hasAttribute("remover")){
 			Global.removeModal({
-			}).modal("show");	
+
+			}).modal("show");
 		}
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
