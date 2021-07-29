@@ -2,13 +2,14 @@
 	session_start();
 	if (isset($_SESSION["username"])){
 		if (!array_key_exists("module", $_POST) || $_POST["module"] === "")
-			die("No Module");
+			die(json_encode(["status" => 0, "error" => "No Module"]));
 		if (!array_key_exists("action", $_POST) || $_POST["action"] === "")
-			die("No action");
+			die(json_encode(["status" => 0, "error" => "No action"]));
 		$module = $_POST["module"];
 		$action = $_POST["action"];
 		$params_data = (array_key_exists("params", $_POST))?$_POST["params"]:[];
 		switch ($module){
+			//ATIVOS
 			case "ativos":
 				include 'api__ativos.php';
 				if ($action === "get_ativos")
@@ -19,17 +20,32 @@
 						echo json_encode(Ativos::insert_ativos($params_data));
 					}
 					else
-						die("No data passed");
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				else if ($action === "update_ativos"){
 					if (!empty($params_data))
 						echo json_encode(Ativos::update_ativos($params_data, $params_data["id"]));
 					else
-						die("No data passed");
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				else
-					die("Action not found");
+					die(json_encode(["status" => 0, "error" => "Action not found"]));
 				break;
+			//RENDA VARIAVEL
+			case "renda_variavel":
+				include 'api__renda_variavel.php';
+				if ($action === "get_arcaboucos")
+					echo json_encode(RendaVariavel::get_arcaboucos(null, $_SESSION["id"]));
+				else if ($action === "insert_arcaboucos"){
+					if (!empty($params_data)){
+						$params_data["id_usuario"] = $_SESSION["id"];
+						echo json_encode(RendaVariavel::insert_arcaboucos($params_data));
+					}
+					else
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
+				}
+				break;
+			//LOGOUT
 			case "login":
 				include 'api__login.php';
 				if ($action === "logout"){
@@ -37,12 +53,12 @@
 					echo json_encode(["status" => 1]);
 				}
 				else
-					die("Action not found");
+					die(json_encode(["status" => 0, "error" => "Action not found"]));
 				break;
 			default:
-				die("Module not found");
+				die(json_encode(["status" => 0, "error" => "Module not found"]));
 		}
 	}
 	else
-		die("Not logged");
+		die(json_encode(["status" => 0, "error" => "Not logged"]));
 ?>

@@ -5,6 +5,13 @@ let iTrade = (function(){
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*------------------------------------ Menu --------------------------------------*/
 	/*
+		Processa toasts no master_toasts, para mostrar ou não a div.
+	*/
+	$(document.getElementById("master_toasts")).on("DOMSubtreeModified", function (){
+		let me = $(this);
+		me.toggle(me.html() !== "");
+	});
+	/*
 		Processa a troca de abas no Menu.
 	*/
 	$("button", document.getElementById("menu_bottom")).click(function (){

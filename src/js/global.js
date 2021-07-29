@@ -63,9 +63,9 @@ let Global = (function(){
 			let html = `<div class='toast align-items-center border-0 mb-2 ${obj.width} ${obj.color}' role='alert' aria-live='assertive' aria-atomic='true' data-bs-delay='${obj.delay}'>`;
 			if (("title" in obj)){
 				html += `<div class='toast-header'>`+
-						`<strong class='mr-auto'>${obj.title}</strong>`+
+						`<strong class='me-auto'>${obj.title}</strong>`+
 						`<small class='text-muted'>${obj.time}</small>`+
-						`<button type='button' class='ml-2 mb-1 close' data-dismiss='toast' aria-label='Close'><span aria-hidden='true'>&times;</span></button>`+
+						`<button type='button' class='btn-close' data-bs-dismiss='toast' aria-label='Close'></button>`+
 						`</div>`+
 						`<div class='toast-body ${obj.text_color}'>${obj.body}</div></div>`;
 			}
