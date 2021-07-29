@@ -1,3 +1,31 @@
+/*
+	jQuery alterClass plugin.
+*/
+(function ($) {
+	$.fn.alterClass = function (removals, additions){
+		var self = this;
+		if ( removals.indexOf( '*' ) === -1 ) {
+			// Use native jQuery methods if there is no wildcard matching
+			self.removeClass( removals );
+			return !additions ? self : self.addClass( additions );
+		}
+		var patt = new RegExp( '\\s' + 
+			removals.
+			replace( /\*/g, '[A-Za-z0-9-_]+' ).
+			split( ' ' ).
+			join( '\\s|\\s' ) + 
+			'\\s', 'g' );
+		self.each( function ( i, it ) {
+			var cn = ' ' + it.className + ' ';
+			while ( patt.test( cn ) ) {
+				cn = cn.replace( patt, ' ' );
+			}
+			it.className = $.trim( cn );
+		});
+		return !additions ? self : self.addClass( additions );
+	};
+})( jQuery );
+
 let Global = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
 	/*----------------------------------- FUNCOES ------------------------------------*/
@@ -70,7 +98,13 @@ let Global = (function(){
 	let insertModal = function (config){
 		let modalInsert = $(document.getElementById("insert_modal"));
 		//Atualiza o tamanho
-		modalInsert.find("div.modal-dialog").attr("class", `modal-dialog modal-dialog-centered modal-dialog-scrollable ${config.size}`);
+		modalInsert.find("div.modal-dialog").attr("class", `modal-dialog modal-dialog-centered modal-dialog-scrollable ${config.size || "modal-sm"}`);
+		if (!("size" in config) || config.size === "modal-sm")
+			modalInsert.find("div.modal-footer button").alterClass("col-*", "col-5");
+		else if (config.size === "modal-fullscreen")
+			modalInsert.find("div.modal-footer button").alterClass("col-*", "col-1");
+		else
+			modalInsert.find("div.modal-footer button").alterClass("col-*", "col-2");
 		//Atualiza o titulo
 		modalInsert.find("div.modal-header h5").html(config.title || "Adicionar");
 		//Atualiza o conteudo
@@ -97,7 +131,13 @@ let Global = (function(){
 	let updateModal = function (config){
 		let modalUpdate = $(document.getElementById("update_modal"));
 		//Atualiza o tamanho
-		modalUpdate.find("div.modal-dialog").attr("class", `modal-dialog modal-dialog-centered modal-dialog-scrollable ${config.size}`);
+		modalUpdate.find("div.modal-dialog").attr("class", `modal-dialog modal-dialog-centered modal-dialog-scrollable ${config.size || "modal-sm"}`);
+		if (!("size" in config) || config.size === "modal-sm")
+			modalUpdate.find("div.modal-footer button").alterClass("col-*", "col-5");
+		else if (config.size === "modal-fullscreen")
+			modalUpdate.find("div.modal-footer button").alterClass("col-*", "col-1");
+		else
+			modalUpdate.find("div.modal-footer button").alterClass("col-*", "col-2");
 		//Atualiza o titulo
 		modalUpdate.find("div.modal-header h5").html(config.title || "Atualizar");
 		//Atualiza o conteudo

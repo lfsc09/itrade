@@ -82,9 +82,9 @@
 						<div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white">
 							<a href="#" class="d-flex align-items-center flex-shrink-0 p-3 pe-2 link-dark text-decoration-none border-bottom">
 								<span class="fs-5 fw-bold">Arcabouços</span>
-								<button class="btn btn-sm btn-primary ms-auto align-self-end" type="button"><i class="fas fa-plus"></i></button>
+								<button class="btn btn-sm btn-primary ms-auto align-self-end" type="button" id="table_arcaboucos_adicionar"><i class="fas fa-plus"></i></button>
 							</a>
-							<div class="list-group list-group-flush border-bottom scrollarea">
+							<div class="list-group list-group-flush border-bottom scrollarea" id="table_arcaboucos">
 								<a href="#" class="list-group-item list-group-item-action py-3 lh-tight" aria-current="true">
 									<div class="d-flex w-100 align-items-center justify-content-between">
 										<strong class="mb-1">Confluence 3.0</strong>
