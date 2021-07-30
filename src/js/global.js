@@ -29,6 +29,9 @@
 let Global = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
 	/*----------------------------------- FUNCOES ------------------------------------*/
+	let hasClass = function (target, className) {
+		return new RegExp('(\\s|^)'+className+'(\\s|$)').test(target.className);
+	}
 	let isObjectEmpty = function(obj){
 		for(var prop in obj) {
 			if(obj.hasOwnProperty(prop))
@@ -204,6 +207,7 @@ let Global = (function(){
 	});
 	/*--------------------------------------------------------------------------------*/
 	return {
+		hasClass: hasClass,
 		isObjectEmpty: isObjectEmpty,
 		connect: connect,
 		request: request,

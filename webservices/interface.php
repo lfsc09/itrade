@@ -54,6 +54,12 @@
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
+				else if ($action === "insert_cenarios"){
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::insert_cenarios($params_data, $_SESSION["id"]));
+					else
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
+				}
 				break;
 			/*------------------------------------ LOGOUT -------------------------------------*/
 			case "login":

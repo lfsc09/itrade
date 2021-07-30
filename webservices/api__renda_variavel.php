@@ -110,8 +110,73 @@
 				];
 			}
 			$stmt->free_result();
+			foreach ($result as $i => $cenario){
+				$result_raw = $mysqli->query("SELECT rvcp.* FROM rv__cenario_premissa rvcp WHERE rvcp.id_cenario='{$cenario["id"]}' ORDER BY rvcp.prioridade ASC,rvcp.nome ASC");
+				while($row = $result_raw->fetch_assoc()){
+					$result[$i]["premissas"][] = [
+						"id" => $row["id"],
+						"inativo" => $row["inativo"],
+						"obrigatoria" => $row["obrigatoria"],
+						"prioridade" => $row["prioridade"],
+						"nome" => $row["nome"]
+					];
+				}
+				$result_raw->free();
+				$result_raw = $mysqli->query("SELECT rvco.* FROM rv__cenario_obs rvco WHERE rvco.id_cenario='{$cenario["id"]}' ORDER BY rvco.prioridade ASC,rvco.nome ASC");
+				while($row = $result_raw->fetch_assoc()){
+					$result[$i]["observacoes"][] = [
+						"id" => $row["id"],
+						"inativo" => $row["inativo"],
+						"importante" => $row["importante"],
+						"prioridade" => $row["prioridade"],
+						"nome" => $row["nome"]
+					];
+				}
+				$result_raw->free();
+			}
 			$mysqli->close();
 			return ["status" => 1, "data" => $result];
+		}
+		/*
+			Insere um novo cenario (Premissas / Observacoes) do arcabouco de um usuario.
+		*/
+		public static function insert_cenarios($params = [], $id_usuario = ""){
+			mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			if ($mysqli->connect_errno)
+				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
+			$mysqli->begin_transaction();
+			try {
+				//Cria o arcabouço
+				$stmt = $mysqli->prepare("INSERT INTO rv__cenario (id_arcabouco,nome) VALUES (?,?)");
+			 	$stmt->bind_param("is", $params["arcabouco"], $params["cenario"]["nome"]);
+				$stmt->execute();
+				$id_cenario = $mysqli->insert_id;
+				//Adicionar agora as premissas se houver
+				foreach ($params["premissas"] as $premissa){
+					$stmt = $mysqli->prepare("INSERT INTO rv__cenario_premissa (id_cenario,obrigatoria,prioridade,nome) VALUES ('{$id_cenario}',?,?,?)");
+			 		$stmt->bind_param("iis", $premissa["obrigatoria"], $premissa["prioridade"], $premissa["nome"]);
+					$stmt->execute();
+				}
+				//Adicionar agora as observacoes se houver
+				foreach ($params["observacoes"] as $obs){
+					$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,importante,prioridade,nome) VALUES ('{$id_cenario}',?,?,?)");
+			 		$stmt->bind_param("iis", $obs["importante"], $obs["prioridade"], $obs["nome"]);
+					$stmt->execute();
+				}
+				$mysqli->commit();
+		 		$mysqli->close();
+		 		return ["status" => 1];
+			}
+			catch (mysqli_sql_exception $exception){
+				$mysqli->rollback();
+				if ($exception->getCode() === 1062)
+					$error = "Cenário já cadastrado.";
+				else
+					$error = "Erro ao cadastrar este Cenário.";
+		 		$mysqli->close();
+	 			return ["status" => 0, "error" => $error];
+			}
 		}
 	}
 ?>

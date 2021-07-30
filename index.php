@@ -82,9 +82,9 @@
 					<!-- Arcabouço de Operacionais -->
 					<div class="col-2">
 						<div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white">
-							<a href="#" class="d-flex align-items-center flex-shrink-0 p-3 pe-2 link-dark text-decoration-none border-bottom">
+							<a href="javascript:void(0)" class="d-flex align-items-center flex-shrink-0 p-3 pe-2 link-dark text-decoration-none border-bottom">
 								<span class="fs-5 fw-bold">Arcabouços</span>
-								<button class="btn btn-sm btn-primary ms-auto align-self-end" type="button" id="table_arcaboucos_adicionar"><i class="fas fa-plus"></i></button>
+								<button class="btn btn-sm btn-primary ms-auto" type="button" id="table_arcaboucos_adicionar"><i class="fas fa-plus"></i></button>
 							</a>
 							<div class="list-group list-group-flush border-bottom scrollarea" id="table_arcaboucos"></div>
 						</div>
@@ -297,14 +297,115 @@
 			</div>
 			<!-- MODAIS RENDA VARIAVEL -->
 			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true">
-				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxl">
 					<div class="modal-content">
 						<div class="modal-header">
-							<h5 class="modal-title">Cenários</h5>
+							<h5 class="modal-title">Controle de Cenários</h5>
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							
+							<div class="container-fluid">
+								<div id="cenarios_modal_toasts"></div>
+								<div class="container-fluid d-flex mb-4 mt-1 px-0" id="cenarios_modal_menu">
+									<button class="btn btn-sm btn-secondary" type="button" name="cenarios"><i class="fas fa-list me-2"></i>Cenários</button>
+									<button class="btn btn-sm btn-secondary ms-2" type="button" name="adicionar_cenarios"><i class="fas fa-plus me-2"></i>Adicionar Cenários</button>
+									<button class="btn btn-sm btn-light ms-auto disabled" type="button" name="editar_cenarios"><i class="fas fa-edit me-2"></i>Edição do Cenário</button>
+								</div>
+								<div class="row" target="cenarios">
+									<div class="col">
+										<h5>Cenários</h5>
+										<ul class="list-group list-group-flush scrollarea" id="table_cenarios"></ul>
+									</div>
+									<div class="col">
+										<h5>Premissas do Cenário</h5>
+										<div id="table_cenarios_premissas"></div>
+									</div>
+									<div class="col">
+										<h5>Observações para o Cenário</h5>
+										<div id="table_cenarios_observacoes"></div>
+									</div>
+								</div>
+								<div class="row" target="adicionar_cenarios">
+									<form id="adicionar_cenarios_form" class="mb-0">
+										<div class="col">
+											<div class="row mb-3">
+												<div class="col">
+													<label>Novo Cenário</label>
+													<input type="text" name="cenario_nome" class="form-control form-control-sm">
+												</div>
+											</div>
+											<div class="row">
+												<div class="col">
+													<table class="table" name="premissas">
+														<thead>
+															<tr>
+																<th name="nome">Premissas</th>
+																<th name="obrigatoria">Obrigatória</th>
+																<th name="prioridade">Prioridade</th>
+																<th name="adicionar"><button type="button" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i></button></th>
+															</tr>
+														</thead>
+														<tbody></tbody>
+													</table>
+												</div>
+												<div class="col">
+													<table class="table" name="observacoes">
+														<thead>
+															<tr>
+																<th name="nome">Observações</th>
+																<th name="importante">Importante</th>
+																<th name="prioridade">Prioridade</th>
+																<th name="adicionar"><button type="button" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i></button></th>
+															</tr>
+														</thead>
+														<tbody></tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</form>
+								</div>
+								<div class="row" target="editar_cenarios">
+									<form id="editar_cenarios_form" class="mb-0">
+										<div class="col">
+											<div class="row mb-3">
+												<div class="col">
+													<label>Cenário</label>
+													<input type="text" name="cenario_nome" class="form-control form-control-sm">
+												</div>
+											</div>
+											<div class="row">
+												<div class="col">
+													<table class="table" name="premissas">
+														<thead>
+															<tr>
+																<th name="nome">Premissas</th>
+																<th name="obrigatoria">Obrigatória</th>
+																<th name="prioridade">Prioridade</th>
+																<th name="adicionar"><button type="button" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i></button></th>
+															</tr>
+														</thead>
+														<tbody></tbody>
+													</table>
+												</div>
+												<div class="col">
+													<table class="table" name="observacoes">
+														<thead>
+															<tr>
+																<th name="nome">Observações</th>
+																<th name="importante">Importante</th>
+																<th name="prioridade">Prioridade</th>
+																<th name="adicionar"><button type="button" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i></button></th>
+															</tr>
+														</thead>
+														<tbody></tbody>
+													</table>
+												</div>
+											</div>
+										</div>
+									</form>
+								</div>
+							</div>
 						</div>
 						<div class="modal-footer d-flex justify-content-between">
 							<button type="button" class="btn btn-secondary btn-sm col-2" data-bs-dismiss="modal">Fechar</button>

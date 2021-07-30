@@ -1,17 +1,29 @@
 .vertical-divider {
   flex-shrink: 0;
-  width: 1.2rem;
+  width: 1rem;
   height: 100vh;
   background-color: rgba(0, 0, 0, .1);
   border: solid rgba(0, 0, 0, .15);
   border-width: 1px 0;
   box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
 }
+@media (min-width: 1200px){
+	.modal-xxl {
+    	max-width: 1500px;
+	}
+}
 #master_toasts {z-index: 1000}
 /*----------------------------------- MENU BOTTOM ------------------------------------*/
 /*---------------------------------- RENDA VARIAVEL ----------------------------------*/
 /*------------------------------------ Arcabouco -------------------------------------*/
 a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
+/*------------------------------------- Cenarios -------------------------------------*/
+#adicionar_cenarios_form table thead th[name='obrigatoria'], #adicionar_cenarios_form table thead th[name='importante'] {text-align: center; width: 15%}
+#adicionar_cenarios_form table thead th[name='prioridade'] {width: 15%}
+#adicionar_cenarios_form table thead th[name='adicionar'] {width: 7%}
+#editar_cenarios_form table thead th[name='obrigatoria'], #editar_cenarios_form table thead th[name='importante'] {text-align: center; width: 15%}
+#editar_cenarios_form table thead th[name='prioridade'] {width: 15%}
+#editar_cenarios_form table thead th[name='adicionar'] {width: 7%}
 /*-------------------------------- Adicionar Operações -------------------------------*/
 #table_operacoes, #table_adicionar_operacoes {font-size: 13px}
 #table_adicionar_operacoes td input {text-align: center}
