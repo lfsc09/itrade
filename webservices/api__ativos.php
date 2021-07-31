@@ -16,8 +16,8 @@
 					"id" => $row["id"],
 					"nome" => $row["nome"],
 					"custo" => $row["custo"],
-					"valor_pt" => $row["valor_pt"],
-					"tick" => $row["tick"]
+					"valor_tick" => $row["valor_tick"],
+					"pts_tick" => $row["pts_tick"]
 				];
 			}
 			$result_raw->free();
@@ -31,8 +31,8 @@
 			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			if ($mysqli->connect_errno)
 				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
-			$stmt = $mysqli->prepare("INSERT INTO ativos (id_usuario,nome,custo,valor_pt,tick) VALUES (?,UPPER(?),?,?,?)");
-		 	$stmt->bind_param("isddd", $id_usuario, $params["nome"], $params["custo"], $params["valor_pt"], $params["tick"]);
+			$stmt = $mysqli->prepare("INSERT INTO ativos (id_usuario,nome,custo,valor_tick,pts_tick) VALUES (?,UPPER(?),?,?,?)");
+		 	$stmt->bind_param("isddd", $id_usuario, $params["nome"], $params["custo"], $params["valor_tick"], $params["pts_tick"]);
 		 	if ($stmt->execute()){
 		 		$mysqli->close();
 		 		return ["status" => 1];

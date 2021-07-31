@@ -185,13 +185,13 @@
 									<h4 class="my-0 flex-fill">Ativos</h4>
 								</div>
 								<div class="card-body">
-									<table id="table_ativos" class="table">
+									<table id="table_ativos" class="table table-hover">
 										<thead>
 											<tr>
 												<th>Nome</th>
 												<th class="text-center">Custo (Abert. + Fech.)</th>
-												<th class="text-center">Valor Pt</th>
-												<th class="text-center">Tick</th>
+												<th class="text-center">Valor por Tick</th>
+												<th class="text-center">Pts por Tick</th>
 												<th></th>
 											</tr>
 										</thead>
@@ -414,6 +414,7 @@
 					</div>
 				</div>
 			</div>
+			<div id="loading_div" style="display: none"><span class="fa fa-spinner fa-spin fa-3x"></span></div>
 		</body>
 		<script src="src/js/global.js"></script>
 		<script src="src/js/iTrade.js"></script>

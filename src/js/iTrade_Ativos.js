@@ -171,8 +171,8 @@ let Ativos = (function(){
 			html += `<tr ativo='${data[at].id}'>`+
 					`<td name='nome'>${data[at].nome}</td>`+
 					`<td name='custo'>${data[at].custo}</td>`+
-					`<td name='valor_pt'>${data[at].valor_pt}</td>`+
-					`<td name='tick'>${data[at].tick}</td>`+
+					`<td name='valor_tick'>${data[at].valor_tick}</td>`+
+					`<td name='pts_tick'>${data[at].pts_tick}</td>`+
 					`<td name='action'><button type='button' class='btn btn-sm btn-light' editar><i class='fas fa-edit'></i></button><button type='button' class='btn btn-sm btn-light ms-2' remover><i class='fas fa-trash-alt'></i></button></td>`+
 					`</tr>`;
 		}
@@ -230,15 +230,15 @@ let Ativos = (function(){
 						`<form class="row g-2 m-0" id="insert_modal_form">`+
 						`<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>`+
 						`<div class="col-md-3 text-start"><label class="form-label">Custo (Abert. + Fech.)</label><input type="text" name="custo" class="form-control form-control-sm" onclick="this.select()"></div>`+
-						`<div class="col-md-3 text-start"><label class="form-label">Valor de 1Pt</label><input type="text" name="valor_pt" class="form-control form-control-sm" onclick="this.select()"></div>`+
-						`<div class="col-md-3 text-start"><label class="form-label">Pts em 1Tick</label><input type="text" name="tick" class="form-control form-control-sm" onclick="this.select()"></div>`+
+						`<div class="col-md-3 text-start"><label class="form-label">Valor por Tick</label><input type="text" name="valor_tick" class="form-control form-control-sm" onclick="this.select()"></div>`+
+						`<div class="col-md-3 text-start"><label class="form-label">Pts por Tick</label><input type="text" name="pts_tick" class="form-control form-control-sm" onclick="this.select()"></div>`+
 						`</form>`;
 				modal_body.append(html).promise().then(function (){
 					let form = modal_body.find("form");
 					form.find("input[name='nome']").inputmask({mask: "*{*}", definitions: {'*': {casing: 'upper'}}, placeholder: ""});
 					form.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
-					form.find("input[name='valor_pt']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
-					form.find("input[name='tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+					form.find("input[name='valor_tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+					form.find("input[name='pts_tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
 				});
 			},
 			send: function (){
@@ -287,70 +287,76 @@ let Ativos = (function(){
 					id: row.attr("ativo"),
 					nome: row.find("td[name='nome']").text(),
 					custo: row.find("td[name='custo']").text(),
-					valor_pt: row.find("td[name='valor_pt']").text(),
-					tick: row.find("td[name='tick']").text()
+					valor_tick: row.find("td[name='valor_tick']").text(),
+					pts_tick: row.find("td[name='pts_tick']").text()
 				};
-			Global.updateModal({
-				size: "modal-lg",
-				title: "Atualizar Ativo",
-				build_body: function (modal_body){
-					let html = ``;
-					html += `<div id="update_modal_toasts"></div>`+
-							`<form class="row g-2 m-0" id="update_modal_form" ativo="${data.id}">`+
-							`<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
-							`<div class="col-md-3 text-start"><label class="form-label">Custo (Abert. + Fech.)</label><input type="text" name="custo" class="form-control form-control-sm" value="${data.custo}" onclick="this.select()"></div>`+
-							`<div class="col-md-3 text-start"><label class="form-label">Valor de 1Pt</label><input type="text" name="valor_pt" class="form-control form-control-sm" value="${data.valor_pt}" onclick="this.select()"></div>`+
-							`<div class="col-md-3 text-start"><label class="form-label">Pts em 1Tick</label><input type="text" name="tick" class="form-control form-control-sm" value="${data.tick}" onclick="this.select()"></div>`+
-							`</form>`;
-					modal_body.append(html).promise().then(function (){
-						let form = modal_body.find("form");
-						form.find("input[name='nome']").inputmask({mask: "*{*}", definitions: {'*': {casing: 'upper'}}, placeholder: ""});
-						form.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
-						form.find("input[name='valor_pt']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
-						form.find("input[name='tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
-						form.find("input").on("change", function (){
-							this.setAttribute("changed", "");
-						});
-					});
-				},
-				send: function (){
-					let error = false,
-						form = $(document.getElementById("update_modal_form")),
-						data = {};
-					form.find("input[changed]").each(function (i, input){
-						if (input.value !== "")
-							data[input.name] = input.value;
-						else
-							error = true;
-					});
-					if (error)
-						Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
-					else if (Global.isObjectEmpty(data))
-						$(document.getElementById("update_modal")).modal("hide");
-					else{
-						data.id = form.attr("ativo");
-						Global.connect({
-							data: {module: "ativos", action: "update_ativos", params: data},
-							success: function (result){
-								if (result.status){
-									$(document.getElementById("update_modal")).modal("hide");
-									Global.connect({
-										data: {module: "ativos", action: "get_ativos"},
-										success: function (result){
-											if (result.status)
-												buildTableAtivos(result.data);
-											else
-												Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-										}
-									});
-								}
-								else
-									Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
-							}
-						});		
-					}
-				}
-			}).modal("show");
+			Global.updateTooltip({
+				elem: this,
+				placement: 'left',
+				title: 'Alterar Ativo',
+				body: `<button class="btn btn-sm">DAS</button>`
+			});
+			// Global.updateModal({
+			// 	size: "modal-lg",
+			// 	title: "Atualizar Ativo",
+			// 	build_body: function (modal_body){
+			// 		let html = ``;
+			// 		html += `<div id="update_modal_toasts"></div>`+
+			// 				`<form class="row g-2 m-0" id="update_modal_form" ativo="${data.id}">`+
+			// 				`<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
+			// 				`<div class="col-md-3 text-start"><label class="form-label">Custo (Abert. + Fech.)</label><input type="text" name="custo" class="form-control form-control-sm" value="${data.custo}" onclick="this.select()"></div>`+
+			// 				`<div class="col-md-3 text-start"><label class="form-label">Valor por Tick</label><input type="text" name="valor_tick" class="form-control form-control-sm" value="${data.valor_tick}" onclick="this.select()"></div>`+
+			// 				`<div class="col-md-3 text-start"><label class="form-label">Pts por Tick</label><input type="text" name="pts_tick" class="form-control form-control-sm" value="${data.pts_tick}" onclick="this.select()"></div>`+
+			// 				`</form>`;
+			// 		modal_body.append(html).promise().then(function (){
+			// 			let form = modal_body.find("form");
+			// 			form.find("input[name='nome']").inputmask({mask: "*{*}", definitions: {'*': {casing: 'upper'}}, placeholder: ""});
+			// 			form.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+			// 			form.find("input[name='valor_tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+			// 			form.find("input[name='pts_tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+			// 			form.find("input").on("change", function (){
+			// 				this.setAttribute("changed", "");
+			// 			});
+			// 		});
+			// 	},
+			// 	send: function (){
+			// 		let error = false,
+			// 			form = $(document.getElementById("update_modal_form")),
+			// 			data = {};
+			// 		form.find("input[changed]").each(function (i, input){
+			// 			if (input.value !== "")
+			// 				data[input.name] = input.value;
+			// 			else
+			// 				error = true;
+			// 		});
+			// 		if (error)
+			// 			Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+			// 		else if (Global.isObjectEmpty(data))
+			// 			$(document.getElementById("update_modal")).modal("hide");
+			// 		else{
+			// 			data.id = form.attr("ativo");
+			// 			Global.connect({
+			// 				data: {module: "ativos", action: "update_ativos", params: data},
+			// 				success: function (result){
+			// 					if (result.status){
+			// 						$(document.getElementById("update_modal")).modal("hide");
+			// 						Global.connect({
+			// 							data: {module: "ativos", action: "get_ativos"},
+			// 							success: function (result){
+			// 								if (result.status)
+			// 									buildTableAtivos(result.data);
+			// 								else
+			// 									Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+			// 							}
+			// 						});
+			// 					}
+			// 					else
+			// 						Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+			// 				}
+			// 			});		
+			// 		}
+			// 	}
+			// }).modal("show");
 		}
 		else if (this.hasAttribute("remover")){
 			Global.removeModal({

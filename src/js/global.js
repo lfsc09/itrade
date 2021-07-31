@@ -28,6 +28,8 @@
 
 let Global = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
+	let _loading_div = $(document.getElementById("loading_div"));
+	let _whiteListPopOvers = bootstrap.Tooltip.Default.allowList;
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	let hasClass = function (target, className) {
 		return new RegExp('(\\s|^)'+className+'(\\s|$)').test(target.className);
@@ -49,12 +51,16 @@ let Global = (function(){
 		Gera conexoes com a interface de webservices.
 	*/
 	let connect = function (options){
+		_loading_div.show();
 		$.ajax({
 			type: "POST",
 			url: "webservices/interface.php",
 			data: options.data,
 			dataType: "json",
-			success: options.success,
+			success: function (result){
+				options.success(result);
+				_loading_div.hide();
+			},
 			error: function (jqXHR, textStatus, errorThrown){
 				console.log(`${textStatus}: ${errorThrown}`);
 			}
@@ -91,6 +97,19 @@ let Global = (function(){
 				});
 			});
 		}
+	}
+	let updateTooltip = function (config){
+		let tooltip = new bootstrap.Tooltip(config.elem, {
+			html: true,
+			placement: config.placement,
+			trigger: 'manual',
+			template: `<div class=\"tooltip-card\"><div class=\"tooltip-card-title${((config.body === "")?" my-0":"")}\">${config.title}</div><div class=\"tooltip-card-body my-0\">${config.body}</div></div>`
+		});
+		tooltip.enable();
+		tooltip.show();
+		// config.elem.addEventListener('hidden.bs.tooltip', function () {
+		// 	tooltip.dispose();
+		// });
 	}
 	/*
 		Comanda a modificacao do modal de Adição de dados.
@@ -174,6 +193,12 @@ let Global = (function(){
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*
+		Configura o popover para aceitar os elementos e html tags
+	*/
+	_whiteListPopOvers.table = [];
+	_whiteListPopOvers.figure = ['style', 'class'];
+	_whiteListPopOvers['*'].push('style');
+	/*
 		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
 	*/
 	$(document.getElementById("insert_modal")).on("hidden.bs.modal", function (){
@@ -212,6 +237,7 @@ let Global = (function(){
 		connect: connect,
 		request: request,
 		toast: toast,
+		updateTooltip: updateTooltip,
 		insertModal: insertModal,
 		updateModal: updateModal,
 		removeModal: removeModal

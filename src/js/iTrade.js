@@ -47,7 +47,7 @@ let iTrade = (function(){
 		});
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
-	$("button[name='renda_variavel']", document.getElementById("menu_bottom")).click();
+	$("button[name='ativos']", document.getElementById("menu_bottom")).click();
 	/*--------------------------------------------------------------------------------*/
 	return {
 	}
