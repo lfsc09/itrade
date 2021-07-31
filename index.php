@@ -177,28 +177,9 @@
 			</div>
 			<div class="container-fluid" id="ativos">
 				<div class="bg-light p-5 rounded mt-3">
-					<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+					<div class="row row-cols-1 row-cols-md-3 mb-3">
 						<div class="col">
-							<div class="card mb-4 rounded-3 shadow-sm">
-								<div class="card-header py-3 d-flex">
-									<button type="button" class="btn btn-sm btn-primary" id="table_ativos_adicionar"><i class="fas fa-plus"></i></button>
-									<h4 class="my-0 flex-fill">Ativos</h4>
-								</div>
-								<div class="card-body">
-									<table id="table_ativos" class="table">
-										<thead>
-											<tr>
-												<th>Nome</th>
-												<th class="text-center">Custo (Abert. + Fech.)</th>
-												<th class="text-center">Valor Pt</th>
-												<th class="text-center">Tick</th>
-												<th></th>
-											</tr>
-										</thead>
-										<tbody></tbody>
-									</table>
-								</div>
-							</div>
+							<div class="w-100" id="table_ativos"></div>
 						</div>
 						<div class="col">
 							<div class="card mb-4 rounded-3 shadow-sm">
