@@ -33,7 +33,91 @@ let Renda_variavel = (function(){
 	*/
 	function buildCenariosModal(data){
 		let modal = $(document.getElementById("cenarios_modal"));
+		buildListaCenarios(data);
+		//Reseta o formulario de adicionar cenario
+		resetAdicionarCenarios();
+		//Mostra por padrao a lista de cenarios
+		modal.find("div.modal-body div.row[target]").each(function (i, elem){
+			if (elem.getAttribute("target") === "cenarios")
+				$(this).show();
+			else if (elem.getAttribute("target") === "adicionar_cenarios" || elem.getAttribute("target") === "editar_cenarios")
+				$(this).hide();
+		});
+		//Reseta os botoes do menu
+		modal.find("#cenarios_modal_menu button").each(function (i, elem){
+			if (elem.name === "cenarios")
+				$(this).removeClass("btn-secondary").addClass("btn-primary");
+			else if (elem.name === "editar_cenarios")
+				$(this).removeClass("btn-primary").addClass("btn-light");
+			else
+				$(this).removeClass("btn-primary").addClass("btn-secondary");
+		});
 		modal.modal("show");
+	}
+	/*
+		Constroi a lista de cenarios e (premissas + observacoes).
+	*/
+	function buildListaCenarios(data){
+		let html_cenarios = "",
+			html_premissas = "",
+			html_observacoes = "";
+		for (let c in data){
+			html_cenarios += `<li class="list-group-item d-flex border-bottom align-items-center" cenario="${data[c].id}">`+
+					`<span>${data[c].nome}</span>`+
+					`<button type="button" class="btn btn-sm ms-auto"><i class="fas fa-edit"></i></button>`+
+					`<button type="button" class="btn btn-sm ms-1"><i class="fas fa-trash"></i></button>`+
+					`<span class="badge bg-secondary rounded-pill ms-1">${data[c]["premissas"].length}</span>`+
+					`<span class="badge bg-secondary rounded-pill ms-1">${data[c]["observacoes"].length}</span>`+
+					`</li>`;
+			html_premissas += `<ul class="list-group" cenario="${data[c].id}">`;
+			for (let p in data[c]["premissas"]){
+				html_premissas += `<li class="list-group-item d-flex justify-content-between align-items-center ${((data[c]["premissas"][p].inativo === "1")?"disabled":"")}" premissa="${data[c]["premissas"][p].id}">`+
+								  `<span class="flex-fill">${data[c]["premissas"][p].nome}</span>`+
+								  ((data[c]["premissas"][p].obrigatoria === "1")?"<i class='fas fa-star me-2 ms-auto'></i>":"")+
+								  ((data[c]["premissas"][p].inativo === "1")?`<button type="button" class="btn btn-sm ms-auto" ativar><i class="fas fa-eye"></i></button>`:`<button type="button" class="btn btn-sm ms-auto" inativar><i class="fas fa-eye-slash"></i></button>`)+
+								  `</li>`;
+			}
+			html_premissas += `</ul>`;
+		}
+		$(document.getElementById("table_cenarios")).empty().append(html_cenarios);
+		$(document.getElementById("table_cenarios_premissas")).empty().append(html_premissas);
+	}
+	/*
+		Reseta o formulario de adicionar cenario.
+	*/
+	function resetAdicionarCenarios(){
+		let form = $(document.getElementById("adicionar_cenarios_form")),
+			html = "";
+		form.find("input[name='cenario_nome']").val("");
+		for (let i=0; i<5; i++)
+			html += addLinePremissa();
+		form.find("table[name='premissas'] tbody").empty().append(html);
+		html = "";
+		for (let i=0; i<5; i++)
+			html += addLineObservacao();
+		form.find("table[name='observacoes'] tbody").empty().append(html);
+	}
+	/*
+		Retorna um linha de premissa de cenario.
+	*/
+	function addLinePremissa(){
+		return `<tr class="text-center align-middle">`+
+			   `<td><input type="text" class="form-control form-control-sm" name="nome"></td>`+
+			   `<td><input type="checkbox" class="form-check-input" name="obrigatoria"></td>`+
+			   `<td><input type="text" class="form-control form-control-sm" name="prioridade"></td>`+
+			   `<td></td>`+
+			   `</tr>`;
+	}
+	/*
+		Retorna um linha de observação de cenario.
+	*/
+	function addLineObservacao(){
+		return `<tr class="text-center align-middle">`+
+			   `<td><input type="text" class="form-control form-control-sm" name="nome"></td>`+
+			   `<td><input type="checkbox" class="form-check-input" name="importante"></td>`+
+			   `<td><input type="text" class="form-control form-control-sm" name="prioridade"></td>`+
+			   `<td></td>`+
+			   `</tr>`;
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
@@ -180,6 +264,51 @@ let Renda_variavel = (function(){
 		}
 	});
 	/*------------------------------ Section Cenarios --------------------------------*/
+	/*
+		Processa a mudanca entre a lista de cenarios e o formulario de adicao de cenarios.
+	*/
+	$("button", document.getElementById("cenarios_modal_menu")).click(function (){
+		let body = $("div.modal-body", document.getElementById("cenarios_modal")),
+			visible_row = body.find("div.row[target]:visible");
+		if (visible_row.attr("target") !== this.name){
+			visible_row.hide();
+			body.find(`div.row[target='${this.name}']`).show();
+			let me = $(this),
+				selected_button = me.parent().find("button.btn-primary");
+			if (selected_button.attr("name") === "editar_cenarios")
+				selected_button.removeClass("btn-primary").addClass("btn-light");
+			else
+				selected_button.removeClass("btn-primary").addClass("btn-secondary");
+			me.removeClass("btn-secondary").addClass("btn-primary");
+		}
+	});
+	/*
+		Processa a adição de novas linhas de premissas / observações, na adição de um novo cenário.
+	*/
+	$("table button","#adicionar_cenarios_form, #editar_cenarios_form").click(function (){
+		let table = $(this).parentsUntil("div.col").last(),
+			target = "",
+			html = "";
+		target = table.attr("name");
+		if (target === "premissas"){
+			for (let i=0; i<5; i++)
+				html += addLinePremissa();
+			table.find("tbody").append(html);
+		}
+		else if (target === "observacoes"){
+			for (let i=0; i<5; i++)
+				html += addLineObservacao();
+			table.find("tbody").append(html);
+		}
+	});
+	/*
+		Processa alteração de valor do checkbox ao clicar na coluna tambem.
+	*/
+	$("#adicionar_cenarios_form, #editar_cenarios_form").on("click", "table tbody td", function (event){
+		let checkbox = $(this).find("input[type='checkbox']");
+		if (event.target.tagName === "TD" && checkbox.length)
+			checkbox[0].checked = !checkbox[0].checked;
+	});
 	/*
 		Processa o envio de Adicionar / Alterar cenarios e (Premissas / Observacoes).
 	*/
