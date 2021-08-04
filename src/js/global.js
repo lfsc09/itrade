@@ -28,8 +28,9 @@
 
 let Global = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
-	let _loading_div = $(document.getElementById("loading_div"));
-	let _whiteListPopOvers = bootstrap.Tooltip.Default.allowList;
+	let _loading_div = $(document.getElementById("loading_div")),
+		_whiteListPopOvers = bootstrap.Tooltip.Default.allowList,
+		_MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	let hasClass = function (target, className) {
 		return new RegExp('(\\s|^)'+className+'(\\s|$)').test(target.className);
@@ -98,15 +99,16 @@ let Global = (function(){
 			});
 		}
 	}
-	let updateTooltip = function (config){
-		let tooltip = new bootstrap.Tooltip(config.elem, {
+	let updatePopover = function (config){
+		$("body").popover({
 			html: true,
-			placement: config.placement,
+			container: 'body',
 			trigger: 'manual',
-			template: `<div class=\"tooltip-card\"><div class=\"tooltip-card-title${((config.body === "")?" my-0":"")}\">${config.title}</div><div class=\"tooltip-card-body my-0\">${config.body}</div></div>`
-		});
-		tooltip.enable();
-		tooltip.show();
+			placement: config.placement,
+			selector: config.selector,
+			title: config.title,
+			content: config.body
+		}).show();
 		// config.elem.addEventListener('hidden.bs.tooltip', function () {
 		// 	tooltip.dispose();
 		// });
@@ -232,12 +234,13 @@ let Global = (function(){
 	});
 	/*--------------------------------------------------------------------------------*/
 	return {
+		_MutationObserver: _MutationObserver,
 		hasClass: hasClass,
 		isObjectEmpty: isObjectEmpty,
 		connect: connect,
 		request: request,
 		toast: toast,
-		updateTooltip: updateTooltip,
+		updatePopover: updatePopover,
 		insertModal: insertModal,
 		updateModal: updateModal,
 		removeModal: removeModal

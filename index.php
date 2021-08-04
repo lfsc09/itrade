@@ -249,6 +249,8 @@
 					<button class="btn btn-sm btn-light me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
 				</div>
 			</footer>
+			<!-- POPOVERS (AREA) -->
+			<div id="update_popover" class="hide"></div>
 			<!-- MODAL (AREA) -->
 			<!-- MODAIS GENERICOS -->
 			<div class="modal fade" id="insert_modal" tabindex="-1" aria-hidden="true">

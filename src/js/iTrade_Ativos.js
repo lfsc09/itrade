@@ -1,5 +1,16 @@
 let Ativos = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
+	let _observerConfig = {
+		attributes: true, 
+		childList: true, 
+		characterData: true
+	}
+	let _observer = new Global._MutationObserver(function (mutations){
+		mutations.forEach(function (mutation) {
+			console.log(mutation);
+			// $(mutation.addedNodes).find('div[openUpdatePopup]').popover(popOverSettings);
+		});
+	});
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*------------------------------- Section Ativos ---------------------------------*/
 	/*
@@ -192,6 +203,7 @@ let Ativos = (function(){
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*------------------------------- Section Ativos ---------------------------------*/
+	_observer.observe($(document.getElementById("table_ativos"))[0], _observerConfig);
 	/*
 		Alterar ano dos contratos de vencimento do WIN e WDO.
 	*/
@@ -290,12 +302,14 @@ let Ativos = (function(){
 					valor_tick: row.find("td[name='valor_tick']").text(),
 					pts_tick: row.find("td[name='pts_tick']").text()
 				};
-			Global.updateTooltip({
-				elem: this,
-				placement: 'left',
-				title: 'Alterar Ativo',
-				body: `<button class="btn btn-sm">DAS</button>`
-			});
+			$(this).append(`<div openUpdatePopup class="hide"></div>`);
+			// Global.updatePopover({
+			// 	selector: 'button[editar][selected]',
+			// 	placement: 'left',
+			// 	title: 'Alterar Ativo',
+			// 	body: `<button class="btn btn-sm">DAS</button>`
+			// });
+
 			// Global.updateModal({
 			// 	size: "modal-lg",
 			// 	title: "Atualizar Ativo",
