@@ -98,20 +98,6 @@ let Global = (function(){
 			});
 		}
 	}
-	let updatePopover = function (config){
-		$("body").popover({
-			html: true,
-			container: 'body',
-			trigger: 'manual',
-			placement: config.placement,
-			selector: config.selector,
-			title: config.title,
-			content: config.body
-		}).show();
-		// config.elem.addEventListener('hidden.bs.tooltip', function () {
-		// 	tooltip.dispose();
-		// });
-	}
 	/*
 		Comanda a modificacao do modal de Adição de dados.
 		Inputs do Config: {
@@ -197,7 +183,7 @@ let Global = (function(){
 		Configura o popover para aceitar os elementos e html tags
 	*/
 	_whiteListPopOvers.table = [];
-	_whiteListPopOvers.figure = ['style', 'class', 'form', 'id'];
+	_whiteListPopOvers.figure = ['style', 'class'];
 	_whiteListPopOvers['*'].push('style');
 	/*
 		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
@@ -238,7 +224,6 @@ let Global = (function(){
 		connect: connect,
 		request: request,
 		toast: toast,
-		updatePopover: updatePopover,
 		insertModal: insertModal,
 		updateModal: updateModal,
 		removeModal: removeModal

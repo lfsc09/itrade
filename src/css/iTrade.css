@@ -40,17 +40,20 @@
 	top: calc(50% - 24px);
 	left: calc(50% - 24px);
 }
+/*----------------------------------- INSERT MODAL -----------------------------------*/
+#insert_modal_form, #insert_modal_form input {font-size: .9em}
+
 /*----------------------------------- MENU BOTTOM ------------------------------------*/
 /*---------------------------------- RENDA VARIAVEL ----------------------------------*/
 /*------------------------------------ Arcabouco -------------------------------------*/
 a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 /*------------------------------------- Cenarios -------------------------------------*/
-#adicionar_cenarios_form table thead th[name='obrigatoria'], #adicionar_cenarios_form table thead th[name='importante'] {text-align: center; width: 15%}
-#adicionar_cenarios_form table thead th[name='prioridade'] {width: 15%}
-#adicionar_cenarios_form table thead th[name='adicionar'] {width: 7%}
-#editar_cenarios_form table thead th[name='obrigatoria'], #editar_cenarios_form table thead th[name='importante'] {text-align: center; width: 15%}
-#editar_cenarios_form table thead th[name='prioridade'] {width: 15%}
-#editar_cenarios_form table thead th[name='adicionar'] {width: 7%}
+#table_cenarios table tbody td{vertical-align: middle}
+#table_cenarios table tbody td[name='prioridade']{width: 10%}
+#table_cenarios table tbody td[name='obrigatoria']{width: 20%}
+#table_cenarios table tbody td[name='inativo']{width: 20%}
+#table_cenarios button.accordion-button-with-input::after {margin-left: 1rem}
+#table_cenarios button.accordion-button[data-bs-toggle]:focus {box-shadow: none}
 /*-------------------------------- Adicionar Operações -------------------------------*/
 #table_operacoes, #table_adicionar_operacoes {font-size: 13px}
 #table_adicionar_operacoes td input {text-align: center}
