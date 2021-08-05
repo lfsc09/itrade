@@ -75,7 +75,7 @@
 			<script src="src/js/base/fancygrid.min.js"></script>
 			<script src="src/js/base/Chart.bundle.min.js"></script>
 		</head>
-		<body>
+		<body class="container container-body">
 			<div class="position-fixed top-0 end-0 p-3" id="master_toasts"></div>
 			<div class="container-fluid" id="renda_variavel">
 				<div class="row">
@@ -249,8 +249,6 @@
 					<button class="btn btn-sm btn-light me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
 				</div>
 			</footer>
-			<!-- POPOVERS (AREA) -->
-			<div id="update_popover" class="hide"></div>
 			<!-- MODAL (AREA) -->
 			<!-- MODAIS GENERICOS -->
 			<div class="modal fade" id="insert_modal" tabindex="-1" aria-hidden="true">

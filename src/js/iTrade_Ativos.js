@@ -5,12 +5,6 @@ let Ativos = (function(){
 		childList: true, 
 		characterData: true
 	}
-	let _observer = new Global._MutationObserver(function (mutations){
-		mutations.forEach(function (mutation) {
-			console.log(mutation);
-			// $(mutation.addedNodes).find('div[openUpdatePopup]').popover(popOverSettings);
-		});
-	});
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*------------------------------- Section Ativos ---------------------------------*/
 	/*
@@ -203,7 +197,6 @@ let Ativos = (function(){
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*------------------------------- Section Ativos ---------------------------------*/
-	_observer.observe($(document.getElementById("table_ativos"))[0], _observerConfig);
 	/*
 		Alterar ano dos contratos de vencimento do WIN e WDO.
 	*/
@@ -293,8 +286,9 @@ let Ativos = (function(){
 		Atualização / Remoção de ativos na tabela de ativos.
 	*/
 	$(document.getElementById("table_ativos")).on("click", "td[name='action'] button", function (){
-		if (this.hasAttribute("editar")){
+		if (this.hasAttribute("editar") && !this.hasAttribute("popup-editar")){
 			let row = $(this).parent().parent(),
+				html = ``,
 				data = {
 					id: row.attr("ativo"),
 					nome: row.find("td[name='nome']").text(),
@@ -302,7 +296,31 @@ let Ativos = (function(){
 					valor_tick: row.find("td[name='valor_tick']").text(),
 					pts_tick: row.find("td[name='pts_tick']").text()
 				};
-			$(this).append(`<div openUpdatePopup class="hide"></div>`);
+			this.setAttribute("popup-editar", "");
+			html += `<div class="container-fluid p-0">`+
+					`<div id="update_popup_toasts"></div>`+
+					`<form class="m-0" id="update_popup_form" ativo="${data.id}">`+
+					`<div class="mb-2 d-flex align-items-center"><div class="flex-fill text-end fw-bold">Nome: </div><div class="ms-2"><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div></div>`+
+					`<div class="mb-2 d-flex align-items-center"><div class="flex-fill text-end fw-bold">Cutos: </div><div class="ms-2"><input type="text" name="custo" class="form-control form-control-sm" value="${data.custo}" onclick="this.select()"></div></div>`+
+					`<div class="mb-2 d-flex align-items-center"><div class="flex-fill text-end fw-bold">Valor por Tick: </div><div class="ms-2"><input type="text" name="valor_tick" class="form-control form-control-sm" value="${data.valor_tick}" onclick="this.select()"></div></div>`+
+					`<div class="mb-2 d-flex align-items-center"><div class="flex-fill text-end fw-bold">Pontos por Tick: </div><div class="ms-2"><input type="text" name="pts_tick" class="form-control form-control-sm" value="${data.pts_tick}" onclick="this.select()"></div></div>`+
+					`</form>`+
+					`<div class="row mt-3"><div class="col"><button type="button" class="w-100 btn btn-sm btn-danger" popup-cancelar>Cancelar</button></div><div class="col"><button type="button" class="w-100 btn btn-sm btn-success" popup-enviar>Enviar</button></div></div>`+
+					`</div>`;
+			$('body').append(`<div id="openUpdatePopup" class="d-none">${html}</div>`).promise().then(function (){
+				$(document.getElementById("table_ativos")).find("button[popup-editar]").popover({
+					html: true,
+					sanitize: false,
+					trigger: 'manual',
+					placement: 'left',
+					template: `<div class="popover" role="tooltip" style="max-width: 100%" table_ativos-editar><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>`,
+					content: function (){
+						let popupContent = $(document.getElementById("openUpdatePopup")).html();
+						$(document.getElementById("openUpdatePopup")).remove();
+						return popupContent;
+					}
+				}).popover("show");
+			});
 			// Global.updatePopover({
 			// 	selector: 'button[editar][selected]',
 			// 	placement: 'left',
@@ -316,12 +334,12 @@ let Ativos = (function(){
 			// 	build_body: function (modal_body){
 			// 		let html = ``;
 			// 		html += `<div id="update_modal_toasts"></div>`+
-			// 				`<form class="row g-2 m-0" id="update_modal_form" ativo="${data.id}">`+
-			// 				`<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
-			// 				`<div class="col-md-3 text-start"><label class="form-label">Custo (Abert. + Fech.)</label><input type="text" name="custo" class="form-control form-control-sm" value="${data.custo}" onclick="this.select()"></div>`+
-			// 				`<div class="col-md-3 text-start"><label class="form-label">Valor por Tick</label><input type="text" name="valor_tick" class="form-control form-control-sm" value="${data.valor_tick}" onclick="this.select()"></div>`+
-			// 				`<div class="col-md-3 text-start"><label class="form-label">Pts por Tick</label><input type="text" name="pts_tick" class="form-control form-control-sm" value="${data.pts_tick}" onclick="this.select()"></div>`+
-			// 				`</form>`;
+							// `<form class="row g-2 m-0" id="update_modal_form" ativo="${data.id}">`+
+							// `<div class="col-md-3 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
+							// `<div class="col-md-3 text-start"><label class="form-label">Custo (Abert. + Fech.)</label><input type="text" name="custo" class="form-control form-control-sm" value="${data.custo}" onclick="this.select()"></div>`+
+							// `<div class="col-md-3 text-start"><label class="form-label">Valor por Tick</label><input type="text" name="valor_tick" class="form-control form-control-sm" value="${data.valor_tick}" onclick="this.select()"></div>`+
+							// `<div class="col-md-3 text-start"><label class="form-label">Pts por Tick</label><input type="text" name="pts_tick" class="form-control form-control-sm" value="${data.pts_tick}" onclick="this.select()"></div>`+
+							// `</form>`;
 			// 		modal_body.append(html).promise().then(function (){
 			// 			let form = modal_body.find("form");
 			// 			form.find("input[name='nome']").inputmask({mask: "*{*}", definitions: {'*': {casing: 'upper'}}, placeholder: ""});
@@ -377,6 +395,65 @@ let Ativos = (function(){
 
 			}).modal("show");
 		}
+	});
+	/*
+		Atualização de ativos da tabela de ativos.
+	*/
+	$("body").on("click", "button[popup-enviar]", function (){
+		let error = false,
+		form = $(document.getElementById("update_popup_form")),
+		data = {};
+		form.find("input[changed]").each(function (i, input){
+			if (input.value !== "")
+				data[input.name] = input.value;
+			else
+				error = true;
+		});
+		if (error)
+			Global.toast.create({location: document.getElementById("update_popup_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+		else if (Global.isObjectEmpty(data))
+			$(document.getElementById("update_modal")).modal("hide");
+		else{
+			data.id = form.attr("ativo");
+			Global.connect({
+				data: {module: "ativos", action: "update_ativos", params: data},
+				success: function (result){
+					if (result.status){
+						$(document.getElementById("update_modal")).modal("hide");
+						Global.connect({
+							data: {module: "ativos", action: "get_ativos"},
+							success: function (result){
+								if (result.status)
+									buildTableAtivos(result.data);
+								else
+									Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+							}
+						});
+					}
+					else
+						Global.toast.create({location: document.getElementById("update_popup_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+				}
+			});		
+		}
+	});
+	/*
+		Inicia as mascaras de input do popup de update de ativos.
+	*/
+	$("body").on("shown.bs.popover", ".popover[table_ativos-editar]", function (){
+		let form = $(document.getElementById("update_popup_form"));
+		form.find("input[name='nome']").inputmask({mask: "*{*}", definitions: {'*': {casing: 'upper'}}, placeholder: ""});
+		form.find("input[name='custo']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+		form.find("input[name='valor_tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+		form.find("input[name='pts_tick']").inputmask({alias: "numeric", digitsOptional: false, digits: 2, placeholder: "0"});
+		form.find("input").on("change", function (){
+			this.setAttribute("changed", "");
+		});
+	});
+	/*
+		Trada o fechamento do Popup de update de ativos.
+	*/
+	$("body").on("click", "button[popup-cancelar]", function (){
+		$(document.getElementById("table_ativos")).find("button[popup-editar]").removeAttr("popup-editar").popover("dispose");
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
 	buildSectionAtivos();

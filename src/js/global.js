@@ -29,8 +29,7 @@
 let Global = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
 	let _loading_div = $(document.getElementById("loading_div")),
-		_whiteListPopOvers = bootstrap.Tooltip.Default.allowList,
-		_MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		_whiteListPopOvers = bootstrap.Tooltip.Default.allowList;
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	let hasClass = function (target, className) {
 		return new RegExp('(\\s|^)'+className+'(\\s|$)').test(target.className);
@@ -198,7 +197,7 @@ let Global = (function(){
 		Configura o popover para aceitar os elementos e html tags
 	*/
 	_whiteListPopOvers.table = [];
-	_whiteListPopOvers.figure = ['style', 'class'];
+	_whiteListPopOvers.figure = ['style', 'class', 'form', 'id'];
 	_whiteListPopOvers['*'].push('style');
 	/*
 		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
@@ -234,7 +233,6 @@ let Global = (function(){
 	});
 	/*--------------------------------------------------------------------------------*/
 	return {
-		_MutationObserver: _MutationObserver,
 		hasClass: hasClass,
 		isObjectEmpty: isObjectEmpty,
 		connect: connect,
