@@ -297,7 +297,7 @@
 			</div>
 			<!-- MODAIS RENDA VARIAVEL -->
 			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true">
-				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxl">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title">Controle de Cenários</h5>
@@ -306,93 +306,14 @@
 						<div class="modal-body">
 							<div class="container-fluid">
 								<div id="cenarios_modal_toasts"></div>
+								<div class="row mb-3">
+									<div class="col">
+										<button type="button" class="btn btn-sm btn-primary" id="cenarios_modal_adicionar"><i class="fas fa-plus me-2"></i>Cenário</button>
+									</div>
+								</div>
 								<div class="row">
 									<div class="col">
-										<div class="accordion" id="table_cenarios">
-											<div class="accordion-item">
-												<h2 class="accordion-header" id="headingOne">
-													<button class="accordion-button collapsed accordion-button-with-input" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne"><input type="text" class="form-control form-control-sm" value="Default"></button>
-												</h2>
-												<div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#table_cenarios">
-													<div class="accordion-body p-0">
-														<div class="accordion">
-															<div class="accordion-item border-top-0 border-start-0 border-end-0">
-																<h2 class="accordion-header" id="headingOne">
-																	<button class="accordion-button ps-5 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne_premissas">Premissas</button>
-																</h2>
-																<div id="collapseOne_premissas" class="accordion-collapse collapse">
-																	<div class="accordion-body p-0 px-2">
-																		<table class="table table-hover m-0">
-																			<thead>
-																				<tr>
-																					<th class="border-0">Nome</th>
-																					<th class="border-0">Ordem</th>
-																					<th class="border-0 text-center">Obrigatória</th>
-																					<th class="border-0 text-center">Desativar</th>
-																				</tr>
-																			</thead>
-																			<tbody>
-																				<tr>
-																					<td name="nome"><input type="text" class="form-control form-control-sm" value="Premissa 1"></td>
-																					<td name="prioridade"><input type="text" class="form-control form-control-sm" value="1"></td>
-																					<td name="obrigatoria"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox"></div></td>
-																					<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox"></div></td>
-																				</tr>
-																				<tr>
-																					<td name="nome"><input type="text" class="form-control form-control-sm" value="Premissa 2" placeholder="Nome"></td>
-																					<td name="prioridade"><input type="text" class="form-control form-control-sm" value="2"></td>
-																					<td name="obrigatoria"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox"></div></td>
-																					<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox"></div></td>
-																				</tr>
-																				<tr>
-																					<td name="nome"><input type="text" class="form-control form-control-sm" value="Premissa 3" placeholder="Nome"></td>
-																					<td name="prioridade"><input type="text" class="form-control form-control-sm" value="3"></td>
-																					<td name="obrigatoria"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox"></div></td>
-																					<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox"></div></td>
-																				</tr>
-																			</tbody>
-																		</table>
-																	</div>
-																</div>
-															</div>
-															<div class="accordion-item border-bottom-0 border-start-0 border-end-0">
-																<h2 class="accordion-header" id="headingTwo">
-																	<button class="accordion-button ps-5 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne_observacoes">Observações</button>
-																</h2>
-																<div id="collapseOne_observacoes" class="accordion-collapse collapse">
-																	<div class="accordion-body">
-																		<strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-																	</div>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-											<div class="accordion-item">
-												<h2 class="accordion-header" id="headingTwo">
-													<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">Usando FFR</button>
-												</h2>
-												<div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#table_cenarios">
-													<div class="accordion-body">
-														<strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-													</div>
-												</div>
-											</div>
-											<div class="accordion-item">
-												<h2 class="accordion-header" id="headingThree">
-													<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">Não vendo DTO</button>
-												</h2>
-												<div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#table_cenarios">
-													<div class="accordion-body">
-														<strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-													</div>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div class="col">
-
+										<div class="accordion" id="table_cenarios"></div>
 									</div>
 								</div>
 							</div>

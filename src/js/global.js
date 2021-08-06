@@ -41,6 +41,14 @@ let Global = (function(){
 		}
 		return true;
 	}
+	let _random = {
+		str: function(prefix){
+		    return Math.random().toString(36).replace('0.',prefix || '');
+		},
+		color: function (){ 
+		    return '#' + (Math.random().toString(16) + '0000000').slice(2, 8); 
+		}
+	}
 	/*
 		Requisita scripts js.
 	*/
@@ -221,8 +229,9 @@ let Global = (function(){
 	return {
 		hasClass: hasClass,
 		isObjectEmpty: isObjectEmpty,
-		connect: connect,
+		_random: _random,
 		request: request,
+		connect: connect,
 		toast: toast,
 		insertModal: insertModal,
 		updateModal: updateModal,
