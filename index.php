@@ -80,7 +80,7 @@
 			<div class="container-fluid" id="renda_variavel">
 				<div class="row">
 					<!-- Arcabouço de Operacionais -->
-					<div class="col-2">
+					<div class="col-2 border-end">
 						<div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white">
 							<a href="javascript:void(0)" class="d-flex align-items-center flex-shrink-0 p-3 pe-2 link-dark text-decoration-none border-bottom">
 								<span class="fs-5 fw-bold">Arcabouços</span>
@@ -90,7 +90,6 @@
 						</div>
 					</div>
 					<div class="col-10 d-flex">
-						<div class="vertical-divider"></div>
 						<div class="bg-light p-5 pt-3 rounded">
 							<div class="container-fluid d-flex mb-3 px-0" id="renda_variavel__menu">
 								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>

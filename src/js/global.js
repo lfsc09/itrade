@@ -49,6 +49,16 @@ let Global = (function(){
 		    return '#' + (Math.random().toString(16) + '0000000').slice(2, 8); 
 		}
 	}
+	let delay = function (callback, ms) {
+		var timer = 0;
+		return function() {
+			var context = this, args = arguments;
+			clearTimeout(timer);
+			timer = setTimeout(function () {
+				callback.apply(context, args);
+			}, ms || 0);
+		};
+	}
 	/*
 		Requisita scripts js.
 	*/
@@ -230,6 +240,7 @@ let Global = (function(){
 		hasClass: hasClass,
 		isObjectEmpty: isObjectEmpty,
 		_random: _random,
+		delay: delay,
 		request: request,
 		connect: connect,
 		toast: toast,

@@ -29,6 +29,26 @@ let Renda_variavel = (function(){
 	}
 	/*------------------------------ Section Cenarios --------------------------------*/
 	/*
+		Faz a reordenacao das linhas da tabela com base nas prioridades.
+	*/
+	function reorder_premissas_e_observacoes(tbody){
+		[].slice.call(tbody.children).sort(function(a, b) {
+			let a_v = parseInt(a.querySelector("input[name='prioridade']").value),
+				b_v = parseInt(b.querySelector("input[name='prioridade']").value);
+			if (a_v < b_v)
+				return -1;
+			else if (a_v > b_v)
+				return 1;
+			else{
+				a_v = a.querySelector("input[name='nome']").value;
+				b_v = b.querySelector("input[name='nome']").value;
+				return a_v.localeCompare(b_v);
+			}
+		}).forEach(function(ele) {
+			tbody.appendChild(ele);
+		});
+	}
+	/*
 		Constroi o modal de gerenciamento de cenarios.
 	*/
 	function buildCenariosModal(data){
@@ -41,8 +61,8 @@ let Renda_variavel = (function(){
 		if (type === 1){
 			for (let p in data){
 				html += `<tr premissa="${data[p].id}">`+
-						`<td name="nome"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"></td>`+
-						`<td name="prioridade"><input type="text" name="prioridade" class="form-control form-control-sm" value="${data[p].prioridade}" onclick="this.select()"></td>`+
+						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"><button class="btn btn-sm btn-danger" type="button" remover_premissa>Excluir</button></div></td>`+
+						`<td name="prioridade"><input type="text" name="prioridade" class="form-control form-control-sm" value="${((data[p].prioridade == 9999)?"":data[p].prioridade)}" onclick="this.select()"></td>`+
 						`<td name="obrigatoria"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="obrigatoria" class="form-check-input" ${((data[p].obrigatoria == 1)?"checked":"")}></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input" ${((data[p].inativo == 1)?"checked":"")}></div></td>`+
 						`</tr>`;
@@ -51,9 +71,9 @@ let Renda_variavel = (function(){
 		else if (type === 2){
 			for (let p in data){
 				html += `<tr observacao="${data[p].id}">`+
-						`<td name="nome"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"></td>`+
-						`<td name="prioridade"><input type="text" name="prioridade" class="form-control form-control-sm" value="${data[p].prioridade}" onclick="this.select()"></td>`+
-						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value=""></div></td>`+
+						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"><button class="btn btn-sm btn-danger" type="button" remover_observacao>Excluir</button></div></td>`+
+						`<td name="prioridade"><input type="text" name="prioridade" class="form-control form-control-sm" value="${((data[p].prioridade == 9999)?"":data[p].prioridade)}" onclick="this.select()"></td>`+
+						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="${data[p].cor}"></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input" ${((data[p].inativo == 1)?"checked":"")}></div></td>`+
 						`</tr>`;
 			}
@@ -68,7 +88,7 @@ let Renda_variavel = (function(){
 		for (let c in data){
 			let div_id = Global._random.str("cenario");
 			html += `<div class="accordion-item" cenario="${data[c].id}">`+
-					`<h2 class="accordion-header"><div class="accordion-button collapsed accordion-button-with-input" type="button" data-bs-toggle="collapse" data-bs-target="#${div_id}"><input type="text" class="form-control form-control-sm" value="${data[c].nome}"></div></h2>`+
+					`<h2 class="accordion-header"><div class="accordion-button collapsed accordion-button-with-input" type="button" data-bs-toggle="collapse" data-bs-target="#${div_id}"><div class="input-group"><input type="text" name="cenario_nome" class="form-control form-control-sm" value="${data[c].nome}"><button class="btn btn-sm btn-danger" type="button" remover_cenario>Excluir</button></div></div></h2>`+
 					`<div id="${div_id}" class="accordion-collapse collapse" data-bs-parent="#table_cenarios">`+
 					`<div class="accordion-body p-0">`+
 					`<div class="accordion">`+
@@ -258,7 +278,7 @@ let Renda_variavel = (function(){
 		let html = ``,
 			div_id = Global._random.str("new_cenario");
 		html += `<div class="accordion-item" new_cenario>`+
-				`<h2 class="accordion-header"><div class="accordion-button collapsed accordion-button-with-input" data-bs-toggle="collapse" data-bs-target="#${div_id}"><div class="input-group"><input type="text" class="form-control form-control-sm" value=""><button class="btn btn-sm btn-danger" type="button" remover_cenario>Excluir</button></div></div></h2>`+
+				`<h2 class="accordion-header"><div class="accordion-button collapsed accordion-button-with-input" data-bs-toggle="collapse" data-bs-target="#${div_id}"><div class="input-group"><input type="text" name="cenario_nome" class="form-control form-control-sm" value=""><button class="btn btn-sm btn-danger" type="button" remover_cenario>Excluir</button></div></div></h2>`+
 				`<div id="${div_id}" class="accordion-collapse collapse" data-bs-parent="#table_cenarios">`+
 				`<div class="accordion-body p-0">`+
 				`<div class="accordion">`+
@@ -298,13 +318,20 @@ let Renda_variavel = (function(){
 	/*
 		Processa a remocao de cenarios e a adicao / remocao de linhas de premissas e observacoes.
 	*/
-	$(document.getElementById("table_cenarios")).on("click", "button", function (){
+	$(document.getElementById("table_cenarios")).on("click", "button", function (e){
 		//Remove um cenario
 		if (this.hasAttribute("remover_cenario")){
 			let cenario_div = $(this).parentsUntil("#table_cenarios").last();
 			//Se é um novo cenario, apenas remove
 			if (cenario_div[0].hasAttribute("new_cenario"))
 				cenario_div.remove();
+			else{
+				$(this).prop("disabled", true).removeClass("btn-danger").addClass("btn-secondary");
+				cenario_div.attr("remover", "").find(".accordion-button-with-input").addClass("collapsed").removeAttr("data-bs-target").find("input[name='cenario_nome']").prop("disabled", true);
+				setTimeout(function (){
+					cenario_div.find(".accordion-collapse[data-bs-parent]").collapse("hide");
+				}, 500);
+			}
 		}
 		//Apenas insere uma nova premissa
 		if (this.hasAttribute("adicionar_premissa")){
@@ -340,7 +367,8 @@ let Renda_variavel = (function(){
 			}
 			//Se é uma remocao de premissa, marca ela para remocao no BD
 			else{
-				console.log("Remove");
+				$(this).prop("disabled", true).removeClass("btn-danger").addClass("btn-secondary");
+				premissa_row.attr("remover", "").find("input").prop("disabled", true);
 			}
 		}
 		//Apenas insere uma nova observacao
@@ -349,7 +377,7 @@ let Renda_variavel = (function(){
 				html = 	`<tr new_observacao>`+
 						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value=""><button class="btn btn-sm btn-danger" type="button" remover_observacao>Excluir</button></div></td>`+
 						`<td name="prioridade"><input type="text" name="prioridade" class="form-control form-control-sm" value="" onclick="this.select()"></td>`+
-						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value=""></div></td>`+
+						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="#ffffff"></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input"></div></td>`+
 						`</tr>`;
 			$(this).parent().find("tbody").prepend(html).promise().then(function (){
@@ -378,79 +406,225 @@ let Renda_variavel = (function(){
 			}
 			//Se é uma remocao de observacao, marca ela para remocao no BD
 			else{
-				console.log("Remove");
+				$(this).prop("disabled", true).removeClass("btn-danger").addClass("btn-secondary");
+				observacao_row.attr("remover", "").find("input").prop("disabled", true);
 			}
 		}
 	});
 	/*
-		Faz a reordenacao das linhas da tabela com base nas prioridades.
-		A flag 'empty_flag', se 'true' nao move caso o valor seja vazio (Para caso esteja apagando)
+		Facilita o seletor de obrigatoria e inativo, clicando tambem no TD.
 	*/
-	function reorder_premissas_e_observacoes(tbody, empty_flag=false){
-
-	}
+	$(document.getElementById("table_cenarios")).on("click", "td[name='obrigatoria'], td[name='inativo']", function (e){
+		if (e.target.tagName === "INPUT")
+			return true;
+		let input = this.querySelector("input[type='checkbox']");
+		if (!input.hasAttribute("disabled"))
+			input.checked = !input.checked;
+	});
 	/*
 		Marca tudo oque tiver mudança.
 	*/
 	$(document.getElementById("table_cenarios")).on("change", "input[name]", function (){
 		this.setAttribute("changed", "");
+		if (this.name !== "cenario_nome")
+			reorder_premissas_e_observacoes($(this).parentsUntil("table").last()[0]);
 	});
 	/*
 		Faz a reordenacao visual, com base nos valores de prioridade.
 	*/
-	$(document.getElementById("table_cenarios")).on("keyup", "input[name='prioridade']", function (){
-
-	});
+	$(document.getElementById("table_cenarios")).on("keyup", "input[name='prioridade']", Global.delay(function (){
+		reorder_premissas_e_observacoes($(this).parentsUntil("table").last()[0]);
+	}, 500));
 	/*
-		Processa o envio de Adicionar / Alterar cenarios e (Premissas / Observacoes).
+		Processa o envio de Adicionar / Alterar / Remover cenarios e (Premissas / Observacoes).
 	*/
-	// $(document.getElementById("cenarios_modal_enviar")).click(function (){
-	// 	let form = $("div.modal-body", document.getElementById("cenarios_modal")).find("div.row[target]:visible form"),
-	// 		data = {};
-	// 	if (form.length){
-	// 		let cenario = form.find("input[name='cenario_nome']").val();
-	// 		if (cenario === ""){
-	// 			Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-warning", body: "Informe um nome.", width: "w-100", delay: 2000});
-	// 			return;
-	// 		}
-	// 		data.arcabouco = $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco");
-	// 		data.cenario = {nome: cenario};
-	// 		//Le as premissas
-	// 		data.premissas = [];
-	// 		form.find("table[name='premissas'] tbody tr").each(function (i, elem){
-	// 			let nome = elem.querySelector("input[name='nome']").value,
-	// 				obrigatoria = elem.querySelector("input[name='obrigatoria']").checked,
-	// 				prioridade = elem.querySelector("input[name='prioridade']").value;
-	// 			if (nome !== "")
-	// 				data.premissas.push({nome: nome, obrigatoria: ((obrigatoria)?1:0), prioridade: ((prioridade === "")?9999:prioridade)});
-	// 			else
-	// 				$(elem).remove();
-	// 		});
-	// 		//Le as observacoes
-	// 		data.observacoes = [];
-	// 		form.find("table[name='observacoes'] tbody tr").each(function (i, elem){
-	// 			let nome = elem.querySelector("input[name='nome']").value,
-	// 				importante = elem.querySelector("input[name='importante']").checked,
-	// 				prioridade = elem.querySelector("input[name='prioridade']").value;
-	// 			if (nome !== "")
-	// 				data.observacoes.push({nome: nome, importante: ((importante)?1:0), prioridade: ((prioridade === "")?9999:prioridade)});
-	// 			else
-	// 				$(elem).remove();
-	// 		});
-	// 		Global.connect({
-	// 			data: {module: "renda_variavel", action: "insert_cenarios", params: data},
-	// 			success: function (result){
-	// 				if (result.status){
-	// 					resetAdicionarCenarios();
-	// 					Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-success", body: "Cenário adicionado.", width: "w-100", delay: 2000});
-	// 				}
-	// 				else
-	// 					Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
-	// 			}
-	// 		});
-	// 		console.log(data);
-	// 	}
-	// });
+	$(document.getElementById("cenarios_modal_enviar")).click(function (){
+		let data = {
+			insert: {
+				//Cenarios novos
+				cenarios: [],
+				//Premissas de cenarios ja existentes
+				premissas: [],
+				//Observacoes de cenarios ja exitentes
+				observacoes: []
+			},
+			update: {
+				//Dados do cenario
+				cenarios: [],
+				//Dados de premissas de cenarios
+				premissas: [],
+				//Dados de observações de cenarios
+				observacoes: []
+			},
+			remove: {
+				//Cenarios inteiros
+				cenarios: [],
+				//Premissas de cenarios
+				premissas: [],
+				//Observações de cenarios
+				observacoes: []
+			}
+		};
+		$(document.getElementById("table_cenarios")).children().each(function (i, elem){
+			let cenario = $(elem);
+			//Cenarios novos
+			if (cenario[0].hasAttribute("new_cenario")){
+				let info = {};
+				info.nome = cenario.find("input[name='cenario_nome']").val();
+				info.premissas = [];
+				cenario.find("tr[new_premissa]").each(function (r, row){
+					let nome = row.querySelector("input[name='nome']").value;
+					if (nome !== ""){
+						info.premissas.push({
+							nome: nome,
+							prioridade: row.querySelector("input[name='prioridade']").value,
+							obrigatoria: ((row.querySelector("input[name='obrigatoria']").checked)?1:0),
+							inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
+						});
+					}
+				});
+				info.observacoes = [];
+				cenario.find("tr[new_observacao]").each(function (r, row){
+					let nome = row.querySelector("input[name='nome']").value;
+					if (nome !== ""){
+						info.observacoes.push({
+							nome: nome,
+							prioridade: row.querySelector("input[name='prioridade']").value,
+							cor: row.querySelector("input[name='cor']").value,
+							inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
+						});
+					}
+				});
+				data["insert"]["cenarios"].push(info);
+			}
+			//Cenario ja existe
+			else if (cenario[0].hasAttribute("cenario")){
+				//Trata a remocao completa do cenario
+				if (cenario[0].hasAttribute("remover"))
+					data["remove"]["cenarios"].push({id: cenario.attr("cenario")});
+				else{
+					//Verifica mudancas no nome do cenario
+					let cenario_nome_input = cenario.find("input[name='cenario_nome']");
+					if (cenario_nome_input[0].hasAttribute("changed") && cenario_nome_input.val() !== "")
+						data["update"]["cenarios"].push({id: cenario.attr("cenario"), nome: cenario_nome_input.val()});
+					//Verifica novas premissas
+					cenario.find("tr[new_premissa]").each(function (r, row){
+						let nome = row.querySelector("input[name='nome']").value;
+						if (nome !== ""){
+							data["insert"]["premissas"].push({
+								id_cenario: cenario.attr("cenario"),
+								nome: nome,
+								prioridade: row.querySelector("input[name='prioridade']").value,
+								obrigatoria: ((row.querySelector("input[name='obrigatoria']").checked)?1:0),
+								inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
+							});
+						}
+					});
+					//Verifica mudancas/remocoes nas premissas
+					cenario.find("tr[premissa]").each(function (r, row){
+						//Trata remocoes de premissas
+						if (row.hasAttribute("remover"))
+							data["remove"]["premissas"].push({id: row.getAttribute("premissa")});
+						//Trata alteracoes em premissas
+						else{
+							let info = {};
+							$(row).find("input[changed]").each(function (ip, input){
+								if (this.name === "nome" && this.value === "")
+									return;
+								if (this.getAttribute("type") === "checkbox")
+									info[this.name] = ((this.checked)?1:0);
+								else
+									info[this.name] = this.value;
+							});
+							if (!Global.isObjectEmpty(info)){
+								info["id"] = row.getAttribute("premissa");
+								data["update"]["premissas"].push(info);
+							}
+						}
+					});
+					//Verifica novas observacoes
+					cenario.find("tr[new_observacao]").each(function (r, row){
+						let nome = row.querySelector("input[name='nome']").value;
+						if (nome !== ""){
+							data["insert"]["observacoes"].push({
+								id_cenario: cenario.attr("cenario"),
+								nome: nome,
+								prioridade: row.querySelector("input[name='prioridade']").value,
+								cor: row.querySelector("input[name='cor']").value,
+								inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
+							});
+						}
+					});
+					//Verifica mudancas/remocoes nas observacoes
+					cenario.find("tr[observacao]").each(function (r, row){
+						//Trata remocoes de observacoes
+						if (row.hasAttribute("remover"))
+							data["remove"]["observacoes"].push({id: row.getAttribute("observacao")});
+						//Trata alteracoes em observacoes
+						else{
+							let info = {};
+							$(row).find("input[changed]").each(function (ip, input){
+								if (this.name === "nome" && this.value === "")
+									return;
+								if (this.getAttribute("type") === "checkbox")
+									info[this.name] = ((this.checked)?1:0);
+								else
+									info[this.name] = this.value;
+							});
+							if (!Global.isObjectEmpty(info)){
+								info["id"] = row.getAttribute("observacao");
+								data["update"]["observacoes"].push(info);
+							}
+						}
+					});
+				}
+			}
+		});
+		console.log(data);
+		// if (form.length){
+		// 	let cenario = form.find("input[name='cenario_nome']").val();
+		// 	if (cenario === ""){
+		// 		Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-warning", body: "Informe um nome.", width: "w-100", delay: 2000});
+		// 		return;
+		// 	}
+		// 	data.arcabouco = $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco");
+		// 	data.cenario = {nome: cenario};
+		// 	//Le as premissas
+		// 	data.premissas = [];
+		// 	form.find("table[name='premissas'] tbody tr").each(function (i, elem){
+		// 		let nome = elem.querySelector("input[name='nome']").value,
+		// 			obrigatoria = elem.querySelector("input[name='obrigatoria']").checked,
+		// 			prioridade = elem.querySelector("input[name='prioridade']").value;
+		// 		if (nome !== "")
+		// 			data.premissas.push({nome: nome, obrigatoria: ((obrigatoria)?1:0), prioridade: ((prioridade === "")?9999:prioridade)});
+		// 		else
+		// 			$(elem).remove();
+		// 	});
+		// 	//Le as observacoes
+		// 	data.observacoes = [];
+		// 	form.find("table[name='observacoes'] tbody tr").each(function (i, elem){
+		// 		let nome = elem.querySelector("input[name='nome']").value,
+		// 			importante = elem.querySelector("input[name='importante']").checked,
+		// 			prioridade = elem.querySelector("input[name='prioridade']").value;
+		// 		if (nome !== "")
+		// 			data.observacoes.push({nome: nome, importante: ((importante)?1:0), prioridade: ((prioridade === "")?9999:prioridade)});
+		// 		else
+		// 			$(elem).remove();
+		// 	});
+		// 	Global.connect({
+		// 		data: {module: "renda_variavel", action: "insert_cenarios", params: data},
+		// 		success: function (result){
+		// 			if (result.status){
+		// 				resetAdicionarCenarios();
+		// 				Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-success", body: "Cenário adicionado.", width: "w-100", delay: 2000});
+		// 			}
+		// 			else
+		// 				Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+		// 		}
+		// 	});
+		// 	console.log(data);
+		// }
+	});
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*
 		Comanda cliques no menu de renda variavel.

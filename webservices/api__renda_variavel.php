@@ -127,7 +127,7 @@
 					$result[$i]["observacoes"][] = [
 						"id" => $row["id"],
 						"inativo" => $row["inativo"],
-						"importante" => $row["importante"],
+						"cor" => $row["cor"],
 						"prioridade" => $row["prioridade"],
 						"nome" => $row["nome"]
 					];
@@ -160,8 +160,8 @@
 				}
 				//Adicionar agora as observacoes se houver
 				foreach ($params["observacoes"] as $obs){
-					$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,importante,prioridade,nome) VALUES ('{$id_cenario}',?,?,?)");
-			 		$stmt->bind_param("iis", $obs["importante"], $obs["prioridade"], $obs["nome"]);
+					$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,cor,prioridade,nome) VALUES ('{$id_cenario}',?,?,?)");
+			 		$stmt->bind_param("iis", $obs["cor"], $obs["prioridade"], $obs["nome"]);
 					$stmt->execute();
 				}
 				$mysqli->commit();
