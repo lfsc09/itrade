@@ -439,45 +439,47 @@ let Renda_variavel = (function(){
 		Processa o envio de Adicionar / Alterar / Remover cenarios e (Premissas / Observacoes).
 	*/
 	$(document.getElementById("cenarios_modal_enviar")).click(function (){
-		let data = {
-			insert: {
-				//Cenarios novos
-				cenarios: [],
-				//Premissas de cenarios ja existentes
-				premissas: [],
-				//Observacoes de cenarios ja exitentes
-				observacoes: []
-			},
-			update: {
-				//Dados do cenario
-				cenarios: [],
-				//Dados de premissas de cenarios
-				premissas: [],
-				//Dados de observações de cenarios
-				observacoes: []
-			},
-			remove: {
-				//Cenarios inteiros
-				cenarios: [],
-				//Premissas de cenarios
-				premissas: [],
-				//Observações de cenarios
-				observacoes: []
-			}
-		};
+		let id_arcabouco = $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco"),
+			data = {
+				insert: {
+					//Cenarios novos
+					cenarios: [],
+					//Premissas de cenarios ja existentes
+					premissas: [],
+					//Observacoes de cenarios ja exitentes
+					observacoes: []
+				},
+				update: {
+					//Dados do cenario
+					cenarios: [],
+					//Dados de premissas de cenarios
+					premissas: [],
+					//Dados de observações de cenarios
+					observacoes: []
+				},
+				remove: {
+					//Cenarios inteiros
+					cenarios: [],
+					//Premissas de cenarios
+					premissas: [],
+					//Observações de cenarios
+					observacoes: []
+				}
+			};
 		$(document.getElementById("table_cenarios")).children().each(function (i, elem){
 			let cenario = $(elem);
 			//Cenarios novos
 			if (cenario[0].hasAttribute("new_cenario")){
 				let info = {};
 				info.nome = cenario.find("input[name='cenario_nome']").val();
+				info.id_arcabouco = id_arcabouco;
 				info.premissas = [];
 				cenario.find("tr[new_premissa]").each(function (r, row){
 					let nome = row.querySelector("input[name='nome']").value;
 					if (nome !== ""){
 						info.premissas.push({
 							nome: nome,
-							prioridade: row.querySelector("input[name='prioridade']").value,
+							prioridade: ((row.querySelector("input[name='prioridade']").value !== "")?row.querySelector("input[name='prioridade']").value:9999),
 							obrigatoria: ((row.querySelector("input[name='obrigatoria']").checked)?1:0),
 							inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
 						});
@@ -489,7 +491,7 @@ let Renda_variavel = (function(){
 					if (nome !== ""){
 						info.observacoes.push({
 							nome: nome,
-							prioridade: row.querySelector("input[name='prioridade']").value,
+							prioridade: ((row.querySelector("input[name='prioridade']").value !== "")?row.querySelector("input[name='prioridade']").value:9999),
 							cor: row.querySelector("input[name='cor']").value,
 							inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
 						});
@@ -514,7 +516,7 @@ let Renda_variavel = (function(){
 							data["insert"]["premissas"].push({
 								id_cenario: cenario.attr("cenario"),
 								nome: nome,
-								prioridade: row.querySelector("input[name='prioridade']").value,
+								prioridade: ((row.querySelector("input[name='prioridade']").value !== "")?row.querySelector("input[name='prioridade']").value:9999),
 								obrigatoria: ((row.querySelector("input[name='obrigatoria']").checked)?1:0),
 								inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
 							});
@@ -531,7 +533,9 @@ let Renda_variavel = (function(){
 							$(row).find("input[changed]").each(function (ip, input){
 								if (this.name === "nome" && this.value === "")
 									return;
-								if (this.getAttribute("type") === "checkbox")
+								if (this.name === "prioridade" && this.value === "")
+									info[this.name] = 9999;
+								else if (this.getAttribute("type") === "checkbox")
 									info[this.name] = ((this.checked)?1:0);
 								else
 									info[this.name] = this.value;
@@ -549,7 +553,7 @@ let Renda_variavel = (function(){
 							data["insert"]["observacoes"].push({
 								id_cenario: cenario.attr("cenario"),
 								nome: nome,
-								prioridade: row.querySelector("input[name='prioridade']").value,
+								prioridade: ((row.querySelector("input[name='prioridade']").value !== "")?row.querySelector("input[name='prioridade']").value:9999),
 								cor: row.querySelector("input[name='cor']").value,
 								inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
 							});
@@ -566,7 +570,9 @@ let Renda_variavel = (function(){
 							$(row).find("input[changed]").each(function (ip, input){
 								if (this.name === "nome" && this.value === "")
 									return;
-								if (this.getAttribute("type") === "checkbox")
+								if (this.name === "prioridade" && this.value === "")
+									info[this.name] = 9999;
+								else if (this.getAttribute("type") === "checkbox")
 									info[this.name] = ((this.checked)?1:0);
 								else
 									info[this.name] = this.value;
@@ -580,50 +586,29 @@ let Renda_variavel = (function(){
 				}
 			}
 		});
-		console.log(data);
-		// if (form.length){
-		// 	let cenario = form.find("input[name='cenario_nome']").val();
-		// 	if (cenario === ""){
-		// 		Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-warning", body: "Informe um nome.", width: "w-100", delay: 2000});
-		// 		return;
-		// 	}
-		// 	data.arcabouco = $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco");
-		// 	data.cenario = {nome: cenario};
-		// 	//Le as premissas
-		// 	data.premissas = [];
-		// 	form.find("table[name='premissas'] tbody tr").each(function (i, elem){
-		// 		let nome = elem.querySelector("input[name='nome']").value,
-		// 			obrigatoria = elem.querySelector("input[name='obrigatoria']").checked,
-		// 			prioridade = elem.querySelector("input[name='prioridade']").value;
-		// 		if (nome !== "")
-		// 			data.premissas.push({nome: nome, obrigatoria: ((obrigatoria)?1:0), prioridade: ((prioridade === "")?9999:prioridade)});
-		// 		else
-		// 			$(elem).remove();
-		// 	});
-		// 	//Le as observacoes
-		// 	data.observacoes = [];
-		// 	form.find("table[name='observacoes'] tbody tr").each(function (i, elem){
-		// 		let nome = elem.querySelector("input[name='nome']").value,
-		// 			importante = elem.querySelector("input[name='importante']").checked,
-		// 			prioridade = elem.querySelector("input[name='prioridade']").value;
-		// 		if (nome !== "")
-		// 			data.observacoes.push({nome: nome, importante: ((importante)?1:0), prioridade: ((prioridade === "")?9999:prioridade)});
-		// 		else
-		// 			$(elem).remove();
-		// 	});
-		// 	Global.connect({
-		// 		data: {module: "renda_variavel", action: "insert_cenarios", params: data},
-		// 		success: function (result){
-		// 			if (result.status){
-		// 				resetAdicionarCenarios();
-		// 				Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-success", body: "Cenário adicionado.", width: "w-100", delay: 2000});
-		// 			}
-		// 			else
-		// 				Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
-		// 		}
-		// 	});
-		// 	console.log(data);
-		// }
+		if (data["insert"]["cenarios"].length || data["insert"]["premissas"].length || data["insert"]["observacoes"].length || data["update"]["cenarios"].length || data["update"]["premissas"].length || data["update"]["observacoes"].length || data["remove"]["cenarios"].length || data["remove"]["premissas"].length || data["remove"]["observacoes"].length){
+			Global.connect({
+				data: {module: "renda_variavel", action: "control_cenarios", params: data},
+				success: function (result){
+					if (result.status){
+						Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-light", body: "Cenários atualizados.", width: "w-100", delay: 4000});
+						Global.connect({
+							data: {module: "renda_variavel", action: "get_cenarios", params: {id_arcabouco: id_arcabouco}},
+							success: function (result){
+								if (result.status)
+									buildListaCenarios(result.data);
+								else
+									Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+							}
+						});
+					}
+					else
+						Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+				}
+			});
+		}
+		else
+			Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-warning", body: "Nada a fazer.", width: "w-100", delay: 2000});
 	});
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*

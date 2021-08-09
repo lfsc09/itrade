@@ -14,6 +14,20 @@
 	}
 }
 #master_toasts {z-index: 1000}
+::-webkit-scrollbar{
+    width: 8px;
+    background-color: #F5F5F5;
+}
+::-webkit-scrollbar-track{
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+    background-color: #F5F5F5;
+}
+::-webkit-scrollbar-thumb{
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+    background-color: #8f8f8f;
+}
 /*-------------------------------------- LOADING -------------------------------------*/
 #loading_div {
 	width: 100%;
