@@ -52,6 +52,9 @@
 /*------------------------------------ Arcabouco -------------------------------------*/
 a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 /*------------------------------------- Cenarios -------------------------------------*/
+#table_cenarios div.card {border-left: 3px solid #0d6efd !important;}
+#table_cenarios div.card[new_cenario] {border-left: 3px solid #198754 !important;}
+#table_cenarios a.nav-link span.badge {font-size: .6em;vertical-align: middle;margin-top: -2px;}
 #table_cenarios table tbody td{vertical-align: middle}
 #table_cenarios table tbody tr:last-child td {border: 0}
 #table_cenarios table tbody td[name='prioridade']{width: 7%}

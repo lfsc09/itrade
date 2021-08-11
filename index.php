@@ -305,45 +305,14 @@
 						<div class="modal-body">
 							<div class="container-fluid">
 								<div id="cenarios_modal_toasts"></div>
-								<div class="mb-4 d-flex">
-									<div class="col-sm-6">
-										<select class="form-control form-select"></select>
-									</div>
-									<button type="button" class="btn btn-sm btn-primary ms-auto" id="cenarios_modal_adicionar"><i class="fas fa-plus me-2"></i>Cenário</button>
+								<div class="d-flex">
+									<button type="button" class="btn btn-sm btn-primary ms-auto align-self-end" id="cenarios_modal_adicionar"><i class="fas fa-plus me-2"></i>Cenário</button>
 								</div>
 								<div class="row">
-									<div class="col">
-										<div class="accordion" id="table_cenarios">
-											<div class="card text-center">
-												<div class="card-header d-flex">
-													<div class="col-md-6">
-														<input type="text" name="cenario_nome" class="form-control form-control-sm">
-													</div>
-													<ul class="nav nav-tabs card-header-tabs ms-auto">
-														<li class="nav-item">
-															<a class="nav-link active" aria-current="true" href="#">Premissas</a>
-														</li>
-														<li class="nav-item">
-															<a class="nav-link" href="#">Observações</a>
-														</li>
-													</ul>
-												</div>
-												<div class="card-body">
-													<h5 class="card-title">Special title treatment</h5>
-													<p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-													<a href="#" class="btn btn-primary">Go somewhere</a>
-												</div>
-												<div class="card-footer bg-transparent"><button type="button" class="btn btn-sm btn-danger">Excluir Cenário</button></div>
-											</div>
-										</div>
-									</div>
+									<div class="col" id="table_cenarios"></div>
 								</div>
 							</div>
 						</div>
-						<!-- <div class="modal-footer d-flex justify-content-between">
-							<button type="button" class="btn btn-secondary btn-sm col-2" data-bs-dismiss="modal">Fechar</button>
-							<button type="button" class="btn btn-success btn-sm col-2" id="cenarios_modal_enviar">Salvar</button>
-						</div> -->
 					</div>
 				</div>
 			</div>
