@@ -473,12 +473,13 @@ let Renda_variavel = (function(){
 				let tbody = me.parentsUntil("table").last(),
 					tab_premissas = me.parentsUntil("#table_cenarios").last().find("a.nav-link[target='premissas']");
 				premissa_row.remove().promise().then(function (){
-					let qtd_new = tbody.find("[new_premissa]").length;
+					let qtd_new = tbody.find("[new_premissa]").length,
+						qtd_total = tbody.find("tr").length;
 					//Recontagem do badge mostrando a quantidade de premissas adicionadas
 					tab_premissas.find("span.badge[new]").remove();
 					if (qtd_new)
 						tab_premissas.append(`<span class="badge bg-primary ms-1" new>+${qtd_new}</span>`);
-					else
+					if (qtd_total === 0)
 						tbody.append(buildListaPremissas_Observacoes({}, 1));
 				});
 			}
@@ -486,6 +487,7 @@ let Renda_variavel = (function(){
 			else{
 				me.prop("disabled", true).removeClass("btn-danger").addClass("btn-secondary");
 				premissa_row.attr("remover", "").find("input").prop("disabled", true);
+				$(this).parentsUntil("#table_cenarios").last().find("button[salvar_cenario]").removeClass("disabled");
 			}
 		}
 		//Apenas insere uma nova observacao
@@ -514,12 +516,13 @@ let Renda_variavel = (function(){
 				let tbody = me.parentsUntil("table").last(),
 					tab_observacoes = me.parentsUntil("#table_cenarios").last().find("a.nav-link[target='observacoes']");
 				observacao_row.remove().promise().then(function (){
-					let qtd_new = tbody.find("[new_observacao]").length;
+					let qtd_new = tbody.find("[new_observacao]").length,
+						qtd_total = tbody.find("tr").length;
 					//Recontagem do badge mostrando a quantidade de premissas adicionadas
 					tab_observacoes.find("span.badge[new]").remove();
 					if (qtd_new)
 						tab_observacoes.append(`<span class="badge bg-primary ms-1" new>+${qtd_new}</span>`);
-					else
+					if (qtd_total === 0)
 						tbody.append(buildListaPremissas_Observacoes({}, 2));
 				});
 			}
@@ -527,6 +530,7 @@ let Renda_variavel = (function(){
 			else{
 				me.prop("disabled", true).removeClass("btn-danger").addClass("btn-secondary");
 				observacao_row.attr("remover", "").find("input").prop("disabled", true);
+				$(this).parentsUntil("#table_cenarios").last().find("button[salvar_cenario]").removeClass("disabled");
 			}
 		}
 		//Processa a adição de um cenário no BD
@@ -574,7 +578,7 @@ let Renda_variavel = (function(){
 			return true;
 		let input = this.querySelector("input[type='checkbox']");
 		if (!input.hasAttribute("disabled"))
-			input.checked = !input.checked;
+			$(input).trigger("click");
 	});
 	/*
 		Marca tudo oque tiver mudança.
