@@ -90,58 +90,12 @@
 						</div>
 					</div>
 					<div class="col-10 d-flex">
-						<div class="bg-light p-5 pt-3 rounded">
+						<div class="container-fluid bg-light p-5 pt-3 rounded ">
 							<div class="container-fluid d-flex mb-3 px-0" id="renda_variavel__menu">
 								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-plus me-2"></i>Adicionar Operações</button>
 							</div>
 							<div class="row row-cols-1 row-cols-md-1 mb-3 text-center">
-								<div class="col">
-									<div class="card mb-4 rounded-3 shadow-sm">
-										<div class="card-header py-2">
-											<h5 class="my-0">Adicionar</h5>
-										</div>
-										<div class="card-body">
-											<table id="table_adicionar_operacoes" class="table">
-												<thead>
-													<tr>
-														<th>Data</th>
-														<th>Hora</th>
-														<th>Ativo</th>
-														<th>Op.</th>
-														<th>Gerenc.</th>
-														<th>Cts</th>
-														<th>Entrada</th>
-														<th>Stop</th>
-														<th>MEN</th>
-														<th>Saída</th>
-														<th>MEP</th>
-													</tr>
-												</thead>
-												<tbody>
-													<tr>
-														<td name="data"><input type="text" name="data" class="form-control form-control-sm"></td>
-														<td name="hora"><input type="text" name="hora" class="form-control form-control-sm"></td>
-														<td name="ativo"><select name='ativo' class="form-select form-select-sm"></select></td>
-														<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>
-														<td name="gerenciamento">
-															<div class="input-group">
-																<select name='gerenciamento' class="form-select form-select-sm"></select>
-																<button class="btn btn-sm btn-outline-secondary" type="button"><i class="fas fa-plus"></i></button>
-															</div>
-														</td>
-														<td name="cts"><input type="text" name="cts" class="form-control form-control-sm"></td>
-														<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm"></td>
-														<td name="stop"><input type="text" name="stop" class="form-control form-control-sm"></td>
-														<td name="men"><input type="text" name="men" class="form-control form-control-sm"></td>
-														<td name="saida"><input type="text" name="saida" class="form-control form-control-sm"></td>
-														<td name="mep"><input type="text" name="mep" class="form-control form-control-sm"></td>
-													</tr>
-												</tbody>
-											</table>
-										</div>
-									</div>
-								</div>
 								<div class="col">
 									<div class="card mb-4 rounded-3 shadow-sm">
 										<div class="card-header py-2">
@@ -312,6 +266,64 @@
 									<div class="col" id="table_cenarios"></div>
 								</div>
 							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal fade" id="operacoes_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxl">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Cadastro de Operações</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="container-fluid">
+								<div id="operacoes_modal_toasts"></div>
+								<div class="d-flex mb-3">
+									<button type="button" class="btn btn-sm btn-primary" id="operacoes_modal_adicionar"><i class="fas fa-plus me-2"></i>Operação</button>
+								</div>
+								<div class="row">
+									<div class="col">
+										<table id="table_operacoes_add" class="table">
+											<thead>
+												<tr>
+													<th>Data</th>
+													<th>Hora</th>
+													<th>Ativo</th>
+													<th>Op.</th>
+													<th>Gerenc.</th>
+													<th>Cts</th>
+													<th>Entrada</th>
+													<th>Stop</th>
+													<th>MEN</th>
+													<th>Saída</th>
+													<th>MEP</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr>
+													<td name="data"><input type="text" name="data" class="form-control form-control-sm"></td>
+													<td name="hora"><input type="text" name="hora" class="form-control form-control-sm"></td>
+													<td name="ativo"><select name='ativo' class="form-select form-select-sm"></select></td>
+													<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>
+													<td name="gerenciamento"><select name='gerenciamento' class="form-select form-select-sm"></select></td>
+													<td name="cts"><input type="text" name="cts" class="form-control form-control-sm"></td>
+													<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm"></td>
+													<td name="stop"><input type="text" name="stop" class="form-control form-control-sm"></td>
+													<td name="men"><input type="text" name="men" class="form-control form-control-sm"></td>
+													<td name="saida"><input type="text" name="saida" class="form-control form-control-sm"></td>
+													<td name="mep"><input type="text" name="mep" class="form-control form-control-sm"></td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button type="button" class="btn btn-secondary btn-sm col-2" data-bs-dismiss="modal">Fechar</button>
+							<button type="button" class="btn btn-success btn-sm col-2" id="operacoes_modal_enviar">Salvar</button>
 						</div>
 					</div>
 				</div>

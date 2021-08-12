@@ -259,6 +259,15 @@ let Renda_variavel = (function(){
 		}
 		return data;
 	}
+	/*----------------------------- Section Operações --------------------------------*/
+	/*
+		Constroi o modal de Cadastro de Operações.
+	*/
+	function buildOperacoesModal(data){
+		let modal = $(document.getElementById("operacoes_modal"));
+		$(document.getElementById("table_operacoes_add"));
+		modal.modal("show");
+	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
 	/*
@@ -620,6 +629,9 @@ let Renda_variavel = (function(){
 						Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
 				}
 			});
+		}
+		else if (this.name === "adicionar_operacoes"){
+			buildOperacoesModal();
 		}
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
