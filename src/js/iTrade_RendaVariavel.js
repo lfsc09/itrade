@@ -1,5 +1,7 @@
 let Renda_variavel = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
+	let _cenarios__operacoes_add = {},
+		_ativos__operacoes_add = [];
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
 	/*
@@ -259,14 +261,109 @@ let Renda_variavel = (function(){
 		}
 		return data;
 	}
-	/*----------------------------- Section Operações --------------------------------*/
+	/*--------------------------- Section Operações Add ------------------------------*/
+	/*
+		Salva localmente os cenarios e ativos, para uso na parte de adição de operações. (recarrega toda vez que o modal for aberto)
+	*/
+	function updateOffData_forOperacoesAdd(data){
+		_ativos__operacoes_add = [];
+		_cenarios__operacoes_add = {};
+		if ("ativos" in data){
+			for (let at in data["ativos"])
+				_ativos__operacoes_add.push(data["ativos"][at]);
+		}
+		if ("cenarios" in data){
+			for (let cn in data["cenarios"])
+				_cenarios__operacoes_add[data["cenarios"][cn].id] = data["cenarios"][cn];
+		}
+	}
 	/*
 		Constroi o modal de Cadastro de Operações.
 	*/
 	function buildOperacoesModal(data){
 		let modal = $(document.getElementById("operacoes_modal"));
-		$(document.getElementById("table_operacoes_add"));
+		$(document.getElementById("table_operacoes_add")).find("tbody").empty().promise().then(function (){
+			buildOperacaoAddLines(10);
+		})
 		modal.modal("show");
+	}
+	/*
+		Adiciona uma linha na tabela de adição de operações.
+	*/
+	function buildOperacaoAddLines(num){
+		let tbody = $(document.getElementById("table_operacoes_add")).find("tbody"),
+			html = ``,
+			select_ativos_data = [{text: '', placeholder: true}],
+			select_cenarios_data = [{text: '', placeholder: true}],
+			seq_trade = parseInt(tbody.find("tr:last-child input[name='sequencia']").val())+1 || 1;
+		for (let i=0; i<num; i++){
+			html += `<tr init>`+
+					`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly></td>`+
+					`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`<td name="ativo"><select name='ativo'></select></td>`+
+					`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+					`<td name="cenario"><select name='cenario'></select></td>`+
+					`<td name="premissas"><select name='premissas' multiple></select></td>`+
+					`<td name="observacoes"><select name='observacoes' multiple></select></td>`+
+					`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()"></td>`+
+					`</tr>`;
+		}
+		for (let at in _ativos__operacoes_add)
+			select_ativos_data.push({value: _ativos__operacoes_add[at].id, text: _ativos__operacoes_add[at].nome});
+		for (let cn in _cenarios__operacoes_add)
+			select_cenarios_data.push({value: _cenarios__operacoes_add[cn].id, text: _cenarios__operacoes_add[cn].nome});
+		tbody.append(html).promise().then(function (){
+			this.find("tr[init]").each(function (t, tr){
+				tr.removeAttribute("init");
+				tr = $(tr);
+				tr.find("input[name='data']").inputmask({mask: "99/99/9999", placeholder: ""});
+				tr.find("input[name='hora']").inputmask({mask: "99:99", placeholder: ""});
+				tr.find("input[name='cts']").inputmask({mask: "9[99]", placeholder: ""});
+				tr.find("select[name='ativo']").data("SlimSelect", new SlimSelect({
+					select: tr.find("select[name='ativo']")[0],
+					data: select_ativos_data,
+					placeholder: 'Selecione',
+					// Atualiza as mascaras dos precos de acordo com o ativo
+					onChange: (info) => {
+						if (info.text.toLowerCase() === "win")
+							tr.find("input[name='entrada'],input[name='stop'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "999.999", placeholder: ''});
+						else if (info.text.toLowerCase() === "wdo")
+							tr.find("input[name='entrada'],input[name='stop'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "9.999,99", placeholder: ''});
+					}
+				}));
+				tr.find("select[name='cenario']").data("SlimSelect", new SlimSelect({
+					select: tr.find("select[name='cenario']")[0],
+					data: select_cenarios_data,
+					placeholder: 'Selecione',
+					onChange: (info) => {
+						let select_premissas_data = [],
+							select_observacoes_data = [];
+						for (let pm in _cenarios__operacoes_add[info.value]["premissas"])
+							select_premissas_data.push({value: _cenarios__operacoes_add[info.value]["premissas"][pm].id, text: _cenarios__operacoes_add[info.value]["premissas"][pm].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["premissas"][pm].cor}"></i>${_cenarios__operacoes_add[info.value]["premissas"][pm].nome}`});
+						tr.find("select[name='premissas']").data("SlimSelect").setData(select_premissas_data);
+						for (let ob in _cenarios__operacoes_add[info.value]["observacoes"])
+							select_observacoes_data.push({value: _cenarios__operacoes_add[info.value]["observacoes"][ob].id, text: _cenarios__operacoes_add[info.value]["observacoes"][ob].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["observacoes"][ob].cor}"></i>${_cenarios__operacoes_add[info.value]["observacoes"][ob].nome}`});
+						tr.find("select[name='observacoes']").data("SlimSelect").setData(select_observacoes_data);
+					}
+				}));
+				tr.find("select[name='premissas']").data("SlimSelect", new SlimSelect({
+					select: tr.find("select[name='premissas']")[0],
+					placeholder: 'Sem premissas',
+					data: [{text: '', display: false}]
+				}));
+				tr.find("select[name='observacoes']").data("SlimSelect", new SlimSelect({
+					select: tr.find("select[name='observacoes']")[0],
+					placeholder: 'Sem observações',
+					data: [{text: '', display: false}]
+				}));
+			});
+		});
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
@@ -614,6 +711,13 @@ let Renda_variavel = (function(){
 		});
 		return false;
 	});
+	/*--------------------------- Section Operações Add ------------------------------*/
+	/*
+		Processa a adição de mais linhas de operações.
+	*/
+	$(document.getElementById("operacoes_modal_adicionar")).click(function (){
+		buildOperacaoAddLines(10);
+	});
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*
 		Comanda cliques no menu de renda variavel.
@@ -631,7 +735,17 @@ let Renda_variavel = (function(){
 			});
 		}
 		else if (this.name === "adicionar_operacoes"){
-			buildOperacoesModal();
+			Global.connect({
+				data: {module: "renda_variavel", action: "get_operacoesAdd", params: {id_arcabouco: $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco")}},
+				success: function (result){
+					if (result.status){
+						updateOffData_forOperacoesAdd(result.data);
+						buildOperacoesModal();
+					}
+					else
+						Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+				}
+			});
 		}
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/

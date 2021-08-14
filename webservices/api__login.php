@@ -1,5 +1,5 @@
 <?php
-	require "db_config.php";
+	require_once "db_config.php";
 	class Login {
 		/*
 			Retorna a lista de ativos do usuario.

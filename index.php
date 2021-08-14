@@ -204,7 +204,7 @@
 			</footer>
 			<!-- MODAL (AREA) -->
 			<!-- MODAIS GENERICOS -->
-			<div class="modal fade" id="insert_modal" tabindex="-1" aria-hidden="true">
+			<div class="modal fade" id="insert_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 					<div class="modal-content">
 						<div class="modal-header">
@@ -219,7 +219,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="modal fade" id="update_modal" tabindex="-1" aria-hidden="true">
+			<div class="modal fade" id="update_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
 					<div class="modal-content">
 						<div class="modal-header">
@@ -249,7 +249,7 @@
 				</div>
 			</div>
 			<!-- MODAIS RENDA VARIAVEL -->
-			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true">
+			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 					<div class="modal-content">
 						<div class="modal-header">
@@ -270,8 +270,8 @@
 					</div>
 				</div>
 			</div>
-			<div class="modal fade" id="operacoes_modal" tabindex="-1" aria-hidden="true">
-				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxl">
+			<div class="modal fade" id="operacoes_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxxl">
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title">Cadastro de Operações</h5>
@@ -280,19 +280,34 @@
 						<div class="modal-body">
 							<div class="container-fluid">
 								<div id="operacoes_modal_toasts"></div>
-								<div class="d-flex mb-3">
-									<button type="button" class="btn btn-sm btn-primary" id="operacoes_modal_adicionar"><i class="fas fa-plus me-2"></i>Operação</button>
-								</div>
 								<div class="row">
-									<div class="col">
+									<div class="col bg-light p-3">
+										<div class="row">
+											<div class="col-2">
+												<select name="file_format" class="form-select form-select-sm">
+													<option value="0">Profit</option>
+													<option value="1">Tryd</option>
+												</select>
+											</div>
+											<div class="col-10">
+												<input class="form-control form-control-sm col" type="file" id="importa_arquivo_operacoes_modal">
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row mt-3">
+									<div class="col bg-light p-3">
 										<table id="table_operacoes_add" class="table">
 											<thead>
 												<tr>
+													<th>#</th>
 													<th>Data</th>
 													<th>Hora</th>
 													<th>Ativo</th>
 													<th>Op.</th>
-													<th>Gerenc.</th>
+													<th>Cenário</th>
+													<th>Premissas</th>
+													<th>Observações</th>
 													<th>Cts</th>
 													<th>Entrada</th>
 													<th>Stop</th>
@@ -301,29 +316,16 @@
 													<th>MEP</th>
 												</tr>
 											</thead>
-											<tbody>
-												<tr>
-													<td name="data"><input type="text" name="data" class="form-control form-control-sm"></td>
-													<td name="hora"><input type="text" name="hora" class="form-control form-control-sm"></td>
-													<td name="ativo"><select name='ativo' class="form-select form-select-sm"></select></td>
-													<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>
-													<td name="gerenciamento"><select name='gerenciamento' class="form-select form-select-sm"></select></td>
-													<td name="cts"><input type="text" name="cts" class="form-control form-control-sm"></td>
-													<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm"></td>
-													<td name="stop"><input type="text" name="stop" class="form-control form-control-sm"></td>
-													<td name="men"><input type="text" name="men" class="form-control form-control-sm"></td>
-													<td name="saida"><input type="text" name="saida" class="form-control form-control-sm"></td>
-													<td name="mep"><input type="text" name="mep" class="form-control form-control-sm"></td>
-												</tr>
-											</tbody>
+											<tbody></tbody>
 										</table>
 									</div>
 								</div>
 							</div>
 						</div>
-						<div class="modal-footer d-flex justify-content-between">
-							<button type="button" class="btn btn-secondary btn-sm col-2" data-bs-dismiss="modal">Fechar</button>
-							<button type="button" class="btn btn-success btn-sm col-2" id="operacoes_modal_enviar">Salvar</button>
+						<div class="modal-footer d-flex">
+							<button type="button" class="btn btn-secondary btn-sm col-1" data-bs-dismiss="modal">Fechar</button>
+							<button type="button" class="btn btn-primary btn-sm col-2" id="operacoes_modal_adicionar"><i class="fas fa-plus me-2"></i>Operação</button>
+							<button type="button" class="btn btn-success btn-sm col-1 ms-auto" id="operacoes_modal_enviar">Salvar</button>
 						</div>
 					</div>
 				</div>
