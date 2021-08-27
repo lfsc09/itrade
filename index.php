@@ -259,8 +259,13 @@
 						<div class="modal-body">
 							<div class="container-fluid">
 								<div id="cenarios_modal_toasts"></div>
-								<div class="d-flex">
-									<button type="button" class="btn btn-sm btn-primary ms-auto align-self-end" id="cenarios_modal_adicionar"><i class="fas fa-plus me-2"></i>Cenário</button>
+								<div class="row justify-content-end">
+									<div class="col-5">
+										<div class="input-group">
+											<select class="form-select form-select-sm" id="cenarios_modal_copiar"></select>
+											<button type="button" class="btn btn-sm btn-primary" id="cenarios_modal_adicionar"><i class="fas fa-plus me-2"></i>Cenário</button>
+										</div>
+									</div>
 								</div>
 								<div class="row">
 									<div class="col" id="table_cenarios"></div>
