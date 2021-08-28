@@ -46,13 +46,19 @@ let Renda_variavel = (function(){
 		Constroi o modal de gerenciamento de cenarios.
 	*/
 	function buildCenariosModal(data){
-		let modal = $(document.getElementById("cenarios_modal")),
-			select_options = `<option value="">Do zero</option>`;
+		let modal = $(document.getElementById("cenarios_modal"));
+		$(document.getElementById("table_cenarios")).empty().append(buildCenariosTable(data));
+		$(document.getElementById("cenarios_modal_copiar")).empty().append(buildCenariosCopySelect(data));
+		modal.modal("show");
+	}
+	/*
+		Constroi o select com os cenarios, para cópia.
+	*/
+	function buildCenariosCopySelect(data){
+		let select_options = `<option value="">---</option>`;
 		for (let c in data)
 			select_options += `<option value="${data[c]["nome"]}">${data[c]["nome"]}</option>`;
-		$(document.getElementById("table_cenarios")).empty().append(buildCenariosTable(data));
-		$(document.getElementById("cenarios_modal_copiar")).empty().append(select_options);
-		modal.modal("show");
+		return select_options;
 	}
 	/*
 		Constroi as secoes de premissas ou observacoes de um cenario.
@@ -61,7 +67,7 @@ let Renda_variavel = (function(){
 		let html = ``;
 		if (type === 1){
 			for (let p in data){
-				html += `<tr ${((new_data)?`new_premissa`:`premissa="${data[p].id}">`)}`+
+				html += `<tr ${((new_data)?`new_premissa`:`premissa="${data[p].id}"`)}>`+
 						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"><button class="btn btn-sm btn-outline-danger" type="button" remover_premissa>Excluir</button></div></td>`+
 						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="${data[p].cor}"></div></td>`+
 						`<td name="obrigatoria"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="obrigatoria" class="form-check-input" ${((data[p].obrigatoria == 1)?"checked":"")}></div></td>`+
@@ -73,7 +79,7 @@ let Renda_variavel = (function(){
 		}
 		else if (type === 2){
 			for (let p in data){
-				html += `<tr ${((new_data)?`new_observacao`:`observacao="${data[p].id}">`)}`+
+				html += `<tr ${((new_data)?`new_observacao`:`observacao="${data[p].id}"`)}>`+
 						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"><button class="btn btn-sm btn-outline-danger" type="button" remover_observacao>Excluir</button></div></td>`+
 						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="${data[p].cor}"></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input" ${((data[p].inativo == 1)?"checked":"")}></div></td>`+
@@ -92,8 +98,8 @@ let Renda_variavel = (function(){
 				`<div class="card-header d-flex">`+
 				`<div class="col-md-6"><input type="text" name="cenario_nome" class="form-control form-control-sm" value="${(("nome" in data)?data.nome:"")}"></div>`+
 				`<ul class="nav nav-tabs card-header-tabs ms-auto" >`+
-				`<li class="nav-item"><a class="nav-link active" href="#" target="premissas">Premissas${(("premissas" in data)?`<span class="badge bg-secondary ms-1">${data["premissas"].length}</span>`:``)}</a></li>`+
-				`<li class="nav-item"><a class="nav-link" href="#" target="observacoes">Observações${(("observacoes" in data)?`<span class="badge bg-secondary ms-1">${data["observacoes"].length}</span>`:``)}</a></li>`+
+				`<li class="nav-item"><a class="nav-link active" href="#" target="premissas">Premissas${(("premissas" in data)?((new_cenario)?((data["premissas"].length)?`<span class="badge bg-primary ms-1">+${data["premissas"].length}</span>`:``):`<span class="badge bg-secondary ms-1">${data["premissas"].length}</span>`):``)}</a></li>`+
+				`<li class="nav-item"><a class="nav-link" href="#" target="observacoes">Observações${(("observacoes" in data)?((new_cenario)?((data["observacoes"].length)?`<span class="badge bg-primary ms-1">+${data["observacoes"].length}</span>`:``):`<span class="badge bg-secondary ms-1">${data["observacoes"].length}</span>`):``)}</a></li>`+
 				`</ul>`+
 				`</div>`+
 				`<div class="card-body">`+
@@ -103,7 +109,7 @@ let Renda_variavel = (function(){
 				`<tr>`+
 				`<th class="border-0">Nome</th><th class="border-0 text-center">Cor</th><th class="border-0 text-center">Obrigatória</th><th class="border-0 text-center">Desativar</th>`+
 				`</tr>`+
-				`<tbody>${(("premissas" in data)?buildListaPremissas_Observacoes(data["premissas"], 1):buildListaPremissas_Observacoes({}, 1))}</tbody>`+
+				`<tbody>${(("premissas" in data)?buildListaPremissas_Observacoes(data["premissas"], 1, new_cenario):buildListaPremissas_Observacoes({}, 1, new_cenario))}</tbody>`+
 				`</table>`+
 				`</div>`+
 				`<div class="d-flex d-none" target="observacoes">`+
@@ -112,7 +118,7 @@ let Renda_variavel = (function(){
 				`<tr>`+
 				`<th class="border-0">Nome</th><th class="border-0 text-center">Cor</th><th class="border-0 text-center">Desativar</th>`+
 				`</tr>`+
-				`<tbody>${(("observacoes" in data)?buildListaPremissas_Observacoes(data["observacoes"], 2):buildListaPremissas_Observacoes({}, 2))}</tbody>`+
+				`<tbody>${(("observacoes" in data)?buildListaPremissas_Observacoes(data["observacoes"], 2, new_cenario):buildListaPremissas_Observacoes({}, 2, new_cenario))}</tbody>`+
 				`</table>`+
 				`</div>`+
 				`</div>`+
@@ -542,12 +548,38 @@ let Renda_variavel = (function(){
 		Processa a adição de um novo Cenário.
 	*/
 	$(document.getElementById("cenarios_modal_adicionar")).click(function (){
-		let copiar_ceario = $(document.getElementById("cenarios_modal_copiar")).val();
-		if (copiar_ceario === "")
+		let copiar_cenario = $(document.getElementById("cenarios_modal_copiar")).val();
+		if (copiar_cenario === "")
 			$(document.getElementById("table_cenarios")).find("div[empty]").remove().end().prepend(buildCenario({}, true));
 		else{
-			let copy_data = {};
-
+			let copy_data = {nome: "", premissas: [], observacoes: []},
+				cenario = $(document.getElementById("table_cenarios")).find("input[name='cenario_nome']").filter(function (){ return this.value === copiar_cenario; }).parentsUntil("#table_cenarios").last();
+			//Pega o nome do cenario
+			copy_data.nome = cenario.find("input[name='cenario_nome']").val();
+			//Pega as premissas
+			cenario.find("div[target='premissas'] table tbody tr").each(function (i, tr){
+				if (tr.hasAttribute("empty"))
+					return;
+				tr = $(tr);
+				copy_data.premissas.push({
+					nome: tr.find("input[name='nome']").val(),
+					cor: tr.find("input[name='cor']").val(),
+					obrigatoria: tr.find("input[name='obrigatoria']").prop("checked"),
+					inativo: tr.find("input[name='inativo']").prop("checked")
+				});
+			});
+			//Pega as observacoes
+			cenario.find("div[target='observacoes'] table tbody tr").each(function (i, tr){
+				if (tr.hasAttribute("empty"))
+					return;
+				tr = $(tr);
+				copy_data.observacoes.push({
+					nome: tr.find("input[name='nome']").val(),
+					cor: tr.find("input[name='cor']").val(),
+					inativo: tr.find("input[name='inativo']").prop("checked")
+				});
+			});
+			$(document.getElementById("table_cenarios")).find("div[empty]").remove().end().prepend(buildCenario(copy_data, true));
 		}
 	});
 	/*
