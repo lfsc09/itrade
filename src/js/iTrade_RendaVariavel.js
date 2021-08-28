@@ -293,26 +293,49 @@ let Renda_variavel = (function(){
 	function buildOperacaoAddLines(num){
 		let tbody = $(document.getElementById("table_operacoes_add")).find("tbody"),
 			html = ``,
+			estilo_form = $(document.getElementById("estilo_operacoes_modal")).prop("checked"),
 			select_ativos_data = [{text: '', placeholder: true}],
 			select_cenarios_data = [{text: '', placeholder: true}],
 			seq_trade = parseInt(tbody.find("tr:last-child input[name='sequencia']").val())+1 || 1;
 		for (let i=0; i<num; i++){
-			html += `<tr init>`+
-					`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly></td>`+
-					`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`<td name="ativo"><select name='ativo'></select></td>`+
-					`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
-					`<td name="cenario"><select name='cenario'></select></td>`+
-					`<td name="premissas"><select name='premissas' multiple></select></td>`+
-					`<td name="observacoes"><select name='observacoes' multiple></select></td>`+
-					`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()"></td>`+
-					`</tr>`;
+			//Formulario de Scalp
+			if (estilo_form){
+				html += `<tr init>`+
+						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly></td>`+
+						`<td name="ativo"><select name='ativo'></select></td>`+
+						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="cenario"><select name='cenario'></select></td>`+
+						`<td name="premissas"><select name='premissas' multiple></select></td>`+
+						`<td name="observacoes"><select name='observacoes' multiple></select></td>`+
+						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`</tr>`;
+			}
+			//Formulario para operacoes sem alvo
+			else{
+				html += `<tr init>`+
+						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly></td>`+
+						`<td name="ativo"><select name='ativo'></select></td>`+
+						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="cenario"><select name='cenario'></select></td>`+
+						`<td name="premissas"><select name='premissas' multiple></select></td>`+
+						`<td name="observacoes"><select name='observacoes' multiple></select></td>`+
+						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`</tr>`;
+			}
 		}
 		for (let at in _ativos__operacoes_add)
 			select_ativos_data.push({value: _ativos__operacoes_add[at].id, text: _ativos__operacoes_add[at].nome});

@@ -283,14 +283,32 @@
 								<div class="row">
 									<div class="col bg-light p-3">
 										<div class="row">
-											<div class="col-2">
+											<div class="col-3">
 												<select name="file_format" class="form-select form-select-sm">
 													<option value="0">Profit</option>
 													<option value="1">Tryd</option>
 												</select>
 											</div>
-											<div class="col-10">
+											<div class="col-9">
 												<input class="form-control form-control-sm col" type="file" id="importa_arquivo_operacoes_modal">
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row mt-3">
+									<div class="col bg-light p-3">
+										<div class="row">
+											<div class="col-1 d-flex align-items-center">
+												<div class="form-check form-switch m-0">
+													<input class="form-check-input" type="checkbox" id="layout_operacoes_modal" checked>
+													<label class="form-check-label" for="layout_operacoes_modal">Scalp</label>
+												</div>
+											</div>
+											<div class="col-1 d-flex align-items-center">
+												<div class="form-check form-switch m-0">
+													<input class="form-check-input" type="checkbox" id="intraday_operacoes_modal" checked>
+													<label class="form-check-label" for="intraday_operacoes_modal">Intraday</label>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -301,14 +319,14 @@
 											<thead>
 												<tr>
 													<th>#</th>
-													<th>Data</th>
-													<th>Hora</th>
 													<th>Ativo</th>
 													<th>Op.</th>
+													<th>Cts</th>
 													<th>Cenário</th>
 													<th>Premissas</th>
 													<th>Observações</th>
-													<th>Cts</th>
+													<th>Data</th>
+													<th>Hora</th>
 													<th>Entrada</th>
 													<th>Stop</th>
 													<th>MEN</th>
