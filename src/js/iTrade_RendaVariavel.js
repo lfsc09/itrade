@@ -299,41 +299,109 @@ let Renda_variavel = (function(){
 		modal.modal("show");
 	}
 	/*
+		
+	*/
+	function buildOperacaoAddLines_After(tbody, prev_data){
+		let select_ativos_data = [{text: '', placeholder: true}],
+			select_cenarios_data = [{text: '', placeholder: true}];
+		for (let at in _ativos__operacoes_add)
+			select_ativos_data.push({value: _ativos__operacoes_add[at].id, text: _ativos__operacoes_add[at].nome});
+		for (let cn in _cenarios__operacoes_add)
+			select_cenarios_data.push({value: _cenarios__operacoes_add[cn].id, text: _cenarios__operacoes_add[cn].nome});
+		tbody.find("tr[init]").each(function (t, tr){
+			tr.removeAttribute("init");
+			tr = $(tr);
+			tr.find("input[name='data']").val((("data" in prev_data)?prev_data["data"]:"")).inputmask({mask: "99/99/9999", placeholder: ""});
+			tr.find("input[name='hora']").val((("hora" in prev_data)?prev_data["hora"]:"")).inputmask({mask: "99:99", placeholder: ""});
+			tr.find("input[name='cts']").inputmask({mask: "9[99]", placeholder: ""});
+			tr.find("select[name='ativo']").data("SlimSelect", new SlimSelect({
+				select: tr.find("select[name='ativo']")[0],
+				data: select_ativos_data,
+				placeholder: 'Selecione',
+				// Atualiza as mascaras dos precos de acordo com o ativo
+				onChange: (info) => {
+					if (info.text.toLowerCase() === "win")
+						tr.find("input[name='entrada'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "999.999", placeholder: ''});
+					else if (info.text.toLowerCase() === "wdo")
+						tr.find("input[name='entrada'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "9.999,99", placeholder: ''});
+				}
+			}));
+			tr.find("select[name='cenario']").data("SlimSelect", new SlimSelect({
+				select: tr.find("select[name='cenario']")[0],
+				data: select_cenarios_data,
+				placeholder: 'Selecione',
+				onChange: (info) => {
+					let select_premissas_data = [],
+					select_observacoes_data = [];
+					for (let pm in _cenarios__operacoes_add[info.value]["premissas"])
+						select_premissas_data.push({value: _cenarios__operacoes_add[info.value]["premissas"][pm].id, text: _cenarios__operacoes_add[info.value]["premissas"][pm].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["premissas"][pm].cor}"></i>${_cenarios__operacoes_add[info.value]["premissas"][pm].nome}`});
+					tr.find("select[name='premissas']").data("SlimSelect").setData(select_premissas_data);
+					for (let ob in _cenarios__operacoes_add[info.value]["observacoes"])
+						select_observacoes_data.push({value: _cenarios__operacoes_add[info.value]["observacoes"][ob].id, text: _cenarios__operacoes_add[info.value]["observacoes"][ob].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["observacoes"][ob].cor}"></i>${_cenarios__operacoes_add[info.value]["observacoes"][ob].nome}`});
+					tr.find("select[name='observacoes']").data("SlimSelect").setData(select_observacoes_data);
+				}
+			}));
+			tr.find("select[name='premissas']").data("SlimSelect", new SlimSelect({
+				select: tr.find("select[name='premissas']")[0],
+				placeholder: 'Sem premissas',
+				data: [{text: '', display: false}]
+			}));
+			tr.find("select[name='observacoes']").data("SlimSelect", new SlimSelect({
+				select: tr.find("select[name='observacoes']")[0],
+				placeholder: 'Sem observações',
+				data: [{text: '', display: false}]
+			}));
+			if ("op" in prev_data)
+				tr.find("select[name='op']").val(prev_data["op"]);
+			if ("ativo" in prev_data){
+				let sel = tr.find("select[name='ativo']").data("SlimSelect");
+				sel.set(prev_data["ativo"]);
+				sel.disable();
+			}
+		});
+	}
+	/*
 		Adiciona uma linha na tabela de adição de operações.
 	*/
-	function buildOperacaoAddLines(num){
-		let tbody = $(document.getElementById("table_operacoes_add")).find("tbody"),
+	function buildOperacaoAddLines(num = 1, add_after = null, prev_data = {}){
+		let is_variante = (add_after !== null),
+			prev_elem = ((!is_variante)?$(document.getElementById("table_operacoes_add")).find("tbody"):add_after),
 			html = ``,
-			estilo_form = $(document.getElementById("estilo_operacoes_modal")).prop("checked"),
-			select_ativos_data = [{text: '', placeholder: true}],
-			select_cenarios_data = [{text: '', placeholder: true}],
-			seq_trade = parseInt(tbody.find("tr:last-child input[name='sequencia']").val())+1 || 1;
+			estilo_form = $(document.getElementById("layout_operacoes_modal")).prop("checked"),
+			seq_trade = 0;
+		if (is_variante)
+			seq_trade = parseInt(prev_elem.find("input[name='sequencia']").val());
+		else
+			seq_trade = parseInt(prev_elem.find("tr:last-child input[name='sequencia']").val())+1 || 1;
 		for (let i=0; i<num; i++){
 			//Formulario de Scalp
 			if (estilo_form){
-				html += `<tr init>`+
-						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly></td>`+
+				html += `<tr init${((is_variante)?" variante":"")}>`+
+						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly><button type="button" class="btn btn-danger d-none"><i class="fas fa-trash-alt"></i></button>${((is_variante)?``:`<button type="button" class="btn btn-primary d-none"><i class="fas fa-plus"></i></button>`)}</td>`+
 						`<td name="ativo"><select name='ativo'></select></td>`+
-						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+						`<td name="op"><select name='op' class="form-select form-select-sm"${((is_variante)?` disabled`:``)}><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()"></td>`+
 						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
 						`<td name="cenario"><select name='cenario'></select></td>`+
 						`<td name="premissas"><select name='premissas' multiple></select></td>`+
 						`<td name="observacoes"><select name='observacoes' multiple></select></td>`+
-						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"${((is_variante)?` disabled`:``)}></td>`+
+						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"${((is_variante)?` disabled`:``)}></td>`+
 						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" disabled></td>`+
+						`<td name="alvo"><input type="text" name="stop" class="form-control form-control-sm" disabled></td>`+
 						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
 						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
 						`</tr>`;
 			}
 			//Formulario para operacoes sem alvo
 			else{
 				html += `<tr init>`+
-						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly></td>`+
+						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly><button type="button" class="btn btn-danger d-none"><i class="fas fa-trash-alt"></i></button>${((is_variante)?``:`<button type="button" class="btn btn-primary d-none"><i class="fas fa-plus"></i></button>`)}</td>`+
 						`<td name="ativo"><select name='ativo'></select></td>`+
 						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()"></td>`+
 						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
 						`<td name="cenario"><select name='cenario'></select></td>`+
 						`<td name="premissas"><select name='premissas' multiple></select></td>`+
@@ -348,56 +416,17 @@ let Renda_variavel = (function(){
 						`</tr>`;
 			}
 		}
-		for (let at in _ativos__operacoes_add)
-			select_ativos_data.push({value: _ativos__operacoes_add[at].id, text: _ativos__operacoes_add[at].nome});
-		for (let cn in _cenarios__operacoes_add)
-			select_cenarios_data.push({value: _cenarios__operacoes_add[cn].id, text: _cenarios__operacoes_add[cn].nome});
-		tbody.append(html).promise().then(function (){
-			this.find("tr[init]").each(function (t, tr){
-				tr.removeAttribute("init");
-				tr = $(tr);
-				tr.find("input[name='data']").inputmask({mask: "99/99/9999", placeholder: ""});
-				tr.find("input[name='hora']").inputmask({mask: "99:99", placeholder: ""});
-				tr.find("input[name='cts']").inputmask({mask: "9[99]", placeholder: ""});
-				tr.find("select[name='ativo']").data("SlimSelect", new SlimSelect({
-					select: tr.find("select[name='ativo']")[0],
-					data: select_ativos_data,
-					placeholder: 'Selecione',
-					// Atualiza as mascaras dos precos de acordo com o ativo
-					onChange: (info) => {
-						if (info.text.toLowerCase() === "win")
-							tr.find("input[name='entrada'],input[name='stop'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "999.999", placeholder: ''});
-						else if (info.text.toLowerCase() === "wdo")
-							tr.find("input[name='entrada'],input[name='stop'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "9.999,99", placeholder: ''});
-					}
-				}));
-				tr.find("select[name='cenario']").data("SlimSelect", new SlimSelect({
-					select: tr.find("select[name='cenario']")[0],
-					data: select_cenarios_data,
-					placeholder: 'Selecione',
-					onChange: (info) => {
-						let select_premissas_data = [],
-							select_observacoes_data = [];
-						for (let pm in _cenarios__operacoes_add[info.value]["premissas"])
-							select_premissas_data.push({value: _cenarios__operacoes_add[info.value]["premissas"][pm].id, text: _cenarios__operacoes_add[info.value]["premissas"][pm].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["premissas"][pm].cor}"></i>${_cenarios__operacoes_add[info.value]["premissas"][pm].nome}`});
-						tr.find("select[name='premissas']").data("SlimSelect").setData(select_premissas_data);
-						for (let ob in _cenarios__operacoes_add[info.value]["observacoes"])
-							select_observacoes_data.push({value: _cenarios__operacoes_add[info.value]["observacoes"][ob].id, text: _cenarios__operacoes_add[info.value]["observacoes"][ob].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["observacoes"][ob].cor}"></i>${_cenarios__operacoes_add[info.value]["observacoes"][ob].nome}`});
-						tr.find("select[name='observacoes']").data("SlimSelect").setData(select_observacoes_data);
-					}
-				}));
-				tr.find("select[name='premissas']").data("SlimSelect", new SlimSelect({
-					select: tr.find("select[name='premissas']")[0],
-					placeholder: 'Sem premissas',
-					data: [{text: '', display: false}]
-				}));
-				tr.find("select[name='observacoes']").data("SlimSelect", new SlimSelect({
-					select: tr.find("select[name='observacoes']")[0],
-					placeholder: 'Sem observações',
-					data: [{text: '', display: false}]
-				}));
+		if (is_variante){
+			prev_elem.after(html).promise().then(function (){
+				buildOperacaoAddLines_After($(document.getElementById("table_operacoes_add")).find("tbody"), prev_data);
 			});
-		});
+		}
+		else{
+			prev_elem.append(html).promise().then(function (){
+				buildOperacaoAddLines_After(this, prev_data);
+			});
+		}
+
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
@@ -791,6 +820,70 @@ let Renda_variavel = (function(){
 	$(document.getElementById("operacoes_modal_adicionar")).click(function (){
 		buildOperacaoAddLines(10);
 	});
+	/*
+		Processa para mostrar o botao, para adicionar operacoes variantes.
+	*/
+	$(document.getElementById("table_operacoes_add")).on("mouseover", "td[name='sequencia']", function (e){
+		let me = $(this);
+		//Mostra o botao de Delete
+		if (e.ctrlKey){
+			me.find("input").addClass("d-none");
+			me.find("button.btn-primary").addClass("d-none");
+			me.find("button.btn-danger").removeClass("d-none");
+		}
+		else{
+			//Mostra botao de adicionar variante (Caso linha nao seja uma variante)
+			if (me.find("button.btn-primary").length){
+				me.find("input").addClass("d-none");
+				me.find("button.btn-primary").removeClass("d-none");
+				me.find("button.btn-danger").addClass("d-none");
+			}
+		}
+	}).on("mouseout", "td[name='sequencia']", function (e){
+		let me = $(this);
+		me.find("input").removeClass("d-none");
+		me.find("button").addClass("d-none");
+	}).on("click", "td[name='sequencia'] button.btn-primary", function (){
+		//Adiciona variante
+		let tr = $(this).parentsUntil("tbody").last(),
+			tr_data = {};
+		tr.find("td").each(function (i, td){
+			let name = td.getAttribute("name");
+			if (name === "ativo")
+				tr_data[name] = $(td).find("select").data("SlimSelect").selected();
+			else if (name === "op")
+				tr_data[name] = $(td).find("select").val();
+			else if (name === "data" || name === "hora")
+				tr_data[name] = $(td).find("input").val();
+		});
+		buildOperacaoAddLines(1, tr, tr_data);
+	}).on("click", "td[name='sequencia'] button.btn-danger", function (){
+		let tr = $(this).parentsUntil("tbody").last(),
+			tbody = tr.parent(),
+			seq = tr.find("input[name='sequencia']").val();
+		//Remove linha de operação
+		//Se for variante remove apenas a linha
+		if (tr[0].hasAttribute("variante"))
+			tr.remove();
+		//Se nao for variante
+		else{
+			tr.remove();
+			//Remove as variantes da linhas tambem
+			tbody.find("tr[variante]").each(function (i, tr_var){
+				tr_var = $(tr_var);
+				if (tr_var.find("input[name='sequencia']").val() === seq)
+					tr_var.remove();
+			});
+			//Faz a recontagem de sequencia
+			let recont = 1;
+			tbody.children().each(function (i, left_tr){
+				left_tr.querySelector("input[name='sequencia']").value = recont;
+				if (!left_tr.hasAttribute("variante"))
+					recont++;
+			});
+		}
+	});
+
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*
 		Comanda cliques no menu de renda variavel.

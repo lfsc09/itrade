@@ -75,8 +75,10 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #table_operacoes_add td[name='ativo'] {width: 7%}
 #table_operacoes_add td[name='op'] {width: 6%}
 #table_operacoes_add td[name='cts'] {width: 3%}
+#table_operacoes_add td[name='vol'] {width: 4%}
 #table_operacoes_add td[name='entrada'] {width: 5%}
 #table_operacoes_add td[name='stop'] {width: 5%}
+#table_operacoes_add td[name='alvo'] {width: 5%}
 #table_operacoes_add td[name='men'] {width: 5%}
 #table_operacoes_add td[name='saida'] {width: 5%}
 #table_operacoes_add td[name='mep'] {width: 5%}
@@ -86,6 +88,7 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #table_operacoes th[name='ativo'] {width: 5%}
 #table_operacoes th[name='op'] {width: 4%}
 #table_operacoes th[name='cts'] {width: 3%}
+#table_operacoes th[name='vol'] {width: 3%}
 #table_operacoes th[name='entrada'] {width: 5%}
 #table_operacoes th[name='stop'] {width: 5%}
 #table_operacoes th[name='men'] {width: 5%}

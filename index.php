@@ -309,12 +309,6 @@
 													<label class="form-check-label" for="layout_operacoes_modal">Scalp</label>
 												</div>
 											</div>
-											<div class="col-1 d-flex align-items-center">
-												<div class="form-check form-switch m-0">
-													<input class="form-check-input" type="checkbox" id="intraday_operacoes_modal" checked>
-													<label class="form-check-label" for="intraday_operacoes_modal">Intraday</label>
-												</div>
-											</div>
 										</div>
 									</div>
 								</div>
@@ -326,6 +320,7 @@
 													<th>#</th>
 													<th>Ativo</th>
 													<th>Op.</th>
+													<th>Vol</th>
 													<th>Cts</th>
 													<th>Cenário</th>
 													<th>Premissas</th>
@@ -334,9 +329,10 @@
 													<th>Hora</th>
 													<th>Entrada</th>
 													<th>Stop</th>
+													<th>Alvo</th>
 													<th>MEN</th>
-													<th>Saída</th>
 													<th>MEP</th>
+													<th>Saída</th>
 												</tr>
 											</thead>
 											<tbody></tbody>
