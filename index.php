@@ -258,7 +258,7 @@
 						</div>
 						<div class="modal-body">
 							<div class="container-fluid">
-								<div id="cenarios_modal_toasts"></div>
+								<div class="row"><div class="col"><div id="cenarios_modal_toasts"></div></div></div>
 								<div class="row justify-content-end">
 									<div class="col-5">
 										<div class="input-group">
@@ -284,17 +284,24 @@
 						</div>
 						<div class="modal-body">
 							<div class="container-fluid">
-								<div id="operacoes_modal_toasts"></div>
+								<div class="row"><div class="col p-0"><div id="operacoes_modal_toasts"></div></div></div>
 								<div class="row">
 									<div class="col bg-light p-3">
 										<div class="row">
-											<div class="col-3">
-												<select name="file_format" class="form-select form-select-sm">
-													<option value="0">Profit</option>
-													<option value="1">Tryd</option>
+											<div class="col-2">
+												<select id="file_format" class="form-select form-select-sm">
+													<option value="excel">Excel</option>
+													<option value="profit">Profit</option>
+													<!-- <option value="tryd">Tryd</option> -->
 												</select>
 											</div>
-											<div class="col-9">
+											<div class="col-2">
+												<select id="table_layout" class="form-select form-select-sm">
+													<option value="scalp">Scalp</option>
+													<option value="tendencia">Tendencia</option>
+												</select>
+											</div>
+											<div class="col-8">
 												<input class="form-control form-control-sm col" type="file" id="importa_arquivo_operacoes_modal">
 											</div>
 										</div>
@@ -302,39 +309,8 @@
 								</div>
 								<div class="row mt-3">
 									<div class="col bg-light p-3">
-										<div class="row">
-											<div class="col-1 d-flex align-items-center">
-												<div class="form-check form-switch m-0">
-													<input class="form-check-input" type="checkbox" id="layout_operacoes_modal" checked>
-													<label class="form-check-label" for="layout_operacoes_modal">Scalp</label>
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<div class="row mt-3">
-									<div class="col bg-light p-3">
-										<table id="table_operacoes_add" class="table">
-											<thead>
-												<tr>
-													<th>#</th>
-													<th>Ativo</th>
-													<th>Op.</th>
-													<th>Vol</th>
-													<th>Cts</th>
-													<th>Cenário</th>
-													<th>Premissas</th>
-													<th>Observações</th>
-													<th>Data</th>
-													<th>Hora</th>
-													<th>Entrada</th>
-													<th>Stop</th>
-													<th>Alvo</th>
-													<th>MEN</th>
-													<th>MEP</th>
-													<th>Saída</th>
-												</tr>
-											</thead>
+										<table id="table_operacoes_add" class="table m-0">
+											<thead></thead>
 											<tbody></tbody>
 										</table>
 									</div>
@@ -343,7 +319,6 @@
 						</div>
 						<div class="modal-footer d-flex">
 							<button type="button" class="btn btn-secondary btn-sm col-1" data-bs-dismiss="modal">Fechar</button>
-							<button type="button" class="btn btn-primary btn-sm col-2" id="operacoes_modal_adicionar"><i class="fas fa-plus me-2"></i>Operação</button>
 							<button type="button" class="btn btn-success btn-sm col-1 ms-auto" id="operacoes_modal_enviar">Salvar</button>
 						</div>
 					</div>

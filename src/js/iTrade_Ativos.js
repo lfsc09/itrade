@@ -257,7 +257,7 @@ let Ativos = (function(){
 						error = true;
 				});
 				if (error)
-					Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+					Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
 				else{
 					Global.connect({
 						data: {module: "ativos", action: "insert_ativos", params: data},
@@ -275,7 +275,7 @@ let Ativos = (function(){
 								});
 							}
 							else
-								Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+								Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "danger", body: result.error, delay: 4000});
 						}
 					});		
 				}
@@ -349,7 +349,7 @@ let Ativos = (function(){
 				error = true;
 		});
 		if (error)
-			Global.toast.create({location: document.getElementById("update_popup_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+			Global.toast.create({location: document.getElementById("update_popup_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
 		else if (Global.isObjectEmpty(data))
 			$(document.getElementById("table_ativos")).find("button[popup-editar]").removeAttr("popup-editar").popover("dispose");
 		else{
@@ -370,7 +370,7 @@ let Ativos = (function(){
 						});
 					}
 					else
-						Global.toast.create({location: document.getElementById("update_popup_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+						Global.toast.create({location: document.getElementById("update_popup_toasts"), color: "danger", body: result.error, delay: 4000});
 				}
 			});		
 		}

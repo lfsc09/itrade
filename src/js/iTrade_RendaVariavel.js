@@ -2,6 +2,136 @@ let Renda_variavel = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
 	let _cenarios__operacoes_add = {},
 		_ativos__operacoes_add = [];
+	/*
+		Realiza a abertura e leitura do arquivo csv.
+	*/
+	let _csv_reader = {
+		reader: new FileReader(),
+		processData: function (allText, options){
+		 	let allTextLines = allText.split(/\r\n|\n/),
+		 		lines = [];
+		    if (options.file_format === "excel" || options.file_format === "profit"){
+			    for (let i=0; i<allTextLines.length; i++)
+		            lines.push(allTextLines[i].split(";"));
+		    }
+		    else if (options.file_format === "tryd"){
+		    	for (let i=0; i<allTextLines.length; i++){
+		    		let broken_lines = allTextLines[i].split("\",\"");
+		    		if (broken_lines.length > 1){
+			    		broken_lines[0] = broken_lines[0].replace(/^\"/, "");
+			    		broken_lines[broken_lines.length-1] = broken_lines[broken_lines.length-1].replace(/\",?/, "");
+			            lines.push(broken_lines);
+		    		}
+		    	}
+		    }
+	        return lines;
+		},
+		cleanData: function (obj, options){
+			let newData = [],
+				dataMap = [],
+				data_limit = -1;
+			for (let line=0; line<obj.length; line++){
+				if (options.file_format === "excel"){
+					//Primeira linha Header do arquivo (Deve ser Data, para identificacao do Header)
+					if (obj[line][0] === "Data"){
+						data_limit = obj[line].length;
+						for (let a=0; a<obj[line].length; a++)
+							dataMap[a] = obj[line][a];
+					}
+					else if (obj[line].length === data_limit){
+						let operacao = obj[line][dataMap.indexOf("Op")].toLowerCase();
+						newData.push({
+							"ativo": obj[line][dataMap.indexOf("Ativo")],
+							"op": ((operacao === "c")?1:2),
+							"rr": obj[line][dataMap.indexOf("R:R")],
+							"vol": (obj[line][dataMap.indexOf("Vol")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							"cts": obj[line][dataMap.indexOf("Cts")],
+							"cenario": obj[line][dataMap.indexOf("Padrao")],
+							"premissas": ((dataMap.indexOf("Premissas") !== -1)?obj[line][dataMap.indexOf("Premissas")].split(","):[]),
+							"observacoes": ((dataMap.indexOf("Observacoes") !== -1)?obj[line][dataMap.indexOf("Observacoes")].split(","):[]),
+							"data": obj[line][dataMap.indexOf("Data")],
+							"hora": obj[line][dataMap.indexOf("Hora")],
+							"entrada": (obj[line][dataMap.indexOf("Entrada")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							"stop": (obj[line][dataMap.indexOf("Stop")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							"alvo": (obj[line][dataMap.indexOf("Alvo")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							"men": (obj[line][dataMap.indexOf("Men")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							"mep": (obj[line][dataMap.indexOf("Mep")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							"saida": (obj[line][dataMap.indexOf("Saida")].replace(/\.+/g, "")).replace(/\,+/g, ".")
+						});
+					}
+				}
+				else if (options.file_format === "profit"){
+					//Primeira coluna do cabecalho (Subconta) ou (Ativo)
+					if (obj[line][0] === "Ativo"){
+						data_limit = obj[line].length;
+						for (let a=0; a<obj[line].length; a++)
+							dataMap[a] = obj[line][a];
+					}
+					else if (obj[line].length === data_limit){
+						let operacao = obj[line][dataMap.indexOf("Lado")],
+							preco_compra = parseFloat((obj[line][dataMap.indexOf("Preço Compra")].replace(/\.+/g, "")).replace(/\,+/g, ".")),
+							preco_venda = parseFloat((obj[line][dataMap.indexOf("Preço Venda")].replace(/\.+/g, "")).replace(/\,+/g, ".")),
+							mep = parseFloat((obj[line][dataMap.indexOf("MEP")].replace(/\.+/g, "")).replace(/\,+/g, ".")),
+							men = parseFloat((obj[line][dataMap.indexOf("MEN")].replace(/\.+/g, "")).replace(/\,+/g, "."));
+						if (options.table_layout === "scalp"){
+							newData.push({
+								"ativo": obj[line][dataMap.indexOf("Ativo")],
+								"op": ((operacao === "C")?1:2),
+								"vol": "",
+								//Profit mostra Qtd Compra e Qtd Venda. Em uma Compra eu quero saber quando eu vendi (qtd. de saída). Em uma Venda o contrário.
+								"cts": ((operacao === "C")?obj[line][dataMap.indexOf("Qtd Venda")]:obj[line][dataMap.indexOf("Qtd Compra")]),
+								"cenario": "",
+								"premissas": [],
+								"observacoes": [],
+								"data": obj[line][dataMap.indexOf("Abertura")].split(" ")[0],
+								"hora": obj[line][dataMap.indexOf("Abertura")].split(" ")[1],
+								"entrada": ((operacao === "C")?preco_compra:preco_venda),
+								"stop": "",
+								"alvo": "",
+								"men": ((operacao === "C")?(preco_compra - Math.abs(men)):(preco_venda + Math.abs(men))),
+								"mep": ((operacao === "C")?(preco_compra + Math.abs(men)):(preco_venda - Math.abs(men))),
+								"saida": ((operacao === "C")?preco_venda:preco_compra)
+								// "duracao": obj[line][dataMap.findIndex(el => el.match(/^Tempo Opera.*/))]
+							});
+						}
+					}
+				}
+				else if (options.file_format === "tryd"){
+					//Primeira coluna do cabecalho (Papel)
+					if (obj[line][0] === "Papel"){
+						data_limit = obj[line].length;
+						for (let a=0; a<obj[line].length; a++)
+							dataMap[a] = obj[line][a];
+					}
+					else if (obj[line].length === data_limit){
+						let operacao = obj[line][dataMap.indexOf("C/V")],
+							preco_compra = (obj[line][dataMap.indexOf("Prc Médio Cpa")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							preco_venda = (obj[line][dataMap.indexOf("Prc Médio Vda")].replace(/\.+/g, "")).replace(/\,+/g, ".");
+						if (options.table_layout === "scalp"){
+							newData.push({
+								"ativo": obj[line][dataMap.indexOf("Papel")],
+								"op": ((operacao === "C")?1:2),
+								"vol": "",
+								"cts": obj[line][dataMap.indexOf("Qtd")],
+								"cenario": "",
+								"premissas": [],
+								"observacoes": [],
+								"data": obj[line][dataMap.indexOf("Data")],
+								"hora": obj[line][dataMap.indexOf("Abertura")],
+								"entrada": ((operacao === "C")?preco_compra:preco_venda),
+								"stop": "",
+								"alvo": "",
+								"men": obj[line][dataMap.indexOf("MEN")],
+								"mep": obj[line][dataMap.indexOf("MEP")],
+								"saida": ((operacao === "C")?preco_venda:preco_compra)
+							});
+						}
+					}
+				}
+			}
+			return newData;
+		}
+	}
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
 	/*
@@ -293,140 +423,115 @@ let Renda_variavel = (function(){
 	*/
 	function buildOperacoesModal(data){
 		let modal = $(document.getElementById("operacoes_modal"));
-		$(document.getElementById("table_operacoes_add")).find("tbody").empty().promise().then(function (){
-			buildOperacaoAddLines(10);
-		})
+		document.getElementById("importa_arquivo_operacoes_modal").value = "";
+		document.getElementById("file_format").selectedIndex = 0;
+		document.getElementById("table_layout").selectedIndex = 0;
+		resetOperacaoAddTable();
 		modal.modal("show");
 	}
 	/*
-		
+		Apaga tudo em 'table_operacoes_add'.
 	*/
-	function buildOperacaoAddLines_After(tbody, prev_data){
-		let select_ativos_data = [{text: '', placeholder: true}],
-			select_cenarios_data = [{text: '', placeholder: true}];
+	function resetOperacaoAddTable(){
+		let table = $(document.getElementById("table_operacoes_add"));
+		table.find("thead").empty();
+		table.find("tbody").empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0">Nada para Mostrar</td></tr>`);
+	}
+	/*
+		Constroi o html do select de ativos em 'table_operacoes_add'.
+	*/
+	function buildAtivosSelect_OperacaoAddTable(){
+		let html = ``;
 		for (let at in _ativos__operacoes_add)
-			select_ativos_data.push({value: _ativos__operacoes_add[at].id, text: _ativos__operacoes_add[at].nome});
+			html += `<option value="${_ativos__operacoes_add[at].id}">${_ativos__operacoes_add[at].nome}</option>`;
+		return html;
+	}
+	/*
+		Constroi o html do select de cenarios em 'table_operacoes_add'.
+	*/
+	function buildCenariosSelect_OperacaoAddTable(){
+		let html = ``;
 		for (let cn in _cenarios__operacoes_add)
-			select_cenarios_data.push({value: _cenarios__operacoes_add[cn].id, text: _cenarios__operacoes_add[cn].nome});
-		tbody.find("tr[init]").each(function (t, tr){
-			tr.removeAttribute("init");
+			html += `<option value="${_cenarios__operacoes_add[cn].id}">${_cenarios__operacoes_add[cn].nome}</option>`;
+		return html;
+	}
+	/*
+		Inicia os valores dos selects das linhas de 'table_operacoes_add'.
+	*/
+	function setSelectValues_OperacaoAddTable(data){
+		$(document.getElementById("table_operacoes_add")).find("tbody tr").each(function (t, tr){
 			tr = $(tr);
-			tr.find("input[name='data']").val((("data" in prev_data)?prev_data["data"]:"")).inputmask({mask: "99/99/9999", placeholder: ""});
-			tr.find("input[name='hora']").val((("hora" in prev_data)?prev_data["hora"]:"")).inputmask({mask: "99:99", placeholder: ""});
-			tr.find("input[name='cts']").inputmask({mask: "9[99]", placeholder: ""});
-			tr.find("select[name='ativo']").data("SlimSelect", new SlimSelect({
-				select: tr.find("select[name='ativo']")[0],
-				data: select_ativos_data,
-				placeholder: 'Selecione',
-				// Atualiza as mascaras dos precos de acordo com o ativo
-				onChange: (info) => {
-					if (info.text.toLowerCase() === "win")
-						tr.find("input[name='entrada'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "999.999", placeholder: ''});
-					else if (info.text.toLowerCase() === "wdo")
-						tr.find("input[name='entrada'],input[name='men'],input[name='saida'],input[name='mep']").inputmask({mask: "9.999,99", placeholder: ''});
-				}
-			}));
-			tr.find("select[name='cenario']").data("SlimSelect", new SlimSelect({
-				select: tr.find("select[name='cenario']")[0],
-				data: select_cenarios_data,
-				placeholder: 'Selecione',
-				onChange: (info) => {
-					let select_premissas_data = [],
-					select_observacoes_data = [];
-					for (let pm in _cenarios__operacoes_add[info.value]["premissas"])
-						select_premissas_data.push({value: _cenarios__operacoes_add[info.value]["premissas"][pm].id, text: _cenarios__operacoes_add[info.value]["premissas"][pm].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["premissas"][pm].cor}"></i>${_cenarios__operacoes_add[info.value]["premissas"][pm].nome}`});
-					tr.find("select[name='premissas']").data("SlimSelect").setData(select_premissas_data);
-					for (let ob in _cenarios__operacoes_add[info.value]["observacoes"])
-						select_observacoes_data.push({value: _cenarios__operacoes_add[info.value]["observacoes"][ob].id, text: _cenarios__operacoes_add[info.value]["observacoes"][ob].nome, innerHTML: `<i class="fas fa-square me-2" style="color: ${_cenarios__operacoes_add[info.value]["observacoes"][ob].cor}"></i>${_cenarios__operacoes_add[info.value]["observacoes"][ob].nome}`});
-					tr.find("select[name='observacoes']").data("SlimSelect").setData(select_observacoes_data);
-				}
-			}));
-			tr.find("select[name='premissas']").data("SlimSelect", new SlimSelect({
-				select: tr.find("select[name='premissas']")[0],
-				placeholder: 'Sem premissas',
-				data: [{text: '', display: false}]
-			}));
-			tr.find("select[name='observacoes']").data("SlimSelect", new SlimSelect({
-				select: tr.find("select[name='observacoes']")[0],
-				placeholder: 'Sem observações',
-				data: [{text: '', display: false}]
-			}));
-			if ("op" in prev_data)
-				tr.find("select[name='op']").val(prev_data["op"]);
-			if ("ativo" in prev_data){
-				let sel = tr.find("select[name='ativo']").data("SlimSelect");
-				sel.set(prev_data["ativo"]);
-				sel.disable();
-			}
+			if ("ativo" in data[t])
+				tr.find("select[name='ativo']").val("").find("option").filter((i, el) => data[t].ativo.toLowerCase().includes(el.innerHTML.toLowerCase())).prop("selected", true);
+			if ("op" in data[t])
+				tr.find("select[name='op']").val(data[t].op);
+			if ("rr" in data[t])
+				tr.find("select[name='rr']").val(data[t].rr);
+			if ("cenario" in data[t])
+				tr.find("select[name='cenario']").val("").find("option").filter((i, el) => data[t].cenario === el.innerHTML).prop("selected", true);
 		});
 	}
 	/*
 		Adiciona uma linha na tabela de adição de operações.
 	*/
-	function buildOperacaoAddLines(num = 1, add_after = null, prev_data = {}){
-		let is_variante = (add_after !== null),
-			prev_elem = ((!is_variante)?$(document.getElementById("table_operacoes_add")).find("tbody"):add_after),
-			html = ``,
-			estilo_form = $(document.getElementById("layout_operacoes_modal")).prop("checked"),
-			seq_trade = 0;
-		if (is_variante)
-			seq_trade = parseInt(prev_elem.find("input[name='sequencia']").val());
-		else
-			seq_trade = parseInt(prev_elem.find("tr:last-child input[name='sequencia']").val())+1 || 1;
-		for (let i=0; i<num; i++){
-			//Formulario de Scalp
-			if (estilo_form){
-				html += `<tr init${((is_variante)?" variante":"")}>`+
-						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly><button type="button" class="btn btn-danger d-none"><i class="fas fa-trash-alt"></i></button>${((is_variante)?``:`<button type="button" class="btn btn-primary d-none"><i class="fas fa-plus"></i></button>`)}</td>`+
-						`<td name="ativo"><select name='ativo'></select></td>`+
-						`<td name="op"><select name='op' class="form-select form-select-sm"${((is_variante)?` disabled`:``)}><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
-						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="cenario"><select name='cenario'></select></td>`+
-						`<td name="premissas"><select name='premissas' multiple></select></td>`+
-						`<td name="observacoes"><select name='observacoes' multiple></select></td>`+
-						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"${((is_variante)?` disabled`:``)}></td>`+
-						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"${((is_variante)?` disabled`:``)}></td>`+
-						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" disabled></td>`+
-						`<td name="alvo"><input type="text" name="stop" class="form-control form-control-sm" disabled></td>`+
-						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`</tr>`;
-			}
-			//Formulario para operacoes sem alvo
-			else{
-				html += `<tr init>`+
-						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${seq_trade+i}" readonly><button type="button" class="btn btn-danger d-none"><i class="fas fa-trash-alt"></i></button>${((is_variante)?``:`<button type="button" class="btn btn-primary d-none"><i class="fas fa-plus"></i></button>`)}</td>`+
-						`<td name="ativo"><select name='ativo'></select></td>`+
+	function buildOperacaoAddTable(data = []){
+		let tbody_html = ``,
+			thead_html = ``,
+			table = $(document.getElementById("table_operacoes_add")),
+			table_layout = $(document.getElementById("table_layout")).val(),
+			select_ativos_html = buildAtivosSelect_OperacaoAddTable(),
+			select_cenarios_html = buildCenariosSelect_OperacaoAddTable();
+		//Constroi o THEAD
+		if (table_layout === "scalp"){
+			thead_html += `<tr>`+
+						  `<th>#</th>`+
+						  `<th>Ativo</th>`+
+						  `<th>Op.</th>`+
+						  `<th>R:R</th>`+
+						  `<th>Vol</th>`+
+						  `<th>Cts</th>`+
+						  `<th>Cenário</th>`+
+						  `<th>Premissas</th>`+
+						  `<th>Observações</th>`+
+						  `<th>Data</th>`+
+						  `<th>Hora</th>`+
+						  `<th>Entrada</th>`+
+						  `<th>Stop</th>`+
+						  `<th>Alvo</th>`+
+						  `<th>MEN</th>`+
+						  `<th>MEP</th>`+
+						  `<th>Saída</th>`+
+						  `</tr>`;
+		}
+		//Constroi o TBODY
+		for (let i=0; i<data.length; i++){
+			//Layout de Scalp
+			if (table_layout === "scalp"){
+				tbody_html += `<tr>`+
+						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
+						`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
 						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
-						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="cenario"><select name='cenario'></select></td>`+
-						`<td name="premissas"><select name='premissas' multiple></select></td>`+
-						`<td name="observacoes"><select name='observacoes' multiple></select></td>`+
-						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()"></td>`+
-						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()"></td>`+
+						`<td name="rr"><select name='rr' class="form-select form-select-sm"><option value="">Sem</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
+						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
+						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
+						`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
+						`<td name="premissas"><select class="form-select form-select-sm" name="premissas" multiple></select></td>`+
+						`<td name="observacoes"><select class="form-select form-select-sm" name="observacoes" multiple></select></td>`+
+						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
+						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" value="${data[i].hora}"></td>`+
+						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()" value="${data[i].entrada}"></td>`+
+						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" value="${data[i].stop}"></td>`+
+						`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" value="${data[i].alvo}"></td>`+
+						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()" value="${data[i].men}"></td>`+
+						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()" value="${data[i].mep}"></td>`+
+						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()" value="${data[i].saida}"></td>`+
 						`</tr>`;
 			}
 		}
-		if (is_variante){
-			prev_elem.after(html).promise().then(function (){
-				buildOperacaoAddLines_After($(document.getElementById("table_operacoes_add")).find("tbody"), prev_data);
-			});
-		}
-		else{
-			prev_elem.append(html).promise().then(function (){
-				buildOperacaoAddLines_After(this, prev_data);
-			});
-		}
-
+		table.find("thead").empty().append(thead_html);
+		table.find("tbody").empty().append(tbody_html).promise().then(function (){
+			setSelectValues_OperacaoAddTable(data);
+		});
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
@@ -456,7 +561,7 @@ let Renda_variavel = (function(){
 						error = true;
 				});
 				if (error)
-					Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+					Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
 				else{
 					Global.connect({
 						data: {module: "renda_variavel", action: "insert_arcaboucos", params: data},
@@ -474,7 +579,7 @@ let Renda_variavel = (function(){
 								});
 							}
 							else
-								Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+								Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "danger", body: result.error, delay: 4000});
 						}
 					});		
 				}
@@ -533,7 +638,7 @@ let Renda_variavel = (function(){
 								error = true;
 						});
 						if (error)
-							Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "bg-warning", body: "Preencha todos os campos", width: "w-100", delay: 1500});
+							Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
 						else if (Global.isObjectEmpty(data))
 							$(document.getElementById("update_modal")).modal("hide");
 						else {
@@ -554,7 +659,7 @@ let Renda_variavel = (function(){
 										});
 									}
 									else
-										Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+										Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "danger", body: result.error, delay: 4000});
 								}
 							});		
 						}
@@ -569,7 +674,6 @@ let Renda_variavel = (function(){
 		else{
 			$(document.getElementById("table_arcaboucos")).find("a.arcabouco-selected").removeClass("arcabouco-selected");
 			$(this).addClass("arcabouco-selected");
-
 		}
 	});
 	/*------------------------------ Section Cenarios --------------------------------*/
@@ -631,13 +735,13 @@ let Renda_variavel = (function(){
 					data: {module: "renda_variavel", action: "remove_cenarios", params: remove_data},
 					success: function (result){
 						if (result.status){
-							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-light", body: "Cenário Removido.", width: "w-100", delay: 4000});
+							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "success", body: "Cenário Removido.", delay: 4000});
 							cenario_div.remove();
 							if (table_cenarios.children().length === 0)
 								table_cenarios.append(buildCenariosTable());
 						}
 						else
-							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "danger", body: result.error, delay: 4000});
 					}
 				});
 			}
@@ -743,11 +847,11 @@ let Renda_variavel = (function(){
 					data: {module: "renda_variavel", action: "insert_cenarios", params: insert_data},
 					success: function (result){
 						if (result.status){
-							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-light", body: "Cenário Adicionado.", width: "w-100", delay: 4000});
+							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "success", body: "Cenário Adicionado.", delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
 						}
 						else
-							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "danger", body: result.error, delay: 4000});
 					}
 				});
 			}
@@ -761,11 +865,11 @@ let Renda_variavel = (function(){
 					data: {module: "renda_variavel", action: "update_cenarios", params: update_data},
 					success: function (result){
 						if (result.status){
-							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-light", body: "Cenário Atualizado.", width: "w-100", delay: 4000});
+							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "success", body: "Cenário Atualizado.", delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
 						}
 						else
-							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "bg-danger", body: result.error, width: "w-100", delay: 4000});
+							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "danger", body: result.error, delay: 4000});
 					}
 				});
 			}
@@ -815,75 +919,30 @@ let Renda_variavel = (function(){
 	});
 	/*--------------------------- Section Operações Add ------------------------------*/
 	/*
-		Processa a adição de mais linhas de operações.
+		Processa a importação de um arquivo de operações.
 	*/
-	$(document.getElementById("operacoes_modal_adicionar")).click(function (){
-		buildOperacaoAddLines(10);
-	});
-	/*
-		Processa para mostrar o botao, para adicionar operacoes variantes.
-	*/
-	$(document.getElementById("table_operacoes_add")).on("mouseover", "td[name='sequencia']", function (e){
-		let me = $(this);
-		//Mostra o botao de Delete
-		if (e.ctrlKey){
-			me.find("input").addClass("d-none");
-			me.find("button.btn-primary").addClass("d-none");
-			me.find("button.btn-danger").removeClass("d-none");
-		}
-		else{
-			//Mostra botao de adicionar variante (Caso linha nao seja uma variante)
-			if (me.find("button.btn-primary").length){
-				me.find("input").addClass("d-none");
-				me.find("button.btn-primary").removeClass("d-none");
-				me.find("button.btn-danger").addClass("d-none");
+	$(document.getElementById("importa_arquivo_operacoes_modal")).change(function (){
+		let file_import = this;
+		_csv_reader.reader.onload = function fileReadCompleted(){
+			let file_format = $(document.getElementById("file_format")).val(),
+				table_layout = $(document.getElementById("table_layout")).val(),
+				data_lines = _csv_reader.processData(_csv_reader.reader.result, {file_format: file_format}),
+				csvData = null;
+			if (data_lines.length){
+				csvData = _csv_reader.cleanData(data_lines, {file_format: file_format, table_layout: table_layout});
+				if (csvData.length){
+					Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "success", body: "Arquivo interpretado com sucesso.", delay: 4000});
+					buildOperacaoAddTable(csvData);
+				}
+				else
+					Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "danger", body: "Falha ao ler o arquivo. (Número de colunas muda em certas linhas)", delay: 4000});
 			}
-		}
-	}).on("mouseout", "td[name='sequencia']", function (e){
-		let me = $(this);
-		me.find("input").removeClass("d-none");
-		me.find("button").addClass("d-none");
-	}).on("click", "td[name='sequencia'] button.btn-primary", function (){
-		//Adiciona variante
-		let tr = $(this).parentsUntil("tbody").last(),
-			tr_data = {};
-		tr.find("td").each(function (i, td){
-			let name = td.getAttribute("name");
-			if (name === "ativo")
-				tr_data[name] = $(td).find("select").data("SlimSelect").selected();
-			else if (name === "op")
-				tr_data[name] = $(td).find("select").val();
-			else if (name === "data" || name === "hora")
-				tr_data[name] = $(td).find("input").val();
-		});
-		buildOperacaoAddLines(1, tr, tr_data);
-	}).on("click", "td[name='sequencia'] button.btn-danger", function (){
-		let tr = $(this).parentsUntil("tbody").last(),
-			tbody = tr.parent(),
-			seq = tr.find("input[name='sequencia']").val();
-		//Remove linha de operação
-		//Se for variante remove apenas a linha
-		if (tr[0].hasAttribute("variante"))
-			tr.remove();
-		//Se nao for variante
-		else{
-			tr.remove();
-			//Remove as variantes da linhas tambem
-			tbody.find("tr[variante]").each(function (i, tr_var){
-				tr_var = $(tr_var);
-				if (tr_var.find("input[name='sequencia']").val() === seq)
-					tr_var.remove();
-			});
-			//Faz a recontagem de sequencia
-			let recont = 1;
-			tbody.children().each(function (i, left_tr){
-				left_tr.querySelector("input[name='sequencia']").value = recont;
-				if (!left_tr.hasAttribute("variante"))
-					recont++;
-			});
-		}
+			else
+				Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "danger", body: "Falha ao ler o arquivo. (Arquivo Vazio)", delay: 4000});
+			file_import.value = "";
+		};
+		_csv_reader.reader.readAsText(this.files[0], "ISO-8859-2");
 	});
-
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*
 		Comanda cliques no menu de renda variavel.

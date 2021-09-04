@@ -89,31 +89,40 @@ let Global = (function(){
 	*/
 	let toast = {
 		create: function (obj){
-			if (!("width" in obj))
-				obj.width = "";
-			if (!("color" in obj))
-				obj.color = "";
-			obj.text_color = ((obj.color === "bg-danger")?"text-white":"");
-			let html = `<div class='toast align-items-center border-0 mb-2 ${obj.width} ${obj.color}' role='alert' aria-live='assertive' aria-atomic='true' data-bs-delay='${obj.delay}'>`;
+			let html = ``;
+			//Toast
 			if (("title" in obj)){
-				html += `<div class='toast-header'>`+
+				if (!("width" in obj))
+					obj.width = "";
+				obj.color = ("color" in obj)?`bg-${obj.color}`:``;
+				html += `<div class='toast align-items-center border-0 mb-2 ${obj.width} ${obj.color}' role='alert' aria-live='assertive' aria-atomic='true' data-bs-delay='${obj.delay}'>`+
+						`<div class='toast-header'>`+
 						`<strong class='me-auto'>${obj.title}</strong>`+
 						`<small class='text-muted'>${obj.time}</small>`+
 						`<button type='button' class='btn-close' data-bs-dismiss='toast' aria-label='Close'></button>`+
 						`</div>`+
-						`<div class='toast-body ${obj.text_color}'>${obj.body}</div></div>`;
-			}
-			else{
-				html += `<div class="d-flex">`+
-						`<div class="toast-body p-2 ${obj.text_color}">${obj.body}</div>`+
-						`<button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>`+
-						`</div></div>`;
-			}
-			$(obj.location).append(html).promise().done(function (){
-				$("div.toast:last", obj.location).toast("show").on("hidden.bs.toast", function (){
-					$(this).remove();
+						`<div class='toast-body'>${obj.body}</div></div>`;
+				$(obj.location).append(html).promise().done(function (){
+					$("div.toast:last", obj.location).toast("show").on("hidden.bs.toast", function (){
+						$(this).remove();
+					});
 				});
-			});
+			}
+			//Alert
+			else{
+				obj.color = ("color" in obj)?`alert-${obj.color}`:`alert-primary`;
+				html += `<div class="alert ${obj.color} ${((!("delay" in obj))?"alert-dismissible":"")}">`+
+						`${obj.body}`+
+						((!("delay" in obj))?`<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`:``)+
+						`</div>`;
+				$(obj.location).append(html).promise().done(function (){
+					if ("delay" in obj){
+						setTimeout(function (){
+							$("div.alert:last", obj.location).alert("close");
+						}, obj.delay);
+					}
+				});
+			}
 		}
 	}
 	/*

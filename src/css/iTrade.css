@@ -18,16 +18,16 @@
 }
 #master_toasts {z-index: 1000}
 ::-webkit-scrollbar{
-    width: 8px;
+    width: 6px;
     background-color: #F5F5F5;
 }
 ::-webkit-scrollbar-track{
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-    border-radius: 10px;
+    border-radius: 0;
     background-color: #F5F5F5;
 }
 ::-webkit-scrollbar-thumb{
-    border-radius: 10px;
+    border-radius: 0;
     -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
     background-color: #8f8f8f;
 }
@@ -71,9 +71,10 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #table_operacoes_add td input {text-align: center; font-size: 13px}
 #table_operacoes_add td[name='sequencia'] {width: 3%}
 #table_operacoes_add td[name='data'] {width: 6%}
-#table_operacoes_add td[name='hora'] {width: 4%}
+#table_operacoes_add td[name='hora'] {width: 5%}
 #table_operacoes_add td[name='ativo'] {width: 7%}
 #table_operacoes_add td[name='op'] {width: 6%}
+#table_operacoes_add td[name='rr'] {width: 7%}
 #table_operacoes_add td[name='cts'] {width: 3%}
 #table_operacoes_add td[name='vol'] {width: 4%}
 #table_operacoes_add td[name='entrada'] {width: 5%}
@@ -82,6 +83,7 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #table_operacoes_add td[name='men'] {width: 5%}
 #table_operacoes_add td[name='saida'] {width: 5%}
 #table_operacoes_add td[name='mep'] {width: 5%}
+#table_operacoes_add td[name='premissas'] select, #table_operacoes_add td[name='observacoes'] select {max-height: 30px}
 #table_operacoes th[name='id'] {width: 2%}
 #table_operacoes th[name='data'] {width: 5%}
 #table_operacoes th[name='hora'] {width: 4%}
