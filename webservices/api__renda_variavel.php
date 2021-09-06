@@ -118,11 +118,12 @@
 			$stmt->free_result();
 			foreach ($result as $i => $cenario){
 				$result[$i]["premissas"] = [];
-				$result_raw = $mysqli->query("SELECT rvcp.* FROM rv__cenario_premissa rvcp WHERE rvcp.id_cenario='{$cenario["id"]}' ORDER BY rvcp.nome ASC");
+				$result_raw = $mysqli->query("SELECT rvcp.* FROM rv__cenario_premissa rvcp WHERE rvcp.id_cenario='{$cenario["id"]}' ORDER BY rvcp.ref ASC");
 				while($row = $result_raw->fetch_assoc()){
 					$result[$i]["premissas"][] = [
 						"id" => $row["id"],
 						"inativo" => $row["inativo"],
+						"ref" => $row["ref"],
 						"obrigatoria" => $row["obrigatoria"],
 						"cor" => $row["cor"],
 						"nome" => $row["nome"]
@@ -130,11 +131,12 @@
 				}
 				$result_raw->free();
 				$result[$i]["observacoes"] = [];
-				$result_raw = $mysqli->query("SELECT rvco.* FROM rv__cenario_obs rvco WHERE rvco.id_cenario='{$cenario["id"]}' ORDER BY rvco.nome ASC");
+				$result_raw = $mysqli->query("SELECT rvco.* FROM rv__cenario_obs rvco WHERE rvco.id_cenario='{$cenario["id"]}' ORDER BY rvco.ref ASC");
 				while($row = $result_raw->fetch_assoc()){
 					$result[$i]["observacoes"][] = [
 						"id" => $row["id"],
 						"inativo" => $row["inativo"],
+						"ref" => $row["ref"],
 						"cor" => $row["cor"],
 						"nome" => $row["nome"]
 					];
@@ -162,16 +164,16 @@
 				//Adicionar agora as premissas se houver
 				if (array_key_exists("premissas", $params)){
 					foreach ($params["premissas"] as $premissa){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_premissa (id_cenario,obrigatoria,cor,nome,inativo) VALUES ('{$id_cenario}',?,?,?,?)");
-				 		$stmt->bind_param("issi", $premissa["obrigatoria"], $premissa["cor"], $premissa["nome"], $premissa["inativo"]);
+						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_premissa (id_cenario,ref,obrigatoria,cor,nome,inativo) VALUES ('{$id_cenario}',?,?,?,?,?)");
+				 		$stmt->bind_param("iissi", $premissa["ref"], $premissa["obrigatoria"], $premissa["cor"], $premissa["nome"], $premissa["inativo"]);
 						$stmt->execute();
 					}
 				}
 				if (array_key_exists("observacoes", $params)){
 					//Adicionar agora as observacoes se houver
 					foreach ($params["observacoes"] as $obs){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,cor,nome,inativo) VALUES ('{$id_cenario}',?,?,?)");
-				 		$stmt->bind_param("ssi", $obs["cor"], $obs["nome"], $obs["inativo"]);
+						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,ref,cor,nome,inativo) VALUES ('{$id_cenario}',?,?,?,?)");
+				 		$stmt->bind_param("issi", $obs["ref"], $obs["cor"], $obs["nome"], $obs["inativo"]);
 						$stmt->execute();
 					}
 				}
@@ -203,16 +205,16 @@
 				if (!empty($params["insert"]["premissas"])){
 					$place = 1;
 					foreach ($params["insert"]["premissas"] as $premissa){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_premissa (id_cenario,obrigatoria,cor,nome,inativo) VALUES (?,?,?,?,?)");
-				 		$stmt->bind_param("iissi", $params["id_cenario"], $premissa["obrigatoria"], $premissa["cor"], $premissa["nome"], $premissa["inativo"]);
+						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_premissa (id_cenario,ref,obrigatoria,cor,nome,inativo) VALUES (?,?,?,?,?,?)");
+				 		$stmt->bind_param("iiissi", $params["id_cenario"], $premissa["ref"], $premissa["obrigatoria"], $premissa["cor"], $premissa["nome"], $premissa["inativo"]);
 						$stmt->execute();
 					}
 				}
 				if (!empty($params["insert"]["observacoes"])){
 					$place = 2;
 					foreach ($params["insert"]["observacoes"] as $obs){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,cor,nome,inativo) VALUES (?,?,?,?)");
-				 		$stmt->bind_param("issi", $params["id_cenario"], $obs["cor"], $obs["nome"], $obs["inativo"]);
+						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,ref,cor,nome,inativo) VALUES (?,?,?,?,?)");
+				 		$stmt->bind_param("iissi", $params["id_cenario"], $obs["ref"], $obs["cor"], $obs["nome"], $obs["inativo"]);
 						$stmt->execute();
 					}
 				}

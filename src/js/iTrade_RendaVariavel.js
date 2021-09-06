@@ -3,7 +3,7 @@ let Renda_variavel = (function(){
 	let _cenarios__operacoes_add = {},
 		_ativos__operacoes_add = [];
 	/*
-		Realiza a abertura e leitura do arquivo csv.
+		Realiza a abertura e leitura do arquivo csv. (Importar operações)
 	*/
 	let _csv_reader = {
 		reader: new FileReader(),
@@ -165,9 +165,9 @@ let Renda_variavel = (function(){
 	*/
 	function reorder_premissas_e_observacoes(tbody){
 		[].slice.call(tbody.children).sort(function(a, b) {
-			let a_v = a.querySelector("input[name='nome']").value,
-				b_v = b.querySelector("input[name='nome']").value;
-			return a_v.localeCompare(b_v);
+			let a_v = a.querySelector("input[name='ref']").value,
+				b_v = b.querySelector("input[name='ref']").value;
+			return parseInt(a_v) - parseInt(b_v);
 		}).forEach(function(ele) {
 			tbody.appendChild(ele);
 		});
@@ -199,24 +199,26 @@ let Renda_variavel = (function(){
 			for (let p in data){
 				html += `<tr ${((new_data)?`new_premissa`:`premissa="${data[p].id}"`)}>`+
 						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"><button class="btn btn-sm btn-outline-danger" type="button" remover_premissa>Excluir</button></div></td>`+
+						`<td name="ref"><input type="text" name="ref" class="form-control form-control-sm text-center" value="${data[p].ref}"></td>`+
 						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="${data[p].cor}"></div></td>`+
 						`<td name="obrigatoria"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="obrigatoria" class="form-check-input" ${((data[p].obrigatoria == 1)?"checked":"")}></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input" ${((data[p].inativo == 1)?"checked":"")}></div></td>`+
 						`</tr>`;
 			}
 			if (html === '')
-				html += `<tr empty><td colspan="4" class="text-muted text-center fw-bold p-4">Nenhuma Premissa</td></tr>`;
+				html += `<tr empty><td colspan="5" class="text-muted text-center fw-bold p-4">Nenhuma Premissa</td></tr>`;
 		}
 		else if (type === 2){
 			for (let p in data){
 				html += `<tr ${((new_data)?`new_observacao`:`observacao="${data[p].id}"`)}>`+
 						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value="${data[p].nome}"><button class="btn btn-sm btn-outline-danger" type="button" remover_observacao>Excluir</button></div></td>`+
+						`<td name="ref"><input type="text" name="ref" class="form-control form-control-sm text-center" value="${data[p].ref}"></td>`+
 						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="${data[p].cor}"></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input" ${((data[p].inativo == 1)?"checked":"")}></div></td>`+
 						`</tr>`;
 			}
 			if (html === '')
-				html += `<tr empty><td colspan="4" class="text-muted text-center fw-bold p-4">Nenhuma Observação</td></tr>`;
+				html += `<tr empty><td colspan="5" class="text-muted text-center fw-bold p-4">Nenhuma Observação</td></tr>`;
 		}
 		return html;
 	}
@@ -237,7 +239,7 @@ let Renda_variavel = (function(){
 				`<table class="table m-0 me-3">`+
 				`<thead>`+
 				`<tr>`+
-				`<th class="border-0">Nome</th><th class="border-0 text-center">Cor</th><th class="border-0 text-center">Obrigatória</th><th class="border-0 text-center">Desativar</th>`+
+				`<th class="border-0">Nome</th><th class="border-0 text-center">Ref</th><th class="border-0 text-center">Cor</th><th class="border-0 text-center">Obrigatória</th><th class="border-0 text-center">Desativar</th>`+
 				`</tr>`+
 				`<tbody>${(("premissas" in data)?buildListaPremissas_Observacoes(data["premissas"], 1, new_cenario):buildListaPremissas_Observacoes({}, 1, new_cenario))}</tbody>`+
 				`</table>`+
@@ -246,7 +248,7 @@ let Renda_variavel = (function(){
 				`<table class="table m-0 me-3">`+
 				`<thead>`+
 				`<tr>`+
-				`<th class="border-0">Nome</th><th class="border-0 text-center">Cor</th><th class="border-0 text-center">Desativar</th>`+
+				`<th class="border-0">Nome</th><th class="border-0 text-center">Ref</th><th class="border-0 text-center">Cor</th><th class="border-0 text-center">Desativar</th>`+
 				`</tr>`+
 				`<tbody>${(("observacoes" in data)?buildListaPremissas_Observacoes(data["observacoes"], 2, new_cenario):buildListaPremissas_Observacoes({}, 2, new_cenario))}</tbody>`+
 				`</table>`+
@@ -280,10 +282,12 @@ let Renda_variavel = (function(){
 			data.id_arcabouco = id_arcabouco;
 			data.premissas = [];
 			cenario.find("tr[new_premissa]").each(function (r, row){
-				let nome = row.querySelector("input[name='nome']").value;
-				if (nome !== ""){
+				let nome = row.querySelector("input[name='nome']").value,
+					ref = row.querySelector("input[name='ref']").value;
+				if (nome !== "" && ref !== ""){
 					data.premissas.push({
 						nome: nome,
+						ref: ref,
 						cor: row.querySelector("input[name='cor']").value,
 						obrigatoria: ((row.querySelector("input[name='obrigatoria']").checked)?1:0),
 						inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
@@ -292,10 +296,12 @@ let Renda_variavel = (function(){
 			});
 			data.observacoes = [];
 			cenario.find("tr[new_observacao]").each(function (r, row){
-				let nome = row.querySelector("input[name='nome']").value;
-				if (nome !== ""){
+				let nome = row.querySelector("input[name='nome']").value,
+					ref = row.querySelector("input[name='ref']").value;
+				if (nome !== "" && ref !== ""){
 					data.observacoes.push({
 						nome: nome,
+						ref: ref,
 						cor: row.querySelector("input[name='cor']").value,
 						inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
 					});
@@ -334,10 +340,12 @@ let Renda_variavel = (function(){
 				data["update"]["cenarios"].push({nome: cenario_nome_input.val()});
 			//Verifica novas premissas
 			cenario.find("tr[new_premissa]").each(function (r, row){
-				let nome = row.querySelector("input[name='nome']").value;
-				if (nome !== ""){
+				let nome = row.querySelector("input[name='nome']").value,
+					ref = row.querySelector("input[name='ref']").value;
+				if (nome !== "" && ref !== ""){
 					data["insert"]["premissas"].push({
 						nome: nome,
+						ref: ref,
 						cor: row.querySelector("input[name='cor']").value,
 						obrigatoria: ((row.querySelector("input[name='obrigatoria']").checked)?1:0),
 						inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
@@ -368,10 +376,12 @@ let Renda_variavel = (function(){
 			});
 			//Verifica novas observacoes
 			cenario.find("tr[new_observacao]").each(function (r, row){
-				let nome = row.querySelector("input[name='nome']").value;
-				if (nome !== ""){
+				let nome = row.querySelector("input[name='nome']").value,
+					ref = row.querySelector("input[name='ref']").value;
+				if (nome !== "" && ref !== ""){
 					data["insert"]["observacoes"].push({
 						nome: nome,
+						ref: ref,
 						cor: row.querySelector("input[name='cor']").value,
 						inativo: ((row.querySelector("input[name='inativo']").checked)?1:0)
 					});
@@ -443,7 +453,7 @@ let Renda_variavel = (function(){
 	function buildAtivosSelect_OperacaoAddTable(){
 		let html = ``;
 		for (let at in _ativos__operacoes_add)
-			html += `<option value="${_ativos__operacoes_add[at].id}">${_ativos__operacoes_add[at].nome}</option>`;
+			html += `<option value="${_ativos__operacoes_add[at].id}" pts_tick="${_ativos__operacoes_add[at].pts_tick}">${_ativos__operacoes_add[at].nome}</option>`;
 		return html;
 	}
 	/*
@@ -454,6 +464,25 @@ let Renda_variavel = (function(){
 		for (let cn in _cenarios__operacoes_add)
 			html += `<option value="${_cenarios__operacoes_add[cn].id}">${_cenarios__operacoes_add[cn].nome}</option>`;
 		return html;
+	}
+	/*
+		Constroi o html de options do select de Premissas e Observações, e seleciona algumas opções caso haja.
+	*/
+	function buildPremissasEObservacoes_OperacaoAddTable(tr, cenario, selected_premissas = [], selected_observacoes = []){
+		let premissas_html = ``,
+			observacoes_html = ``;
+		if (cenario in _cenarios__operacoes_add){
+			for (let p in _cenarios__operacoes_add[cenario]["premissas"])
+				premissas_html += `<option value="${_cenarios__operacoes_add[cenario]["premissas"][p]["id"]}" ref="${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}">(${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}) ${_cenarios__operacoes_add[cenario]["premissas"][p]["nome"]}</option>`;
+			for (let o in _cenarios__operacoes_add[cenario]["observacoes"])
+				observacoes_html += `<option value="${_cenarios__operacoes_add[cenario]["observacoes"][o]["id"]}" ref="${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}">(${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}) ${_cenarios__operacoes_add[cenario]["observacoes"][o]["nome"]}</option>`;
+		}
+		tr.find("select[name='premissas']").append(premissas_html).promise().then(function (){
+			this.children().filter((i, el) => selected_premissas.includes(el.getAttribute("ref"))).prop("selected", true);
+		});
+		tr.find("select[name='observacoes']").append(observacoes_html).promise().then(function (){
+			this.children().filter((i, el) => selected_observacoes.includes(el.getAttribute("ref"))).prop("selected", true);
+		});
 	}
 	/*
 		Inicia os valores dos selects das linhas de 'table_operacoes_add'.
@@ -467,8 +496,11 @@ let Renda_variavel = (function(){
 				tr.find("select[name='op']").val(data[t].op);
 			if ("rr" in data[t])
 				tr.find("select[name='rr']").val(data[t].rr);
-			if ("cenario" in data[t])
-				tr.find("select[name='cenario']").val("").find("option").filter((i, el) => data[t].cenario === el.innerHTML).prop("selected", true);
+			if ("cenario" in data[t]){
+				let cenario_option = tr.find("select[name='cenario']").val("").find("option").filter((i, el) => data[t].cenario === el.innerHTML);
+				cenario_option.prop("selected", true);
+				buildPremissasEObservacoes_OperacaoAddTable(tr, cenario_option.attr("value"), (("premissas" in data[t])?data[t].premissas:[]), (("observacoes" in data[t])?data[t].observacoes:[]));
+			}
 		});
 	}
 	/*
@@ -511,7 +543,7 @@ let Renda_variavel = (function(){
 						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
 						`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
 						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
-						`<td name="rr"><select name='rr' class="form-select form-select-sm"><option value="">Sem</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
+						`<td name="rr"><select name='rr' class="form-select form-select-sm"><option value="">---</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
 						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
 						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
 						`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
@@ -532,6 +564,30 @@ let Renda_variavel = (function(){
 		table.find("tbody").empty().append(tbody_html).promise().then(function (){
 			setSelectValues_OperacaoAddTable(data);
 		});
+	}
+	/*
+		Recalcula o Stop e Alvo, baseado nos dados preenchidos em um linha da 'table_operacoes_add'.
+	*/
+	function recalcStopeAlvo_OperacoesAddTable(tr_data){
+		let novo_alvo = '',
+			novo_stop = '';
+		if (tr_data.vol == 0 || tr_data.pts_tick == 0 || (tr_data.risco == 0 && tr_data.retorno == 0))
+			return;
+		//Se for compra
+		if (tr_data.op == "1"){
+			if (tr_data.retorno != 0)
+				novo_alvo = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
+			if (tr_data.risco != 0)
+				novo_stop = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.risco);
+		}
+		else if (tr_data.op == "2"){
+			if (tr_data.retorno != 0)
+				novo_alvo = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
+			if (tr_data.risco != 0)
+				novo_stop = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.risco);	
+		}
+		tr_data.tr.find("input[name='alvo']").val(novo_alvo);
+		tr_data.tr.find("input[name='stop']").val(novo_stop);
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
@@ -756,6 +812,7 @@ let Renda_variavel = (function(){
 			let me = $(this),
 				html = 	`<tr new_premissa>`+
 						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value=""><button class="btn btn-sm btn-outline-danger" type="button" remover_premissa>Excluir</button></div></td>`+
+						`<td name="ref"><input type="text" name="ref" class="form-control form-control-sm text-center"></td>`+
 						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="#ffffff"></div></td>`+
 						`<td name="obrigatoria"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="obrigatoria" class="form-check-input"></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input"></div></td>`+
@@ -800,6 +857,7 @@ let Renda_variavel = (function(){
 			let me = $(this),
 				html = 	`<tr new_observacao>`+
 						`<td name="nome"><div class="input-group"><input type="text" name="nome" class="form-control form-control-sm" value=""><button class="btn btn-sm btn-outline-danger" type="button" remover_observacao>Excluir</button></div></td>`+
+						`<td name="ref"><input type="text" name="ref" class="form-control form-control-sm text-center"></td>`+
 						`<td name="cor"><div class="d-flex justify-content-center"><input type="color" name="cor" class="form-control form-control-sm form-control-color" value="#ffffff"></div></td>`+
 						`<td name="inativo"><div class="form-check form-switch d-flex justify-content-center"><input type="checkbox" name="inativo" class="form-check-input"></div></td>`+
 						`</tr>`;
@@ -890,7 +948,7 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById("table_cenarios")).on("change", "input[name]", function (){
 		this.setAttribute("changed", "");
-		if (this.name !== "cenario_nome")
+		if (this.name === "ref")
 			reorder_premissas_e_observacoes($(this).parentsUntil("table").last()[0]);
 		let cenario_div = $(this).parentsUntil("#table_cenarios").last();
 		if (cenario_div[0].hasAttribute("cenario"))
@@ -942,6 +1000,79 @@ let Renda_variavel = (function(){
 			file_import.value = "";
 		};
 		_csv_reader.reader.readAsText(this.files[0], "ISO-8859-2");
+	});
+	/*
+		Processa alteracoes no select de R:R, Vol, Entrada, Op e Ativo, para alterar o Stop e Alvo. (Caso o Vol e R:R esteja preenchido)
+	*/
+	$(document.getElementById("table_operacoes_add")).on("change", "select[name='rr']", function (){
+		let tr = $(this).parentsUntil("tbody").last(),
+			op = tr.find("select[name='op']").val(),
+			pts_tick = tr.find("select[name='ativo'] option:selected").attr("pts_tick"),
+			rr = $(this).val().split(":"),
+			risco = ((rr.length === 2)?parseInt(rr[0]):0),
+			retorno = ((rr.length === 2)?parseInt(rr[1]):0),
+			vol = tr.find("input[name='vol']").val(),
+			entrada = tr.find("input[name='entrada']").val();
+		vol = ((vol !== "")?parseFloat(vol):0.0);
+		pts_tick = ((pts_tick)?parseFloat(pts_tick):0.0);
+		entrada = ((entrada !== "")?parseFloat(entrada):0.0);
+		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	});
+	$(document.getElementById("table_operacoes_add")).on("change", "input[name='vol']", function (){
+		let tr = $(this).parentsUntil("tbody").last(),
+			op = tr.find("select[name='op']").val(),
+			pts_tick = tr.find("select[name='ativo'] option:selected").attr("pts_tick"),
+			rr = tr.find("select[name='rr']").val().split(":"),
+			risco = ((rr.length === 2)?parseInt(rr[0]):0),
+			retorno = ((rr.length === 2)?parseInt(rr[1]):0),
+			vol = $(this).val(),
+			entrada = tr.find("input[name='entrada']").val();
+		vol = ((vol !== "")?parseFloat(vol):0.0);
+		pts_tick = ((pts_tick)?parseFloat(pts_tick):0.0);
+		entrada = ((entrada !== "")?parseFloat(entrada):0.0);
+		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	});
+	$(document.getElementById("table_operacoes_add")).on("change", "input[name='entrada']", function (){
+		let tr = $(this).parentsUntil("tbody").last(),
+			op = tr.find("select[name='op']").val(),
+			pts_tick = tr.find("select[name='ativo'] option:selected").attr("pts_tick"),
+			rr = tr.find("select[name='rr']").val().split(":"),
+			risco = ((rr.length === 2)?parseInt(rr[0]):0),
+			retorno = ((rr.length === 2)?parseInt(rr[1]):0),
+			vol = tr.find("input[name='vol']").val(),
+			entrada = $(this).val();
+		vol = ((vol !== "")?parseFloat(vol):0.0);
+		pts_tick = ((pts_tick)?parseFloat(pts_tick):0.0);
+		entrada = ((entrada !== "")?parseFloat(entrada):0.0);
+		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	});
+	$(document.getElementById("table_operacoes_add")).on("change", "select[name='ativo']", function (){
+		let tr = $(this).parentsUntil("tbody").last(),
+			op = tr.find("select[name='op']").val(),
+			pts_tick = $(this).find("option:selected").attr("pts_tick"),
+			rr = tr.find("select[name='rr']").val().split(":"),
+			risco = ((rr.length === 2)?parseInt(rr[0]):0),
+			retorno = ((rr.length === 2)?parseInt(rr[1]):0),
+			vol = tr.find("input[name='vol']").val(),
+			entrada = tr.find("input[name='entrada']").val();
+		vol = ((vol !== "")?parseFloat(vol):0.0);
+		pts_tick = ((pts_tick)?parseFloat(pts_tick):0.0);
+		entrada = ((entrada !== "")?parseFloat(entrada):0.0);
+		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	});
+	$(document.getElementById("table_operacoes_add")).on("change", "select[name='op']", function (){
+		let tr = $(this).parentsUntil("tbody").last(),
+			op = $(this).val(),
+			pts_tick = tr.find("select[name='ativo'] option:selected").attr("pts_tick"),
+			rr = tr.find("select[name='rr']").val().split(":"),
+			risco = ((rr.length === 2)?parseInt(rr[0]):0),
+			retorno = ((rr.length === 2)?parseInt(rr[1]):0),
+			vol = tr.find("input[name='vol']").val(),
+			entrada = tr.find("input[name='entrada']").val();
+		vol = ((vol !== "")?parseFloat(vol):0.0);
+		pts_tick = ((pts_tick)?parseFloat(pts_tick):0.0);
+		entrada = ((entrada !== "")?parseFloat(entrada):0.0);
+		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
 	});
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*
