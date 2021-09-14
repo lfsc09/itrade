@@ -477,10 +477,10 @@ let Renda_variavel = (function(){
 			for (let o in _cenarios__operacoes_add[cenario]["observacoes"])
 				observacoes_html += `<option value="${_cenarios__operacoes_add[cenario]["observacoes"][o]["id"]}" ref="${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}">(${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}) ${_cenarios__operacoes_add[cenario]["observacoes"][o]["nome"]}</option>`;
 		}
-		tr.find("select[name='premissas']").append(premissas_html).promise().then(function (){
+		tr.find("select[name='premissas']").empty().append(premissas_html).promise().then(function (){
 			this.children().filter((i, el) => selected_premissas.includes(el.getAttribute("ref"))).prop("selected", true);
 		});
-		tr.find("select[name='observacoes']").append(observacoes_html).promise().then(function (){
+		tr.find("select[name='observacoes']").empty().append(observacoes_html).promise().then(function (){
 			this.children().filter((i, el) => selected_observacoes.includes(el.getAttribute("ref"))).prop("selected", true);
 		});
 	}
@@ -517,15 +517,12 @@ let Renda_variavel = (function(){
 		if (table_layout === "scalp"){
 			thead_html += `<tr>`+
 						  `<th>#</th>`+
+						  `<th>Data</th>`+
 						  `<th>Ativo</th>`+
 						  `<th>Op.</th>`+
 						  `<th>R:R</th>`+
 						  `<th>Vol</th>`+
 						  `<th>Cts</th>`+
-						  `<th>Cenário</th>`+
-						  `<th>Premissas</th>`+
-						  `<th>Observações</th>`+
-						  `<th>Data</th>`+
 						  `<th>Hora</th>`+
 						  `<th>Entrada</th>`+
 						  `<th>Stop</th>`+
@@ -533,6 +530,9 @@ let Renda_variavel = (function(){
 						  `<th>MEN</th>`+
 						  `<th>MEP</th>`+
 						  `<th>Saída</th>`+
+						  `<th>Cenário</th>`+
+						  `<th>Premissas</th>`+
+						  `<th>Observações</th>`+
 						  `</tr>`;
 		}
 		//Constroi o TBODY
@@ -541,22 +541,22 @@ let Renda_variavel = (function(){
 			if (table_layout === "scalp"){
 				tbody_html += `<tr>`+
 						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
+						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
 						`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
 						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
 						`<td name="rr"><select name='rr' class="form-select form-select-sm"><option value="">---</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
 						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
 						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
-						`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
-						`<td name="premissas"><select class="form-select form-select-sm" name="premissas" multiple></select></td>`+
-						`<td name="observacoes"><select class="form-select form-select-sm" name="observacoes" multiple></select></td>`+
-						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
 						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" value="${data[i].hora}"></td>`+
 						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()" value="${data[i].entrada}"></td>`+
-						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" value="${data[i].stop}"></td>`+
-						`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" value="${data[i].alvo}"></td>`+
+						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()" value="${data[i].stop}"></td>`+
+						`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" onclick="this.select()" value="${data[i].alvo}"></td>`+
 						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()" value="${data[i].men}"></td>`+
 						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()" value="${data[i].mep}"></td>`+
 						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()" value="${data[i].saida}"></td>`+
+						`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
+						`<td name="premissas"><select class="form-select form-select-sm" name="premissas" multiple></select></td>`+
+						`<td name="observacoes"><select class="form-select form-select-sm" name="observacoes" multiple></select></td>`+
 						`</tr>`;
 			}
 		}
@@ -1073,6 +1073,13 @@ let Renda_variavel = (function(){
 		pts_tick = ((pts_tick)?parseFloat(pts_tick):0.0);
 		entrada = ((entrada !== "")?parseFloat(entrada):0.0);
 		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	});
+	/*
+		Reconstroi a select de premissas e observacoes ao mudar o cenario.
+	*/
+	$(document.getElementById("table_operacoes_add")).on("change", "select[name='cenario']", function (){
+		let tr = $(this).parentsUntil("tbody").last();
+		buildPremissasEObservacoes_OperacaoAddTable(tr, this.options[this.selectedIndex].value, [], []);
 	});
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*
