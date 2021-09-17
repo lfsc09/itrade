@@ -41,6 +41,17 @@ let Global = (function(){
 		}
 		return true;
 	}
+	let convertDate = function(date){
+		//Valida a Data
+		if (!(/^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/.test(date)) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])\-(0[1-9]|1\d|2\d|3[01])$/.test(date)))
+			return ``;
+		let frag_date = date.split("/");
+		if (frag_date.length === 1){
+			frag_date = date.split("-");
+			return `${frag_date[2]}/${frag_date[1]}/${frag_date[0]}`;
+		}
+		return `${frag_date[2]}-${frag_date[1]}-${frag_date[0]}`;
+	}
 	let _random = {
 		str: function(prefix){
 		    return Math.random().toString(36).replace('0.',prefix || '');
@@ -213,6 +224,34 @@ let Global = (function(){
 	_whiteListPopOvers.figure = ['style', 'class'];
 	_whiteListPopOvers['*'].push('style');
 	/*
+		Extensao do Plug-in DataTables para incluir ordenacao com numeros ex.: 5.000, 450.000 ou 4.500,00
+ 	*/
+ 	$.extend($.fn.dataTableExt.oSort, {
+ 		"dot-thousand-pre": function (a){
+ 			let _a = a.replace(/<[^<>]*>/g, "");
+ 			_a = (_a === "")?0:((_a.indexOf(",") !== -1)?parseFloat(_a.replace(/\./g, "").replace(/,/, ".")):parseFloat(_a.replace(/\./g, "")));
+ 			return _a;
+	    },
+	    "dot-thousand-asc": function (a, b){
+	    	return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+	    },
+	    "dot-thousand-desc": function (a, b){
+	    	return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+	    },
+	    "br-date-pre": function (a){
+	    	let _a = a.replace(/<[^<>]*>/g, "");
+	    	if (_a === "") return _a;
+	    	_a = _a.split("/");
+	    	return _a[2]+"-"+_a[1]+"-"+_a[0];
+	    },
+	    "n_viagens-pre": function (a){
+	    	let _a = a.replace(/<[^<>]*>/g, "");
+	    	if (_a === "") return 0;
+	    	_a = _a.replace(/\(.*\)/, "");
+	    	return parseInt(_a);
+	    }
+	});
+	/*
 		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
 	*/
 	$(document.getElementById("insert_modal")).on("hidden.bs.modal", function (){
@@ -248,6 +287,7 @@ let Global = (function(){
 	return {
 		hasClass: hasClass,
 		isObjectEmpty: isObjectEmpty,
+		convertDate: convertDate,
 		_random: _random,
 		delay: delay,
 		request: request,

@@ -67,6 +67,7 @@
 			<link rel="shortcut icon" href="favicon.ico">
 			<link rel="stylesheet" href="src/css/bootstrap.min.css">
 			<link rel="stylesheet" href="src/css/slim-select.min.css">
+			<link rel="stylesheet" href="src/css/datatables.min.css">
 			<link rel="stylesheet" href="src/css/iTrade.css">
 			<script src="https://kit.fontawesome.com/9bb84e5d3e.js" crossorigin="anonymous"></script>
 			<script src="src/js/base/jquery_3.6.0.min.js"></script>
@@ -74,6 +75,9 @@
 			<script src="src/js/base/bootstrap.bundle.min.js"></script>
 			<script src="src/js/base/slim-select.min.js"></script>
 			<script src="src/js/base/Chart.bundle.min.js"></script>
+			<!-- DataTables -->
+			<script src="src/js/base/datatables.min.js"></script>
+			<script src="src/js/base/datatables.pagination.min.js"></script>
 		</head>
 		<body class="container container-body">
 			<div class="position-fixed top-0 end-0 p-3" id="master_toasts"></div>
@@ -90,39 +94,15 @@
 						</div>
 					</div>
 					<div class="col-10 d-flex">
-						<div class="container-fluid bg-light p-5 pt-3 rounded ">
-							<div class="container-fluid d-flex mb-3 px-0" id="renda_variavel__menu">
+						<div class="container-fluid bg-light p-5 pt-3 rounded">
+							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
 								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-plus me-2"></i>Adicionar Operações</button>
+								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="dashboard_ops"><i class="fas fa-chart-line me-2"></i>Dashboard</button>
+								<button class="btn btn-sm btn-outline-primary" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
 							</div>
-							<div class="row row-cols-1 row-cols-md-1 mb-3 text-center">
-								<div class="col">
-									<div class="card mb-4 rounded-3 shadow-sm">
-										<div class="card-header py-2">
-											<h5 class="my-0">Operações</h5>
-										</div>
-										<div class="card-body">
-											<table id="table_operacoes" class="table">
-												<thead>
-													<tr>
-														<th>#</th>
-														<th>Data</th>
-														<th>Hora</th>
-														<th>Ativo</th>
-														<th>Op.</th>
-														<th>Cts</th>
-														<th>Entrada</th>
-														<th>Stop</th>
-														<th>MEN</th>
-														<th>Saída</th>
-														<th>MEP</th>
-													</tr>
-												</thead>
-												<tbody></tbody>
-											</table>
-										</div>
-									</div>
-								</div>
+							<div class="row">
+								<div class="col" id="renda_variavel__section"></div>
 							</div>
 						</div>
 					</div>
@@ -196,7 +176,7 @@
 			</div>
 			<footer class="footer mt-auto fixed-bottom py-2 bg-light">
 				<div class="container-fluid d-flex" id="menu_bottom">
-					<button class="btn btn-sm btn-secondary me-2" type="button" name="dashboard">Dashboard</button>
+					<!-- <button class="btn btn-sm btn-secondary me-2" type="button" name="dashboard">Dashboard</button> -->
 					<button class="btn btn-sm btn-secondary me-2" type="button" name="renda_variavel">Renda Variável</button>
 					<button class="btn btn-sm btn-secondary me-4 ms-auto" type="button" name="ativos">Ativos</button>
 					<button class="btn btn-sm btn-light me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>

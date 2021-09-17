@@ -11,13 +11,14 @@
 			$mysqli->set_charset('utf8');
 			if ($mysqli->connect_errno)
 				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
-			$result_raw = $mysqli->query("SELECT rva.*,crva_u.qtd_usuarios FROM rv__arcabouco rva INNER JOIN rv__arcabouco__usuario rva_u ON rva.id=rva_u.id_arcabouco INNER JOIN (SELECT COUNT(_rva_u.id_arcabouco) AS qtd_usuarios,_rva_u.id_arcabouco FROM rv__arcabouco__usuario _rva_u GROUP BY _rva_u.id_arcabouco) crva_u ON rva.id=crva_u.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' ORDER BY rva.id DESC");
+			$result_raw = $mysqli->query("SELECT rva.*,crva_u.qtd_usuarios,crvo.qtd_ops FROM rv__arcabouco rva INNER JOIN rv__arcabouco__usuario rva_u ON rva.id=rva_u.id_arcabouco INNER JOIN (SELECT COUNT(_rva_u.id_arcabouco) AS qtd_usuarios,_rva_u.id_arcabouco FROM rv__arcabouco__usuario _rva_u GROUP BY _rva_u.id_arcabouco) crva_u ON rva.id=crva_u.id_arcabouco LEFT JOIN (SELECT COUNT(_rvo.id) AS qtd_ops,_rvo.id_arcabouco FROM rv__operacoes _rvo GROUP BY _rvo.id_arcabouco) crvo ON rva.id=crvo.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' ORDER BY rva.id DESC");
 			while($row = $result_raw->fetch_assoc()){
 				$result[] = [
 					"id" => $row["id"],
 					"nome" => $row["nome"],
 					"criador" => ($row["id_usuario_criador"] == $id_usuario)?1:0,
-					"qtd_usuarios" => $row["qtd_usuarios"]
+					"qtd_usuarios" => $row["qtd_usuarios"],
+					"qtd_ops" => (!is_null($row["qtd_ops"])?$row["qtd_ops"]:0)
 				];
 			}
 			$result_raw->free();
@@ -360,6 +361,100 @@
 				$mysqli->rollback();
 		 		$mysqli->close();
 	 			return ["status" => 0, "error" => "Erro ao remover este cenário."];
+			}
+		}
+		/*------------------------------------------ OPERAÇÕES ------------------------------------------*/
+		/*
+			Retorna a lista de operações de um arcabouço do usuario.
+		*/
+		public static function get_operacoes($params = [], $id_usuario = ""){
+			$result = [];
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			$mysqli->set_charset('utf8');
+			if ($mysqli->connect_errno)
+				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
+			$stmt = $mysqli->prepare("SELECT rvo.* FROM rv__operacoes rvo INNER JOIN rv__arcabouco__usuario rva_u ON rvo.id_arcabouco=rva_u.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' AND rvo.id_arcabouco=? ORDER BY rvo.data DESC,rvo.hora DESC");
+		 	$stmt->bind_param("i", $params["id_arcabouco"]);
+			$stmt->execute();
+		 	$result_raw = $stmt->get_result();
+			while($row = $result_raw->fetch_assoc())
+				$result[] = $row;
+			$result_raw->free();
+			$mysqli->close();
+			return ["status" => 1, "data" => $result];
+		}
+		/*
+			Insere novas operações no arcabouco de um usuario.
+		*/
+		public static function insert_operacoes($params = [], $id_usuario = ""){
+			$hold_ops = [];
+			mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			if ($mysqli->connect_errno)
+				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
+			$mysqli->begin_transaction();
+			try {
+				//Checa para ver se o usuario tem acesso ao arcabouço
+				$stmt = $mysqli->prepare("SELECT id_arcabouco FROM rv__arcabouco__usuario WHERE id_arcabouco=? AND id_usuario='{$id_usuario}'");
+			 	$stmt->bind_param("i", $params["id_arcabouco"]);
+			 	$stmt->execute();
+		 		$result_raw = $stmt->get_result();
+		 		if ($result_raw->num_rows > 0){
+		 			foreach ($params["operacoes"] as $operacao){
+		 				//Busca a operacao para nao inserir duplicado caso ja haja o mesmo (id_arcabouco, data, ativo, op, hora, entrada, saida, cenario, premissas, observacoes)
+		 				$stmt = $mysqli->prepare("SELECT id FROM rv__operacoes WHERE id_arcabouco=? AND data=? AND ativo=? AND op=? AND hora=? AND entrada=? AND saida=? AND cenario=? AND premissas=? AND observacoes=?");
+				 		$stmt->bind_param("ississssss", 
+				 			$params["id_arcabouco"],
+				 			$operacao["data"],
+				 			$operacao["ativo"],
+				 			$operacao["op"],
+				 			$operacao["hora"],
+				 			$operacao["entrada"],
+				 			$operacao["saida"],
+				 			$operacao["cenario"],
+				 			$operacao["premissas"],
+				 			$operacao["observacoes"]
+				 		);
+				 		$stmt->execute();
+		 				$result_raw = $stmt->get_result();
+				 		if ($result_raw->num_rows === 0){
+							$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+					 		$stmt->bind_param("iissisisssssssssssss", 
+					 			$params["id_arcabouco"],
+					 			$id_usuario,
+					 			$operacao["data"],
+					 			$operacao["ativo"],
+					 			$operacao["op"],
+					 			$operacao["vol"],
+					 			$operacao["cts"],
+					 			$operacao["hora"],
+					 			$operacao["entrada"],
+					 			$operacao["stop"],
+					 			$operacao["alvo"],
+					 			$operacao["men"],
+					 			$operacao["mep"],
+					 			$operacao["saida"],
+					 			$operacao["cenario"],
+					 			$operacao["premissas"],
+					 			$operacao["observacoes"],
+					 			$operacao["ativo_custo"],
+					 			$operacao["ativo_valor_tick"],
+					 			$operacao["ativo_pts_tick"]
+					 		);
+							$stmt->execute();
+				 		}
+				 		else
+				 			$hold_ops[] = $operacao["sequencia"];
+		 			}
+		 		}
+				$mysqli->commit();
+		 		$mysqli->close();
+		 		return ["status" => 1, "hold_ops" => $hold_ops];
+			}
+			catch (mysqli_sql_exception $exception){
+				$mysqli->rollback();
+		 		$mysqli->close();
+	 			return ["status" => 0, "error" => "Erro no cadastro de operações, nada foi feito."];
 			}
 		}
 	}

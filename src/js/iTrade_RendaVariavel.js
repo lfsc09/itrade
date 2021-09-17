@@ -1,7 +1,59 @@
 let Renda_variavel = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
-	let _cenarios__operacoes_add = {},
-		_ativos__operacoes_add = [];
+	//Contem a lista de cenarios atuais do arcabouço selecionado
+	let _cenarios__operacoes_add = {};
+	//Contem a lista de ativos cadastrados
+	let	_ativos__operacoes_add = [];
+	//Contem a lista atual de operações do arcabouço selecionado
+	let	_operacoes_arcabouco = [];
+	//Informa qual seção do Section Arcabouço está sendo mostrado (dashboard_ops|lista_ops)
+	let	_selected_arcabouco_section = 'lista_ops';
+	//Variavel usada no controle de click, para saber se está pressionado o click ou não
+	let _table_operacoes_DT__clickState = 0;
+	//Funcoes usadas em '_table_operacoes_DT'
+	let _table_operacoes_DT__ext = {
+		preco_render: function (data, type, row){
+			if (data == 0)
+				return '';
+			if (row[3].toLowerCase().includes("win"))
+				return $.fn.dataTable.render.number( '.', '', 0, '').display(data);
+			else if (row[3].toLowerCase().includes("wdo"))
+				return $.fn.dataTable.render.number( '.', ',', 2, '').display(data);
+			else
+				return data;
+		},
+		vol_render: function (data, type, row){
+			return $.fn.dataTable.render.number( '.', '', 0, '').display(data);
+		}
+	}
+	//Configuração da tabela de operações em 'lista_ops'
+	let _table_operacoes_DT = {
+		"columns": [
+			{"name": "id", "orderable": true},
+			{"name": "data", "orderable": true, "type": "br-date"},
+			{"name": "hora", "orderable": true},
+			{"name": "ativo", "orderable": true},
+			{"name": "op", "orderable": true},
+			{"name": "vol", "orderable": true, render: _table_operacoes_DT__ext.vol_render},
+			{"name": "cts", "orderable": true},
+			{"name": "entrada", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
+			{"name": "stop", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
+			{"name": "alvo", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
+			{"name": "men", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
+			{"name": "mep", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
+			{"name": "saida", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
+			{"name": "cenario", "orderable": true},
+			{"name": "premissas", "orderable": false},
+			{"name": "observacoes", "orderable": false}
+		],
+		columnDefs: [{
+			targets: [1],
+			orderData: [1, 2]
+		}],
+		"order": [[ 0, 'desc' ]],
+		"pageLength": 25,
+		"pagingType": "input"
+	}
 	/*
 		Realiza a abertura e leitura do arquivo csv. (Importar operações)
 	*/
@@ -146,7 +198,7 @@ let Renda_variavel = (function(){
 			html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action py-3 lh-tight" arcabouco="${data[ar].id}">`+
 					`<div class="d-flex w-100 justify-content-between">`+
 					`<h5 class="mb-1">${data[ar].nome}</h5>`+
-					`<small>100 ops.</small>`+
+					`<small>${data[ar].qtd_ops} ops.</small>`+
 					`</div>`+
 					`<div class="col mb-0 mt-3 small d-flex align-items-center">`+
 					`${((data[ar].qtd_usuarios > 1 && data[ar].criador)?"<i class='fas fa-user-shield me-3'></i>":"")}${((data[ar].qtd_usuarios > 1)?"<i class='fas fa-share-alt me-3'></i>":"")}`+
@@ -158,6 +210,96 @@ let Renda_variavel = (function(){
 		arcaboucos.empty().append(html).promise().then(function (){
 			$(document.getElementById("table_arcaboucos")).children().first().trigger("click");
 		});
+	}
+	/*
+		Atualiza a lista interna de operações do arcabouco, usada para reconstroir a interface.
+	*/
+	function updateOperacoes_Arcabouco(data){
+		_operacoes_arcabouco = data;
+	}
+	/*
+		Retorna o html da lista de operacoes. (Head ou Body)
+	*/
+	function rebuildArcaboucoSection__List(section = ''){
+		let html = ``;
+		if (section === 'thead'){
+			html += `<tr>`+
+					`<th>#</th>`+
+					`<th>Data</th>`+
+					`<th>Hora</th>`+
+					`<th>Ativo</th>`+
+					`<th>Op.</th>`+
+					`<th>Vol</th>`+
+					`<th>Cts</th>`+
+					`<th>Entrada</th>`+
+					`<th>Stop</th>`+
+					`<th>Alvo</th>`+
+					`<th>MEN</th>`+
+					`<th>MEP</th>`+
+					`<th>Saída</th>`+
+					`<th>Cenário</th>`+
+					`<th>Premissas</th>`+
+					`<th>Observações</th>`+
+					`</tr>`;
+		}
+		else if (section === 'tbody'){
+			for (let o in _operacoes_arcabouco){
+				html += `<tr>`+
+						`<td name='id'>${_operacoes_arcabouco[o].id}</td>`+
+						`<td name='data'>${Global.convertDate(_operacoes_arcabouco[o].data)}</td>`+
+						`<td name='hora'>${_operacoes_arcabouco[o].hora}</td>`+
+						`<td name='ativo'>${_operacoes_arcabouco[o].ativo}</td>`+
+						`<td name='op'>${_operacoes_arcabouco[o].op}</td>`+
+						`<td name='vol'>${_operacoes_arcabouco[o].vol}</td>`+
+						`<td name='cts'>${_operacoes_arcabouco[o].cts}</td>`+
+						`<td name='entrada'>${_operacoes_arcabouco[o].entrada}</td>`+
+						`<td name='stop'>${_operacoes_arcabouco[o].stop}</td>`+
+						`<td name='alvo'>${_operacoes_arcabouco[o].alvo}</td>`+
+						`<td name='men'>${_operacoes_arcabouco[o].men}</td>`+
+						`<td name='mep'>${_operacoes_arcabouco[o].mep}</td>`+
+						`<td name='saida'>${_operacoes_arcabouco[o].saida}</td>`+
+						`<td name='cenario'>${_operacoes_arcabouco[o].cenario}</td>`+
+						`<td name='premissas'>${_operacoes_arcabouco[o].premissas}</td>`+
+						`<td name='observacoes'>${_operacoes_arcabouco[o].observacoes}</td>`+
+						`</tr>`;
+			}
+		}
+		return html;
+	}
+	/*
+		Reconstrói a seção de Dashboard estatistico ou a seção de lista de operações do arcabouço selecionado.
+	*/
+	function rebuildArcaboucoSection(){
+		let html = ``;
+		if (_selected_arcabouco_section === 'lista_ops'){
+			//Submenu acima da Tabela
+			html += `<div class="card mb-2 rounded-3 shadow-sm">`+
+					`<div class="card-body p-2">`+
+					`<div class="container-fluid d-flex justify-content-end px-0" id="table_operacoes__actions">`+
+					`<form class="row m-0 flex-fill">`+
+					`<div class="col-auto"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" placeholder="Data"></div>`+
+					`<div class="col-auto"><input type="text" name="ativo" class="form-control form-control-sm" onclick="this.select()" placeholder="Ativo"></div>`+
+					`<div class="col-auto"><input type="text" name="cenario" class="form-control form-control-sm ms-auto" onclick="this.select()" placeholder="Cenário"></div>`+
+					`</form>`+
+					`<button class="btn btn-sm btn-outline-primary me-2" type="button" name="alterar_sel"><i class="fas fa-edit me-2"></i>Editar</button>`+
+					`<button class="btn btn-sm btn-outline-danger me-2" type="button" name="remove_sel"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>`+
+					`<button class="btn btn-sm btn-danger" type="button" name="remove_all"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>`+
+					`</div></div></div>`;
+			//Tabela de operações
+			html += `<div class="card mb-4 rounded-3 shadow-sm">`+
+					`<div class="card-body">`+
+					`<table id="table_operacoes" class="table table-hover">`+
+					`<thead>${rebuildArcaboucoSection__List('thead')}<thead>`+
+					`<tbody>${rebuildArcaboucoSection__List('tbody')}</tbody>`+
+					`</table>`+
+					`</div></div>`;
+			$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
+				$(document.getElementById("table_operacoes")).DataTable(_table_operacoes_DT);
+			});
+		}
+		else if (_selected_arcabouco_section === 'dashboard_ops'){
+			console.log("dashhhh");
+		}
 	}
 	/*------------------------------ Section Cenarios --------------------------------*/
 	/*
@@ -453,7 +595,7 @@ let Renda_variavel = (function(){
 	function buildAtivosSelect_OperacaoAddTable(){
 		let html = ``;
 		for (let at in _ativos__operacoes_add)
-			html += `<option value="${_ativos__operacoes_add[at].id}" pts_tick="${_ativos__operacoes_add[at].pts_tick}">${_ativos__operacoes_add[at].nome}</option>`;
+			html += `<option value="${_ativos__operacoes_add[at].id}" custo="${_ativos__operacoes_add[at].custo}" valor_tick="${_ativos__operacoes_add[at].valor_tick}" pts_tick="${_ativos__operacoes_add[at].pts_tick}">${_ativos__operacoes_add[at].nome}</option>`;
 		return html;
 	}
 	/*
@@ -468,22 +610,22 @@ let Renda_variavel = (function(){
 	/*
 		Constroi o html de options do select de Premissas e Observações, e seleciona algumas opções caso haja.
 	*/
-	function buildPremissasEObservacoes_OperacaoAddTable(tr, cenario, selected_premissas = [], selected_observacoes = []){
-		let premissas_html = ``,
-			observacoes_html = ``;
-		if (cenario in _cenarios__operacoes_add){
-			for (let p in _cenarios__operacoes_add[cenario]["premissas"])
-				premissas_html += `<option value="${_cenarios__operacoes_add[cenario]["premissas"][p]["id"]}" ref="${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}">(${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}) ${_cenarios__operacoes_add[cenario]["premissas"][p]["nome"]}</option>`;
-			for (let o in _cenarios__operacoes_add[cenario]["observacoes"])
-				observacoes_html += `<option value="${_cenarios__operacoes_add[cenario]["observacoes"][o]["id"]}" ref="${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}">(${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}) ${_cenarios__operacoes_add[cenario]["observacoes"][o]["nome"]}</option>`;
-		}
-		tr.find("select[name='premissas']").empty().append(premissas_html).promise().then(function (){
-			this.children().filter((i, el) => selected_premissas.includes(el.getAttribute("ref"))).prop("selected", true);
-		});
-		tr.find("select[name='observacoes']").empty().append(observacoes_html).promise().then(function (){
-			this.children().filter((i, el) => selected_observacoes.includes(el.getAttribute("ref"))).prop("selected", true);
-		});
-	}
+	// function buildPremissasEObservacoes_OperacaoAddTable(tr, cenario, selected_premissas = [], selected_observacoes = []){
+	// 	let premissas_html = ``,
+	// 		observacoes_html = ``;
+	// 	if (cenario in _cenarios__operacoes_add){
+	// 		for (let p in _cenarios__operacoes_add[cenario]["premissas"])
+	// 			premissas_html += `<option value="${_cenarios__operacoes_add[cenario]["premissas"][p]["id"]}" ref="${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}">(${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}) ${_cenarios__operacoes_add[cenario]["premissas"][p]["nome"]}</option>`;
+	// 		for (let o in _cenarios__operacoes_add[cenario]["observacoes"])
+	// 			observacoes_html += `<option value="${_cenarios__operacoes_add[cenario]["observacoes"][o]["id"]}" ref="${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}">(${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}) ${_cenarios__operacoes_add[cenario]["observacoes"][o]["nome"]}</option>`;
+	// 	}
+	// 	tr.find("select[name='premissas']").empty().append(premissas_html).promise().then(function (){
+	// 		this.children().filter((i, el) => selected_premissas.includes(el.getAttribute("ref"))).prop("selected", true);
+	// 	});
+	// 	tr.find("select[name='observacoes']").empty().append(observacoes_html).promise().then(function (){
+	// 		this.children().filter((i, el) => selected_observacoes.includes(el.getAttribute("ref"))).prop("selected", true);
+	// 	});
+	// }
 	/*
 		Inicia os valores dos selects das linhas de 'table_operacoes_add'.
 	*/
@@ -497,9 +639,9 @@ let Renda_variavel = (function(){
 			if ("rr" in data[t])
 				tr.find("select[name='rr']").val(data[t].rr);
 			if ("cenario" in data[t]){
-				let cenario_option = tr.find("select[name='cenario']").val("").find("option").filter((i, el) => data[t].cenario === el.innerHTML);
-				cenario_option.prop("selected", true);
-				buildPremissasEObservacoes_OperacaoAddTable(tr, cenario_option.attr("value"), (("premissas" in data[t])?data[t].premissas:[]), (("observacoes" in data[t])?data[t].observacoes:[]));
+				tr.find("select[name='cenario']").val("").find("option").filter((i, el) => data[t].cenario === el.innerHTML).prop("selected", true);
+				if (tr.find("select[name='cenario']").val() === null)
+					tr.find("input[name='premissas'],input[name='observacoes']").val("");
 			}
 		});
 	}
@@ -516,23 +658,23 @@ let Renda_variavel = (function(){
 		//Constroi o THEAD
 		if (table_layout === "scalp"){
 			thead_html += `<tr>`+
-						  `<th>#</th>`+
-						  `<th>Data</th>`+
-						  `<th>Ativo</th>`+
-						  `<th>Op.</th>`+
-						  `<th>R:R</th>`+
-						  `<th>Vol</th>`+
-						  `<th>Cts</th>`+
-						  `<th>Hora</th>`+
-						  `<th>Entrada</th>`+
-						  `<th>Stop</th>`+
-						  `<th>Alvo</th>`+
-						  `<th>MEN</th>`+
-						  `<th>MEP</th>`+
-						  `<th>Saída</th>`+
-						  `<th>Cenário</th>`+
-						  `<th>Premissas</th>`+
-						  `<th>Observações</th>`+
+						  `<th name="sequencia">#</th>`+
+						  `<th name="data">Data</th>`+
+						  `<th name="ativo">Ativo</th>`+
+						  `<th name="op">Op.</th>`+
+						  `<th name="rr">R:R</th>`+
+						  `<th name="vol">Vol</th>`+
+						  `<th name="cts">Cts</th>`+
+						  `<th name="hora">Hora</th>`+
+						  `<th name="entrada">Entrada</th>`+
+						  `<th name="stop">Stop</th>`+
+						  `<th name="alvo">Alvo</th>`+
+						  `<th name="men">MEN</th>`+
+						  `<th name="mep">MEP</th>`+
+						  `<th name="saida">Saída</th>`+
+						  `<th name="cenario">Cenário</th>`+
+						  `<th name="premissas">Premissas</th>`+
+						  `<th name="observacoes">Observações</th>`+
 						  `</tr>`;
 		}
 		//Constroi o TBODY
@@ -540,24 +682,24 @@ let Renda_variavel = (function(){
 			//Layout de Scalp
 			if (table_layout === "scalp"){
 				tbody_html += `<tr>`+
-						`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
-						`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
-						`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
-						`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
-						`<td name="rr"><select name='rr' class="form-select form-select-sm"><option value="">---</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
-						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
-						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
-						`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" value="${data[i].hora}"></td>`+
-						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()" value="${data[i].entrada}"></td>`+
-						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()" value="${data[i].stop}"></td>`+
-						`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" onclick="this.select()" value="${data[i].alvo}"></td>`+
-						`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()" value="${data[i].men}"></td>`+
-						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()" value="${data[i].mep}"></td>`+
-						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()" value="${data[i].saida}"></td>`+
-						`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
-						`<td name="premissas"><select class="form-select form-select-sm" name="premissas" multiple></select></td>`+
-						`<td name="observacoes"><select class="form-select form-select-sm" name="observacoes" multiple></select></td>`+
-						`</tr>`;
+							`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
+							`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
+							`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
+							`<td name="op"><select name='op' class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+							`<td name="rr"><select name='rr' class="form-select form-select-sm"><option value="">---</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
+							`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
+							`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
+							`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" value="${data[i].hora}"></td>`+
+							`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()" value="${data[i].entrada}"></td>`+
+							`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()" value="${data[i].stop}"></td>`+
+							`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" onclick="this.select()" value="${data[i].alvo}"></td>`+
+							`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()" value="${data[i].men}"></td>`+
+							`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()" value="${data[i].mep}"></td>`+
+							`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()" value="${data[i].saida}"></td>`+
+							`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
+							`<td name="premissas"><input type="text" name="premissas" class="form-control form-control-sm" onclick="this.select()" value="${data[i].premissas.map(s => s.trim()).join(",")}"></td>`+
+							`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm" onclick="this.select()" value="${data[i].observacoes.map(s => s.trim()).join(",")}"></td>`+
+							`</tr>`;
 			}
 		}
 		table.find("thead").empty().append(thead_html);
@@ -591,6 +733,7 @@ let Renda_variavel = (function(){
 	}
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
+	/*------------------------------ Lista Arcabouços --------------------------------*/
 	/*
 		Adição de arcabouços na 'tabela' de arcabouços.
 	*/
@@ -661,6 +804,7 @@ let Renda_variavel = (function(){
 				else if (event.target.parentElement.hasAttribute("remover"))
 					action = "remover";	
 			}
+			//Edita o Arcabouço
 			if (action === "editar"){
 				let me = $(this),
 					data = {
@@ -722,16 +866,68 @@ let Renda_variavel = (function(){
 					}
 				}).modal("show");
 			}
+			//Apagar um arcabouço
 			else if (action === "remover")
 				Global.removeModal({
 
 				}).modal("show");
 		}
+		//Seleção do arcabouço
 		else{
-			$(document.getElementById("table_arcaboucos")).find("a.arcabouco-selected").removeClass("arcabouco-selected");
-			$(this).addClass("arcabouco-selected");
+			let me = this;
+			Global.connect({
+				data: {module: "renda_variavel", action: "get_operacoes", params: {id_arcabouco: this.getAttribute("arcabouco")}},
+				success: function (result){
+					if (result.status){
+						$(document.getElementById("table_arcaboucos")).find("a.arcabouco-selected").removeClass("arcabouco-selected");
+						$(me).addClass("arcabouco-selected");
+						updateOperacoes_Arcabouco(result.data);
+						rebuildArcaboucoSection();
+					}
+					else
+						Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+				}
+			});
 		}
 	});
+	/*------------------------------ Table Operações ---------------------------------*/
+	/*
+		Processa o filtro na tabela 'table_operacoes'.
+	*/
+	$(document.getElementById("renda_variavel__section")).on("keyup", "#table_operacoes__actions form input", function (){
+		$(document.getElementById("table_operacoes")).DataTable().column(`${this.name}:name`).search(this.value).draw();
+	});
+	/*
+		https://datatables.net/examples/index
+		https://datatables.net/examples/api/highcharts.html
+		https://datatables.net/examples/basic_init/data_rendering.html
+	*/
+	/*
+		Processa os cliques na tabela de operações de um arcabouço.
+		Click:
+			- (Ctrl): Selecionar 1 row.
+	*/
+	$(document.getElementById("renda_variavel__section")).on("mousedown", "#table_operacoes tbody tr", function (e){
+		//Ativa a seleção de linhas (Ctrl pressionado)
+		if (e.ctrlKey){
+			e.preventDefault();
+			_table_operacoes_DT__clickState = 1;
+			$(this).addClass("selected");
+		}
+		//Deseleciona tudo
+		else
+			$(document.getElementById("table_operacoes")).find("tbody tr.selected").removeClass("selected");
+	}).on("mouseenter", "#table_operacoes tbody tr", function (e){
+		//Seleciona linhas caso esteje segurando (Ctrl e Click)
+		if (_table_operacoes_DT__clickState && e.ctrlKey){
+			e.preventDefault();
+			$(this).addClass("selected");
+		}
+	}).on("mouseup", "#table_operacoes tbody tr", function (e){
+		if (e.ctrlKey)
+			_table_operacoes_DT__clickState = 0;
+	});
+	/*---------------------------- Dashboard Operações -------------------------------*/
 	/*------------------------------ Section Cenarios --------------------------------*/
 	/*
 		Processa a adição de um novo Cenário.
@@ -976,6 +1172,9 @@ let Renda_variavel = (function(){
 		return false;
 	});
 	/*--------------------------- Section Operações Add ------------------------------*/
+	$(document.getElementById("operacoes_modal")).on("hidden.bs.modal", function (){
+		rebuildArcaboucoSection();
+	});
 	/*
 		Processa a importação de um arquivo de operações.
 	*/
@@ -988,10 +1187,8 @@ let Renda_variavel = (function(){
 				csvData = null;
 			if (data_lines.length){
 				csvData = _csv_reader.cleanData(data_lines, {file_format: file_format, table_layout: table_layout});
-				if (csvData.length){
-					Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "success", body: "Arquivo interpretado com sucesso.", delay: 4000});
+				if (csvData.length)
 					buildOperacaoAddTable(csvData);
-				}
 				else
 					Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "danger", body: "Falha ao ler o arquivo. (Número de colunas muda em certas linhas)", delay: 4000});
 			}
@@ -1078,8 +1275,107 @@ let Renda_variavel = (function(){
 		Reconstroi a select de premissas e observacoes ao mudar o cenario.
 	*/
 	$(document.getElementById("table_operacoes_add")).on("change", "select[name='cenario']", function (){
-		let tr = $(this).parentsUntil("tbody").last();
-		buildPremissasEObservacoes_OperacaoAddTable(tr, this.options[this.selectedIndex].value, [], []);
+		$(this).parentsUntil("tbody").last().find("input[name='premissas'],input[name='observacoes']").val("");
+	});
+	/*
+		Envia as operações para serem registradas no BD.
+	*/
+	$(document.getElementById("operacoes_modal_enviar")).click(function (){
+		let table = $(document.getElementById("table_operacoes_add")),
+			insert_data = {id_arcabouco: $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco"), operacoes: []},
+			error = false;
+		$(document.getElementById("table_operacoes_add")).find("tbody tr").each(function (t, tr){
+			tr = $(tr);
+			let sequencia = tr.find("input[name='sequencia']").val(),
+				data = Global.convertDate(tr.find("input[name='data']").val()),
+				ativo = tr.find("select[name='ativo'] option:selected").text(),
+				op = tr.find("select[name='op']").val(),
+				vol = tr.find("input[name='vol']").val(),
+				cts = tr.find("input[name='cts']").val(),
+				hora = tr.find("input[name='hora']").val(),
+				entrada = tr.find("input[name='entrada']").val(),
+				stop = tr.find("input[name='stop']").val(),
+				alvo = tr.find("input[name='alvo']").val(),
+				men = tr.find("input[name='men']").val(),
+				mep = tr.find("input[name='mep']").val(),
+				saida = tr.find("input[name='saida']").val(),
+				cenario = tr.find("select[name='cenario'] option:selected").text(),
+				premissas = tr.find("input[name='premissas']").val(),
+				observacoes = tr.find("input[name='observacoes']").val(),
+				ativo_custo = tr.find("select[name='ativo'] option:selected").attr("custo"),
+				ativo_valor_tick = tr.find("select[name='ativo'] option:selected").attr("valor_tick"),
+				ativo_pts_tick = tr.find("select[name='ativo'] option:selected").attr("pts_tick");
+			if (data === "" || ativo === "" || op === "" || cts === "" || entrada === "" || saida === ""){
+				if (data === "")
+					table.find("thead th[name='data']").addClass("error");
+				if (ativo === "")
+					table.find("thead th[name='ativo']").addClass("error");
+				if (op === "")
+					table.find("thead th[name='op']").addClass("error");
+				if (cts === "")
+					table.find("thead th[name='cts']").addClass("error");
+				if (entrada === "")
+					table.find("thead th[name='entrada']").addClass("error");
+				if (saida === "")
+					table.find("thead th[name='saida']").addClass("error");
+				tr.addClass("error");
+				error = true;
+			}
+			else{
+				tr.removeClass("error");
+				insert_data["operacoes"].push({
+					sequencia: sequencia,
+					data: data,
+					ativo: ativo,
+					op: op,
+					vol: vol,
+					cts: cts,
+					hora: hora,
+					entrada: entrada,
+					stop: stop,
+					alvo: alvo,
+					men: men,
+					mep: mep,
+					saida: saida,
+					cenario: cenario,
+					premissas: premissas,
+					observacoes: observacoes,
+					ativo_custo: ativo_custo,
+					ativo_valor_tick: ativo_valor_tick,
+					ativo_pts_tick: ativo_pts_tick
+				});
+			}
+		});
+		if (error)
+			Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "danger", body: "Alguns campos devem serem preenchidos.", delay: 4000});
+		else{
+			table.find("thead th.error").removeClass("error");
+			Global.connect({
+				data: {module: "renda_variavel", action: "insert_operacoes", params: insert_data},
+				success: function (result){
+					if (result.status){
+						updateOperacoes_Arcabouco(result.data);
+						if (result.hold_ops.length === 0){
+							Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "success", body: "Operações Adicionadas.", delay: 4000});
+							document.getElementById("importa_arquivo_operacoes_modal").value = "";
+							document.getElementById("file_format").selectedIndex = 0;
+							document.getElementById("table_layout").selectedIndex = 0;
+							resetOperacaoAddTable();
+						}
+						else{
+							Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "warning", body: "Essas operações já foram adicionadas.", delay: 4000});
+							$(document.getElementById("table_operacoes_add")).find("tbody tr").each(function (t, tr){
+								let seq = $(tr).find("input[name='sequencia']").val();
+								if (!result.hold_ops.includes(seq))
+									$(tr).remove();
+							});
+						}
+					}
+					else
+						Global.toast.create({location: document.getElementById("operacoes_modal_toasts"), color: "danger", body: result.error, delay: 4000});
+				}
+			});
+		}
 	});
 	/*----------------------------------- Menu Top -----------------------------------*/
 	/*
@@ -1109,6 +1405,10 @@ let Renda_variavel = (function(){
 						Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
 				}
 			});
+		}
+		else if (this.name === "dashboard_ops" || this.name === "lista_ops"){
+			_selected_arcabouco_section = this.name;
+			rebuildArcaboucoSection();
 		}
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
