@@ -394,12 +394,13 @@
 				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
 			$mysqli->begin_transaction();
 			try {
-				//Checa para ver se o usuario tem acesso ao arcabouço
-				$stmt = $mysqli->prepare("SELECT id_arcabouco FROM rv__arcabouco__usuario WHERE id_arcabouco=? AND id_usuario='{$id_usuario}'");
-			 	$stmt->bind_param("i", $params["id_arcabouco"]);
+				//Checa para ver se o usuario tem acesso ao arcabouço e pegar a ultima 'sequencia'
+				$stmt = $mysqli->prepare("SELECT IFNULL(rvo.ult_seq+1,1) AS ult_seq FROM rv__arcabouco__usuario rvau LEFT JOIN (SELECT id_arcabouco,MAX(sequencia) AS ult_seq FROM rv__operacoes WHERE id_arcabouco=?) rvo ON rvau.id_arcabouco=rvo.id_arcabouco WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
+			 	$stmt->bind_param("ii", $params["id_arcabouco"], $params["id_arcabouco"]);
 			 	$stmt->execute();
 		 		$result_raw = $stmt->get_result();
 		 		if ($result_raw->num_rows > 0){
+		 			$ult_seq = $result_raw->fetch_assoc()["ult_seq"];
 		 			foreach ($params["operacoes"] as $operacao){
 		 				//Busca a operacao para nao inserir duplicado caso ja haja o mesmo (id_arcabouco, data, ativo, op, hora, entrada, saida, cenario, premissas, observacoes)
 		 				$stmt = $mysqli->prepare("SELECT id FROM rv__operacoes WHERE id_arcabouco=? AND data=? AND ativo=? AND op=? AND hora=? AND entrada=? AND saida=? AND cenario=? AND premissas=? AND observacoes=?");
@@ -418,10 +419,11 @@
 				 		$stmt->execute();
 		 				$result_raw = $stmt->get_result();
 				 		if ($result_raw->num_rows === 0){
-							$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-					 		$stmt->bind_param("iissisisssssssssssss", 
+							$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+					 		$stmt->bind_param("iiissisisssssssssssss", 
 					 			$params["id_arcabouco"],
 					 			$id_usuario,
+					 			$ult_seq,
 					 			$operacao["data"],
 					 			$operacao["ativo"],
 					 			$operacao["op"],
@@ -442,10 +444,15 @@
 					 			$operacao["ativo_pts_tick"]
 					 		);
 							$stmt->execute();
+							$ult_seq++;
 				 		}
 				 		else
 				 			$hold_ops[] = $operacao["sequencia"];
 		 			}
+		 			//Refaz a contagem de sequencia, para deixar sempre em ordem de inserção
+					// $stmt = $mysqli->prepare("UPDATE rv__operacoes JOIN (SELECT @seq := 0) s SET sequencia=@seq:=@seq+1 WHERE id_arcabouco=? ORDER BY id");
+					// $stmt->bind_param("i", $params["id_arcabouco"]);
+			 		// $stmt->execute();
 		 		}
 				$mysqli->commit();
 		 		$mysqli->close();
@@ -455,6 +462,48 @@
 				$mysqli->rollback();
 		 		$mysqli->close();
 	 			return ["status" => 0, "error" => "Erro no cadastro de operações, nada foi feito."];
+			}
+		}
+		/*
+			Remove uma ou mais operacoes do arcabouco de um usuario.
+		*/
+		public static function remove_operacoes($params = [], $id_usuario = ""){
+			mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			if ($mysqli->connect_errno)
+				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
+			$mysqli->begin_transaction();
+			try {
+				//Checa para ver se o usuario tem acesso ao arcabouço
+				$stmt = $mysqli->prepare("SELECT id_arcabouco FROM rv__arcabouco__usuario WHERE id_arcabouco=? AND id_usuario='{$id_usuario}'");
+			 	$stmt->bind_param("i", $params["id_arcabouco"]);
+			 	$stmt->execute();
+		 		$result_raw = $stmt->get_result();
+		 		if ($result_raw->num_rows > 0){
+					$where = "id_arcabouco=?";
+					if (array_key_exists("operacoes", $params) && !empty($params["operacoes"])){
+						$where .= " AND (".preg_replace("/^ OR /", "", array_reduce($params["operacoes"], function($result, $item) use ($mysqli){
+		    				return $result." OR id='".$mysqli->real_escape_string($item)."'";
+		    			})).")";
+					}
+					//Remove as operacoes
+					$stmt = $mysqli->prepare("DELETE FROM rv__operacoes WHERE {$where}");
+			 		$stmt->bind_param("i", $params["id_arcabouco"]);
+					$stmt->execute();
+					//Refaz a contagem de sequencia, para deixar sempre em ordem de inserção
+					$stmt = $mysqli->prepare("UPDATE rv__operacoes JOIN (SELECT @seq := 0) s SET sequencia=@seq:=@seq+1 WHERE id_arcabouco=? ORDER BY id");
+					$stmt->bind_param("i", $params["id_arcabouco"]);
+			 		$stmt->execute();
+					$mysqli->commit();
+			 		$mysqli->close();
+		 			return ["status" => 1];
+		 		}
+	 			return ["status" => 0, "error" => "Arcabouço não existe."];
+			}
+			catch (mysqli_sql_exception $exception){
+				$mysqli->rollback();
+		 		$mysqli->close();
+	 			return ["status" => 0, "error" => "Erro ao remover operações."];
 			}
 		}
 	}

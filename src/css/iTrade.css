@@ -1,4 +1,4 @@
-/*------------ Tamanho Modal -----------*/
+/*----------------------------------- Tamanho Modal ----------------------------------*/
 @media (max-width: 2100px){
 	.modal-xxl {
 		max-width: 85%;
@@ -25,7 +25,10 @@
 		max-width: 100%
 	}
 }
+/*-------------------------------------- Toasts --------------------------------------*/
+.toast {background-color: rgba(255,255,255)}
 #master_toasts {z-index: 1000}
+/*-------------------------------------- Scroll --------------------------------------*/
 ::-webkit-scrollbar{
     width: 6px;
     background-color: #F5F5F5;

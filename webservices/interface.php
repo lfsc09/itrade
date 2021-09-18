@@ -115,6 +115,19 @@
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
+				else if ($action === "remove_operacoes"){
+					if (!empty($params_data)){
+						$status = RendaVariavel::remove_operacoes($params_data, $_SESSION["id"]);
+						if ($status["status"]){
+							$operacoes_data = RendaVariavel::get_operacoes(["id_arcabouco" => $params_data["id_arcabouco"]], $_SESSION["id"]);
+							if ($operacoes_data["status"])
+								$status["data"] = $operacoes_data["data"];
+						}
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
+				}
 				break;
 			/*------------------------------------ LOGOUT -------------------------------------*/
 			case "login":
