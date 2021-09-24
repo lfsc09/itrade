@@ -69,12 +69,17 @@
 			<link rel="stylesheet" href="src/css/slim-select.min.css">
 			<link rel="stylesheet" href="src/css/datatables.min.css">
 			<link rel="stylesheet" href="src/css/loadings.min.css">
+			<link rel="stylesheet" href="src/css/daterangepicker.min.css">
+			<link rel="stylesheet" href="src/css/noUiSlider.min.css">
 			<link rel="stylesheet" href="src/css/iTrade.css">
 			<script src="https://kit.fontawesome.com/9bb84e5d3e.js" crossorigin="anonymous"></script>
 			<script src="src/js/base/jquery_3.6.0.min.js"></script>
 			<script src="src/js/base/jquery.inputmask.min.js"></script>
 			<script src="src/js/base/bootstrap.bundle.min.js"></script>
 			<script src="src/js/base/slim-select.min.js"></script>
+			<script src="src/js/base/moment.min.js"></script>
+			<script src="src/js/base/daterangepicker.min.js"></script>
+			<script src="src/js/base/noUiSlider.min.js"></script>
 			<script src="src/js/base/Chart.bundle.min.js"></script>
 			<!-- DataTables -->
 			<script src="src/js/base/datatables.min.js"></script>

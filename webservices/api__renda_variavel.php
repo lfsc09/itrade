@@ -395,6 +395,7 @@
 					"cenario" => $row["cenario"],
 					"premissas" => $row["premissas"],
 					"observacoes" => $row["observacoes"],
+					"erro" => (int) $row["erro"],
 					"ativo_custo" => (float) $row["ativo_custo"],
 					"ativo_valor_tick" => (float) $row["ativo_valor_tick"],
 					"ativo_pts_tick" => (float) $row["ativo_pts_tick"]
@@ -439,7 +440,7 @@
 		 				//Se fechou o bloco
 		 				if ($block_i === $block_size){
 		 					//Faz a inserção do Bloco
-		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data["wildcards"]}");
+		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,erro,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data["wildcards"]}");
 							$stmt->bind_param($insert_data["bind"], ...$insert_data["values"]);
 							$stmt->execute();
 							//Reseta o Bloco de inserção
@@ -448,8 +449,8 @@
 		 				}
 		 				$find_by_key = "{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . floatval($operacao['entrada']) . floatval($operacao['saida']) . "{$operacao['cenario']}{$operacao['premissas']}{$operacao['observacoes']}";
 				 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
-				 			$insert_data["wildcards"] .= (($insert_data["wildcards"] !== "")?",":"")."(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-					 		$insert_data["bind"] .= "iiissisisssssssssssss";
+				 			$insert_data["wildcards"] .= (($insert_data["wildcards"] !== "")?",":"")."(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+					 		$insert_data["bind"] .= "iiissisisissssssssssss";
 					 		$insert_data["values"] = array_merge($insert_data["values"], [
 					 			$params["id_arcabouco"],
 					 			$id_usuario,
@@ -460,6 +461,7 @@
 					 			$operacao["vol"],
 					 			$operacao["cts"],
 					 			$operacao["hora"],
+					 			$operacao["erro"],
 					 			$operacao["entrada"],
 					 			$operacao["stop"],
 					 			$operacao["alvo"],
@@ -482,7 +484,7 @@
 		 		}
 		 		//Insere caso não tenha fechado o bloco
 		 		if ($block_i > 0){
-		 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data["wildcards"]}");
+		 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,erro,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data["wildcards"]}");
 					$stmt->bind_param($insert_data["bind"], ...$insert_data["values"]);
 					$stmt->execute();
 		 		}

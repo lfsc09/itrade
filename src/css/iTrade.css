@@ -25,6 +25,31 @@
 		max-width: 100%
 	}
 }
+/*------------------------------------ noUiSlider ------------------------------------*/
+.slider-styled, .slider-styled .noUi-handle {
+    box-shadow: none;
+    height: 10px;
+}
+/* Hide markers on slider handles */
+.slider-styled .noUi-handle::before, .slider-styled .noUi-handle::after {
+    display: none;
+}
+.slider-styled .noUi-connect {
+    background: #0d6efd;
+}
+.slider-styled .noUi-handle {
+    height: 18px;
+    width: 18px;
+    top: -5px;
+    right: -9px; /* half the width */
+    border-radius: 9px;
+}
+.slider-styled .noUi-tooltip {
+    display: none;
+}
+.slider-styled .noUi-active .noUi-tooltip {
+    display: block;
+}
 /*-------------------------------------- Toasts --------------------------------------*/
 .toast {background-color: rgba(255,255,255)}
 #master_toasts {z-index: 1000}
@@ -107,6 +132,10 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #renda_variavel__section .form-label {font-size: 11px}
 #table_arcaboucos .arcabouco-badge {font-size: 11px; color: #00000096}
 /*---------------------------------- Dashboard Ops -----------------------------------*/
+#dashboard_ops__filter .slider-styled.filter-hora {width: 100px; margin-top: 11px}
+#dashboard_ops__filter input[name='data'] {width: 175px}
+#dashboard_ops__filter input[name='ativo'] {width: 75px}
+#dashboard_ops__simulate input[name='vol'] {width: 80px}
 #dashboard_ops__table_stats {font-size: 13px}
 #dashboard_ops__table_stats span.text-muted {font-weight: bold; font-size: 10px}
 #dashboard_ops__table_stats tbody tr td:nth-child(2) {width: 38%}
@@ -152,6 +181,7 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #table_operacoes_add td[name='saida'] {width: 5%}
 #table_operacoes_add td[name='premissas'] {width: 9%}
 #table_operacoes_add td[name='observacoes'] {width: 9%}
+#table_operacoes_add td[name='erro'] {width: 2%; text-align: center; vertical-align: middle;}
 /*------------------------------------- ATIVOS ---------------------------------------*/
 #table_ativos {font-size: .80em}
 #table_ativos tbody td{vertical-align: middle}

@@ -44,7 +44,8 @@ let Renda_variavel = (function(){
 			{"name": "saida", "orderable": false, render: _lista_ops__table_DT_ext.preco_render},
 			{"name": "cenario", "orderable": true},
 			{"name": "premissas", "orderable": false},
-			{"name": "observacoes", "orderable": false}
+			{"name": "observacoes", "orderable": false},
+			{"name": "erro", "orderable": false}
 		],
 		columnDefs: [{
 			targets: [1],
@@ -101,6 +102,7 @@ let Renda_variavel = (function(){
 							"cenario": obj[line][dataMap.indexOf("Padrao")],
 							"premissas": ((dataMap.indexOf("Premissas") !== -1)?obj[line][dataMap.indexOf("Premissas")].split(","):[]),
 							"observacoes": ((dataMap.indexOf("Observacoes") !== -1)?obj[line][dataMap.indexOf("Observacoes")].split(","):[]),
+							"erro": ((dataMap.indexOf("Erro") !== -1)?obj[line][dataMap.indexOf("Erro")]:""),
 							"data": obj[line][dataMap.indexOf("Data")],
 							"hora": obj[line][dataMap.indexOf("Hora")],
 							"entrada": ((dataMap.indexOf("Entrada") !== -1)?(obj[line][dataMap.indexOf("Entrada")].replace(/\.+/g, "")).replace(/\,+/g, "."):""),
@@ -135,6 +137,7 @@ let Renda_variavel = (function(){
 								"cenario": "",
 								"premissas": [],
 								"observacoes": [],
+								"erro": "",
 								"data": obj[line][dataMap.indexOf("Abertura")].split(" ")[0],
 								"hora": obj[line][dataMap.indexOf("Abertura")].split(" ")[1],
 								"entrada": ((operacao === "C")?preco_compra:preco_venda),
@@ -143,7 +146,6 @@ let Renda_variavel = (function(){
 								"men": ((operacao === "C")?(preco_compra - Math.abs(men)):(preco_venda + Math.abs(men))),
 								"mep": ((operacao === "C")?(preco_compra + Math.abs(men)):(preco_venda - Math.abs(men))),
 								"saida": ((operacao === "C")?preco_venda:preco_compra)
-								// "duracao": obj[line][dataMap.findIndex(el => el.match(/^Tempo Opera.*/))]
 							});
 						}
 					}
@@ -168,6 +170,7 @@ let Renda_variavel = (function(){
 								"cenario": "",
 								"premissas": [],
 								"observacoes": [],
+								"erro": "",
 								"data": obj[line][dataMap.indexOf("Data")],
 								"hora": obj[line][dataMap.indexOf("Abertura")],
 								"entrada": ((operacao === "C")?preco_compra:preco_venda),
@@ -228,18 +231,22 @@ let Renda_variavel = (function(){
 				});
 			}
 			else if (_selected_arcabouco_section === 'dashboard_ops'){
-				let dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, {}, {}, {R: 26, valor_inicial: 5000.00, usa_custo: 1, usa_custo_offset: 1});
+				let dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, {ignora_erro: 0}, {rr: "1", usa_custo: 1, R: 26, valor_inicial: 5000.00});
 				//Submenu de Filtros do Dashboard
 				html += `<div class="card mb-2 rounded-3 shadow-sm">`+
 						`<div class="card-body p-2">`+
 						`<div class="container-fluid d-flex justify-content-end px-0" id="dashboard_ops__filter">`+
 						`<form class="row m-0 flex-fill">`+
-						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Data</label><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" placeholder="Data"></div>`+
-						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Hora</label><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" placeholder="Hora"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Data</label><input type="text" name="data" class="form-control form-control-sm" placeholder="Data"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Hora</label><div class="slider-styled filter-hora" name="hora"></div></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Ativo</label><input type="text" name="ativo" class="form-control form-control-sm" onclick="this.select()" placeholder="Ativo"></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label><input type="text" name="cenario" class="form-control form-control-sm ms-auto" onclick="this.select()" placeholder="Cenário"></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label><select name="premissas" class="form-select form-select-sm ms-auto"></select></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label><select name="observacoes" class="form-select form-select-sm ms-auto"></select></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Ignorar Erros</label><select name="ignora_erro" class="form-select form-select-sm ms-auto">`+
+						`<option value="0">Não</option>`+
+						`<option value="1">Sim</option>`+
+						`</select></div>`+
 						`</form>`+
 						`</div></div></div>`;
 				//Submenu de Simulação do Dashboard
@@ -265,6 +272,12 @@ let Renda_variavel = (function(){
 						`<option value="2">Quantidade Máx por R</option>`+
 						`</select>`+
 						`<input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" placeholder="Cts" disabled></div></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Custos</label><select name="usa_custo" class="form-select form-select-sm ms-auto">`+
+						`<option value="1">Incluir</option>`+
+						`<option value="0">Não Incluir</option>`+
+						`</select></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular Capital</label><input type="text" name="valor_inicial" class="form-control form-control-sm" onclick="this.select()" placeholder="Capital"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular R</label><input type="text" name="R" class="form-control form-control-sm" onclick="this.select()" placeholder="R"></div>`+
 						`</form>`+
 						`</div></div></div>`;
 				//Info Estatistica + (Grafico Horário + Grafico Resultado no Tempo)
@@ -291,7 +304,41 @@ let Renda_variavel = (function(){
 						`</div>`+
 						`</div>`;
 				$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
-					// $(document.getElementById("lista_ops__table")).DataTable(_lista_ops__table_DT);
+					//Inicia a seção de Filtros
+					let filters = $(document.getElementById("dashboard_ops__filter")),
+						data_inicial = Global.convertDate(_operacoes_arcabouco[0].data),
+						data_final = Global.convertDate(_operacoes_arcabouco[_operacoes_arcabouco.length-1].data);
+					filters.find("input[name='data']").daterangepicker({
+						"showDropdowns": true,
+						"minDate": data_inicial,
+						"startDate": data_inicial,
+						"endDate": data_final,
+						"maxDate": data_final,
+						"locale": {
+							"format": "DD/MM/YYYY",
+							"separator": " - ",
+							"applyLabel": "Aplicar",
+							"cancelLabel": "Cancelar",
+							"fromLabel": "De",
+							"toLabel": "Até",
+							"customRangeLabel": "Custom",
+							"weekLabel": "S",
+							"daysOfWeek": ["D", "S", "T", "Q", "Q", "S", "S"],
+							"monthNames": ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
+						}
+					});
+					noUiSlider.create(filters.find("div[name='hora']")[0], {
+						connect: true,
+						range: {
+							'min': new Date('2000-01-01 09:00:00').getTime(),
+							'max': new Date('2000-01-01 18:00:00').getTime()
+						},
+						step: 60 * 60 * 1000,
+						start: [new Date('2000-01-01 09:00:00').getTime(), new Date('2000-01-01 18:00:00').getTime()],
+						tooltips: {
+							to: ((value) => moment(value).format("HH:mm"))
+						}
+					});
 				});
 			}
 		}
@@ -353,6 +400,7 @@ let Renda_variavel = (function(){
 					`<th>Cenário</th>`+
 					`<th>Premissas</th>`+
 					`<th>Observações</th>`+
+					`<th>Erro</th>`+
 					`</tr>`;
 		}
 		else if (section === 'tbody'){
@@ -374,6 +422,7 @@ let Renda_variavel = (function(){
 						`<td name='cenario'>${_operacoes_arcabouco[o].cenario}</td>`+
 						`<td name='premissas'>${_operacoes_arcabouco[o].premissas}</td>`+
 						`<td name='observacoes'>${_operacoes_arcabouco[o].observacoes}</td>`+
+						`<td name='erro'>${_operacoes_arcabouco[o].erro}</td>`+
 						`</tr>`;
 			}
 		}
@@ -391,9 +440,10 @@ let Renda_variavel = (function(){
 			//Dias
 			html += `<tr class="align-middle"><td class="fw-bold text-center">Dias</td><td class="text-center"><span name="dias__total" class="fs-6 fw-bold">${stats.dias__total}</span></td><td><span name="dias__trades_por_dia" class="text-muted">${stats.dias__trades_por_dia.toFixed(1)} Trades por Dia<span></td></tr>`;
 			//N° Trades
-			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Trades</td><td rowspan="3" class="text-center pt-3"><span name="trades__total" class="fs-6 fw-bold">${stats.trades__total}</span></td><td class="pt-3"><span name="trades__positivo" class="text-muted">${stats.trades__positivo} Positivos</span><span name="trades__positivo_perc" class="text-center text-muted ms-2">(${stats.trades__positivo_perc.toFixed(2)}%)</span></td></tr>`+
+			html += `<tr class="align-middle"><td rowspan="4" class="fw-bold text-center pt-3">Trades</td><td rowspan="4" class="text-center pt-3"><span name="trades__total" class="fs-6 fw-bold">${stats.trades__total}</span></td><td class="pt-3"><span name="trades__positivo" class="text-muted">${stats.trades__positivo} Positivos</span><span name="trades__positivo_perc" class="text-center text-muted ms-2">(${stats.trades__positivo_perc.toFixed(2)}%)</span></td></tr>`+
 					`<tr><td><span name="trades__negativo" class="text-muted">${stats.trades__negativo} Negativos</span><span name="trades__negativo_perc" class="text-center text-muted ms-2">(${stats.trades__negativo_perc.toFixed(2)}%)</span></td></tr>`+
-					`<tr><td><span name="trades__empate" class="text-muted">${stats.trades__empate} Empatados</span><span name="trades__empate_perc" class="text-center text-muted ms-2">(${stats.trades__empate_perc.toFixed(2)}%)</span></td></tr>`;
+					`<tr><td><span name="trades__empate" class="text-muted">${stats.trades__empate} Empatados</span><span name="trades__empate_perc" class="text-center text-muted ms-2">(${stats.trades__empate_perc.toFixed(2)}%)</span></td></tr>`+
+					`<tr><td><span name="trades__erro" class="text-muted">${stats.trades__erro} Errados</span><span name="trades__erro_perc" class="text-center text-muted ms-2">(${((stats.trades__erro_perc !== "--") ? stats.trades__erro_perc.toFixed(2) : stats.trades__erro_perc )}%)</span></td></tr>`;
 			//Result.
 			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Result.</td><td rowspan="3" class="text-center pt-3"><span name="result__lucro_brl" class="fs-6 fw-bold">R$ ${stats.result__lucro_brl.toFixed(2)}</span></td><td class="pt-3"><span name="result__lucro_R" class="text-muted">${stats.result__lucro_R.toFixed(3)}R</span></td></tr>`+
 					`<tr><td><span name="result__lucro_pts" class="text-muted">${stats.result__lucro_pts.toFixed(0)} pts</span></td></tr>`+
@@ -788,6 +838,7 @@ let Renda_variavel = (function(){
 						  `<th name="cenario">Cenário</th>`+
 						  `<th name="premissas">Premissas</th>`+
 						  `<th name="observacoes">Observações</th>`+
+						  `<th name="erro">Erro</th>`+
 						  `</tr>`;
 		}
 		//Constroi o TBODY
@@ -812,6 +863,7 @@ let Renda_variavel = (function(){
 							`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
 							`<td name="premissas"><input type="text" name="premissas" class="form-control form-control-sm" onclick="this.select()" value="${data[i].premissas.map(s => s.trim()).join(",")}"></td>`+
 							`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm" onclick="this.select()" value="${data[i].observacoes.map(s => s.trim()).join(",")}"></td>`+
+							`<td name="erro"><input type="checkbox" name="erro" class="form-check-input" ${(data[i].erro == 1)?"checked":""}></td>`+
 							`</tr>`;
 			}
 		}
@@ -1090,6 +1142,10 @@ let Renda_variavel = (function(){
 		}
 	});
 	/*---------------------------- Dashboard Operações -------------------------------*/
+	/*
+		Processa a aplicacao dos filtros.
+	*/
+	$(document.getElementById("renda_variavel__section")).find("#dashboard_ops__filter input[name='ativo']");
 	/*------------------------------ Section Cenarios --------------------------------*/
 	/*
 		Processa a adição de um novo Cenário.
@@ -1455,6 +1511,7 @@ let Renda_variavel = (function(){
 				vol = tr.find("input[name='vol']").val(),
 				cts = tr.find("input[name='cts']").val(),
 				hora = tr.find("input[name='hora']").val(),
+				erro = ((tr.find("input[name='erro']").is(":checked"))?1:0),
 				entrada = tr.find("input[name='entrada']").val(),
 				stop = tr.find("input[name='stop']").val(),
 				alvo = tr.find("input[name='alvo']").val(),
@@ -1493,6 +1550,7 @@ let Renda_variavel = (function(){
 					vol: vol,
 					cts: cts,
 					hora: hora,
+					erro: erro,
 					entrada: entrada,
 					stop: stop,
 					alvo: alvo,
