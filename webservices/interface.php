@@ -103,10 +103,13 @@
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				else if ($action === "insert_operacoes"){
-					if (!empty($params_data)){
-						$status = RendaVariavel::insert_operacoes($params_data, $_SESSION["id"]);
+					if ($params_data === "")
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
+					$unserial_params_data = json_decode($params_data, true);
+					if (!empty($unserial_params_data)){
+						$status = RendaVariavel::insert_operacoes($unserial_params_data, $_SESSION["id"]);
 						if ($status["status"]){
-							$operacoes_data = RendaVariavel::get_operacoes(["id_arcabouco" => $params_data["id_arcabouco"]], $_SESSION["id"]);
+							$operacoes_data = RendaVariavel::get_operacoes(["id_arcabouco" => $unserial_params_data["id_arcabouco"]], $_SESSION["id"]);
 							if ($operacoes_data["status"])
 								$status["data"] = $operacoes_data["data"];
 						}

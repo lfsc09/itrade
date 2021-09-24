@@ -74,9 +74,9 @@
 				$update_data["values"][] = &$params[$data_name];
 			}
 			$update_data["bind"] .= "i";
-			$update_data["values"][] = &$id_arcaboucos;
+			$update_data["values"][] = $id_arcaboucos;
 			$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET {$update_data["wildcards"]} WHERE id=? AND id_usuario_criador='{$id_usuario}'");
-			call_user_func_array(array($stmt, "bind_param"), array_merge([$update_data["bind"]], $update_data["values"]));
+			$stmt->bind_param($update_data["bind"], ...$update_data["values"]);
 		 	if ($stmt->execute()){
 		 		$mysqli->close();
 		 		return ["status" => 1];
@@ -233,9 +233,9 @@
 							$update_data["values"][] = &$cenario[$data_name];
 						}
 						$update_data["bind"] .= "i";
-						$update_data["values"][] = &$params["id_cenario"];
+						$update_data["values"][] = $params["id_cenario"];
 						$stmt = $mysqli->prepare("UPDATE rv__cenario SET {$update_data["wildcards"]} WHERE id=?");
-						call_user_func_array(array($stmt, "bind_param"), array_merge([$update_data["bind"]], $update_data["values"]));
+						$stmt->bind_param($update_data["bind"], ...$update_data["values"]);
 						$stmt->execute();
 					}
 				}
@@ -253,9 +253,9 @@
 							$update_data["values"][] = &$premissa[$data_name];
 						}
 						$update_data["bind"] .= "i";
-						$update_data["values"][] = &$premissa["id"];
+						$update_data["values"][] = $premissa["id"];
 						$stmt = $mysqli->prepare("UPDATE rv__cenario_premissa SET {$update_data["wildcards"]} WHERE id=?");
-						call_user_func_array(array($stmt, "bind_param"), array_merge([$update_data["bind"]], $update_data["values"]));
+						$stmt->bind_param($update_data["bind"], ...$update_data["values"]);
 						$stmt->execute();
 					}
 				}
@@ -273,9 +273,9 @@
 							$update_data["values"][] = &$observacao[$data_name];
 						}
 						$update_data["bind"] .= "i";
-						$update_data["values"][] = &$observacao["id"];
+						$update_data["values"][] = $observacao["id"];
 						$stmt = $mysqli->prepare("UPDATE rv__cenario_obs SET {$update_data["wildcards"]} WHERE id=?");
-						call_user_func_array(array($stmt, "bind_param"), array_merge([$update_data["bind"]], $update_data["values"]));
+						$stmt->bind_param($update_data["bind"], ...$update_data["values"]);
 						$stmt->execute();
 					}
 				}
@@ -373,12 +373,33 @@
 			$mysqli->set_charset('utf8');
 			if ($mysqli->connect_errno)
 				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
-			$stmt = $mysqli->prepare("SELECT rvo.* FROM rv__operacoes rvo INNER JOIN rv__arcabouco__usuario rva_u ON rvo.id_arcabouco=rva_u.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' AND rvo.id_arcabouco=? ORDER BY rvo.data DESC,rvo.hora DESC");
+			$stmt = $mysqli->prepare("SELECT rvo.* FROM rv__operacoes rvo INNER JOIN rv__arcabouco__usuario rva_u ON rvo.id_arcabouco=rva_u.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' AND rvo.id_arcabouco=? ORDER BY rvo.data ASC,rvo.hora ASC");
 		 	$stmt->bind_param("i", $params["id_arcabouco"]);
 			$stmt->execute();
 		 	$result_raw = $stmt->get_result();
-			while($row = $result_raw->fetch_assoc())
-				$result[] = $row;
+			while($row = $result_raw->fetch_assoc()){
+				$result[] = [
+					"sequencia" => $row["sequencia"],
+					"data" => $row["data"],
+					"ativo" => $row["ativo"],
+					"op" => $row["op"],
+					"vol" => (float) $row["vol"],
+					"cts" => (int) $row["cts"],
+					"hora" => $row["hora"],
+					"entrada" => (float) $row["entrada"],
+					"stop" => (float) $row["stop"],
+					"alvo" => (float) $row["alvo"],
+					"men" => (float) $row["men"],
+					"mep" => (float) $row["mep"],
+					"saida" => (float) $row["saida"],
+					"cenario" => $row["cenario"],
+					"premissas" => $row["premissas"],
+					"observacoes" => $row["observacoes"],
+					"ativo_custo" => (float) $row["ativo_custo"],
+					"ativo_valor_tick" => (float) $row["ativo_valor_tick"],
+					"ativo_pts_tick" => (float) $row["ativo_pts_tick"]
+				];
+			}
 			$result_raw->free();
 			$mysqli->close();
 			return ["status" => 1, "data" => $result];
@@ -401,26 +422,35 @@
 		 		$result_raw = $stmt->get_result();
 		 		if ($result_raw->num_rows > 0){
 		 			$ult_seq = $result_raw->fetch_assoc()["ult_seq"];
+		 			$operacoes_ja_cadastradas = [];
+		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, entrada, saida, cenario, premissas, observacoes)
+	 				$stmt = $mysqli->prepare("SELECT data,ativo,op,DATE_FORMAT(hora, \"%H:%i\") AS hora,entrada,saida,cenario,premissas,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
+			 		$stmt->bind_param("i", $params["id_arcabouco"]);
+			 		$stmt->execute();
+	 				$result_raw = $stmt->get_result();
+	 				while($row = $result_raw->fetch_assoc()){
+	 					$key = "{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . floatval($row['entrada']) . floatval($row['saida']) . "{$row['cenario']}{$row['premissas']}{$row['observacoes']}";
+						$operacoes_ja_cadastradas[$key] = NULL;
+					}
+					$block_size = 50;
+					$block_i = 0;
+					$insert_data = ["wildcards" => "", "values" => [], "bind" => ""];
 		 			foreach ($params["operacoes"] as $operacao){
-		 				//Busca a operacao para nao inserir duplicado caso ja haja o mesmo (id_arcabouco, data, ativo, op, hora, entrada, saida, cenario, premissas, observacoes)
-		 				$stmt = $mysqli->prepare("SELECT id FROM rv__operacoes WHERE id_arcabouco=? AND data=? AND ativo=? AND op=? AND hora=? AND entrada=? AND saida=? AND cenario=? AND premissas=? AND observacoes=?");
-				 		$stmt->bind_param("ississssss", 
-				 			$params["id_arcabouco"],
-				 			$operacao["data"],
-				 			$operacao["ativo"],
-				 			$operacao["op"],
-				 			$operacao["hora"],
-				 			$operacao["entrada"],
-				 			$operacao["saida"],
-				 			$operacao["cenario"],
-				 			$operacao["premissas"],
-				 			$operacao["observacoes"]
-				 		);
-				 		$stmt->execute();
-		 				$result_raw = $stmt->get_result();
-				 		if ($result_raw->num_rows === 0){
-							$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-					 		$stmt->bind_param("iiissisisssssssssssss", 
+		 				//Se fechou o bloco
+		 				if ($block_i === $block_size){
+		 					//Faz a inserção do Bloco
+		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data["wildcards"]}");
+							$stmt->bind_param($insert_data["bind"], ...$insert_data["values"]);
+							$stmt->execute();
+							//Reseta o Bloco de inserção
+							$block_i = 0;
+							$insert_data = ["wildcards" => "", "values" => [], "bind" => ""];
+		 				}
+		 				$find_by_key = "{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . floatval($operacao['entrada']) . floatval($operacao['saida']) . "{$operacao['cenario']}{$operacao['premissas']}{$operacao['observacoes']}";
+				 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
+				 			$insert_data["wildcards"] .= (($insert_data["wildcards"] !== "")?",":"")."(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+					 		$insert_data["bind"] .= "iiissisisssssssssssss";
+					 		$insert_data["values"] = array_merge($insert_data["values"], [
 					 			$params["id_arcabouco"],
 					 			$id_usuario,
 					 			$ult_seq,
@@ -442,17 +472,19 @@
 					 			$operacao["ativo_custo"],
 					 			$operacao["ativo_valor_tick"],
 					 			$operacao["ativo_pts_tick"]
-					 		);
-							$stmt->execute();
+					 		]);
 							$ult_seq++;
+							$block_i++;
 				 		}
 				 		else
 				 			$hold_ops[] = $operacao["sequencia"];
 		 			}
-		 			//Refaz a contagem de sequencia, para deixar sempre em ordem de inserção
-					// $stmt = $mysqli->prepare("UPDATE rv__operacoes JOIN (SELECT @seq := 0) s SET sequencia=@seq:=@seq+1 WHERE id_arcabouco=? ORDER BY id");
-					// $stmt->bind_param("i", $params["id_arcabouco"]);
-			 		// $stmt->execute();
+		 		}
+		 		//Insere caso não tenha fechado o bloco
+		 		if ($block_i > 0){
+		 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data["wildcards"]}");
+					$stmt->bind_param($insert_data["bind"], ...$insert_data["values"]);
+					$stmt->execute();
 		 		}
 				$mysqli->commit();
 		 		$mysqli->close();

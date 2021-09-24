@@ -32,8 +32,10 @@ let iTrade = (function(){
 		$("body > div[id]").each(function (i, elem){
 			if (elem.id === me){
 				if (elem.id === "renda_variavel"){
-					if (typeof Renda_variavel === 'undefined')
+					if (typeof Renda_variavel === 'undefined'){
+						Global.request("src/js/iTrade_RendaVariavel_Statistics.js");
 						Global.request("src/js/iTrade_RendaVariavel.js");
+					}
 				}
 				else if (elem.id === "ativos"){
 					if (typeof Ativos === 'undefined')

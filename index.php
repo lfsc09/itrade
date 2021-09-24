@@ -68,6 +68,7 @@
 			<link rel="stylesheet" href="src/css/bootstrap.min.css">
 			<link rel="stylesheet" href="src/css/slim-select.min.css">
 			<link rel="stylesheet" href="src/css/datatables.min.css">
+			<link rel="stylesheet" href="src/css/loadings.min.css">
 			<link rel="stylesheet" href="src/css/iTrade.css">
 			<script src="https://kit.fontawesome.com/9bb84e5d3e.js" crossorigin="anonymous"></script>
 			<script src="src/js/base/jquery_3.6.0.min.js"></script>
@@ -304,7 +305,7 @@
 					</div>
 				</div>
 			</div>
-			<div id="loading_div" style="display: none"><span class="fa fa-spinner fa-spin fa-3x"></span></div>
+			<div id="loading_div" style="display: none"><div class="dot-revolution"></div></div>
 		</body>
 		<script src="src/js/global.js"></script>
 		<script src="src/js/iTrade.js"></script>

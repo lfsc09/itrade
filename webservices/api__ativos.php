@@ -64,9 +64,9 @@
 				$update_data["values"][] = &$params[$data_name];
 			}
 			$update_data["bind"] .= "i";
-			$update_data["values"][] = &$id_ativo;
+			$update_data["values"][] = $id_ativo;
 			$stmt = $mysqli->prepare("UPDATE ativos SET {$update_data["wildcards"]} WHERE id=? AND id_usuario='{$id_usuario}'");
-			call_user_func_array(array($stmt, "bind_param"), array_merge([$update_data["bind"]], $update_data["values"]));
+			$stmt->bind_param($update_data["bind"], ...$update_data["values"]);
 		 	if ($stmt->execute()){
 		 		$mysqli->close();
 		 		return ["status" => 1];

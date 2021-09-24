@@ -7,11 +7,11 @@ let Renda_variavel = (function(){
 	//Contem a lista atual de operações do arcabouço selecionado
 	let	_operacoes_arcabouco = [];
 	//Informa qual seção do Section Arcabouço está sendo mostrado (dashboard_ops|lista_ops)
-	let	_selected_arcabouco_section = 'lista_ops';
+	let	_selected_arcabouco_section = 'dashboard_ops';
 	//Variavel usada no controle de click, para saber se está pressionado o click ou não
-	let _table_operacoes_DT__clickState = 0;
-	//Funcoes usadas em '_table_operacoes_DT'
-	let _table_operacoes_DT__ext = {
+	let _lista_ops__table_DT_clickState = 0;
+	//Funcoes usadas em '_lista_ops__table_DT'
+	let _lista_ops__table_DT_ext = {
 		preco_render: function (data, type, row){
 			if (data == 0)
 				return '';
@@ -27,21 +27,21 @@ let Renda_variavel = (function(){
 		}
 	}
 	//Configuração da tabela de operações em 'lista_ops'
-	let _table_operacoes_DT = {
+	let _lista_ops__table_DT = {
 		"columns": [
 			{"name": "id", "orderable": true},
 			{"name": "data", "orderable": true, "type": "br-date"},
 			{"name": "hora", "orderable": true},
 			{"name": "ativo", "orderable": true},
 			{"name": "op", "orderable": true},
-			{"name": "vol", "orderable": true, render: _table_operacoes_DT__ext.vol_render},
+			{"name": "vol", "orderable": true, render: _lista_ops__table_DT_ext.vol_render},
 			{"name": "cts", "orderable": true},
-			{"name": "entrada", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
-			{"name": "stop", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
-			{"name": "alvo", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
-			{"name": "men", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
-			{"name": "mep", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
-			{"name": "saida", "orderable": false, render: _table_operacoes_DT__ext.preco_render},
+			{"name": "entrada", "orderable": false, render: _lista_ops__table_DT_ext.preco_render},
+			{"name": "stop", "orderable": false, render: _lista_ops__table_DT_ext.preco_render},
+			{"name": "alvo", "orderable": false, render: _lista_ops__table_DT_ext.preco_render},
+			{"name": "men", "orderable": false, render: _lista_ops__table_DT_ext.preco_render},
+			{"name": "mep", "orderable": false, render: _lista_ops__table_DT_ext.preco_render},
+			{"name": "saida", "orderable": false, render: _lista_ops__table_DT_ext.preco_render},
 			{"name": "cenario", "orderable": true},
 			{"name": "premissas", "orderable": false},
 			{"name": "observacoes", "orderable": false}
@@ -91,24 +91,24 @@ let Renda_variavel = (function(){
 							dataMap[a] = obj[line][a];
 					}
 					else if (obj[line].length === data_limit){
-						let operacao = obj[line][dataMap.indexOf("Op")].toLowerCase();
+						let operacao = ((dataMap.indexOf("Op") !== -1)?obj[line][dataMap.indexOf("Op")].toLowerCase():"");
 						newData.push({
 							"ativo": obj[line][dataMap.indexOf("Ativo")],
-							"op": ((operacao === "c")?1:2),
+							"op": ((operacao === "")?0:(operacao === "c")?1:2),
 							"rr": obj[line][dataMap.indexOf("R:R")],
-							"vol": (obj[line][dataMap.indexOf("Vol")].replace(/\.+/g, "")).replace(/\,+/g, "."),
+							"vol": ((dataMap.indexOf("Vol") !== -1)?(obj[line][dataMap.indexOf("Vol")].replace(/\.+/g, "")).replace(/\,+/g, "."):""),
 							"cts": obj[line][dataMap.indexOf("Cts")],
 							"cenario": obj[line][dataMap.indexOf("Padrao")],
 							"premissas": ((dataMap.indexOf("Premissas") !== -1)?obj[line][dataMap.indexOf("Premissas")].split(","):[]),
 							"observacoes": ((dataMap.indexOf("Observacoes") !== -1)?obj[line][dataMap.indexOf("Observacoes")].split(","):[]),
 							"data": obj[line][dataMap.indexOf("Data")],
 							"hora": obj[line][dataMap.indexOf("Hora")],
-							"entrada": (obj[line][dataMap.indexOf("Entrada")].replace(/\.+/g, "")).replace(/\,+/g, "."),
-							"stop": (obj[line][dataMap.indexOf("Stop")].replace(/\.+/g, "")).replace(/\,+/g, "."),
-							"alvo": (obj[line][dataMap.indexOf("Alvo")].replace(/\.+/g, "")).replace(/\,+/g, "."),
-							"men": (obj[line][dataMap.indexOf("Men")].replace(/\.+/g, "")).replace(/\,+/g, "."),
-							"mep": (obj[line][dataMap.indexOf("Mep")].replace(/\.+/g, "")).replace(/\,+/g, "."),
-							"saida": (obj[line][dataMap.indexOf("Saida")].replace(/\.+/g, "")).replace(/\,+/g, ".")
+							"entrada": ((dataMap.indexOf("Entrada") !== -1)?(obj[line][dataMap.indexOf("Entrada")].replace(/\.+/g, "")).replace(/\,+/g, "."):""),
+							"stop": ((dataMap.indexOf("Stop") !== -1)?(obj[line][dataMap.indexOf("Stop")].replace(/\.+/g, "")).replace(/\,+/g, "."):""),
+							"alvo": ((dataMap.indexOf("Alvo") !== -1)?(obj[line][dataMap.indexOf("Alvo")].replace(/\.+/g, "")).replace(/\,+/g, "."):""),
+							"men": ((dataMap.indexOf("Men") !== -1)?(obj[line][dataMap.indexOf("Men")].replace(/\.+/g, "")).replace(/\,+/g, "."):""),
+							"mep": ((dataMap.indexOf("Mep") !== -1)?(obj[line][dataMap.indexOf("Mep")].replace(/\.+/g, "")).replace(/\,+/g, "."):""),
+							"saida": ((dataMap.indexOf("Saida") !== -1)?(obj[line][dataMap.indexOf("Saida")].replace(/\.+/g, "")).replace(/\,+/g, "."):"")
 						});
 					}
 				}
@@ -186,33 +186,6 @@ let Renda_variavel = (function(){
 	}
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
-	/*------------------------------ Lista Arcabouços --------------------------------*/
-	/*
-		Constroi a tabela de ativos. (Dados que recebe do BD)
-	*/
-	function buildTableArcaboucos(data){
-		let arcaboucos = $(document.getElementById("table_arcaboucos")),
-			html = ``,
-			first = 0;
-		//Constroi tabela de informacoes dos ativos
-		for (let ar in data){
-			html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action py-3 lh-tight" arcabouco="${data[ar].id}">`+
-					`<div class="d-flex w-100 justify-content-between">`+
-					`<h5 class="mb-1">${data[ar].nome}</h5>`+
-					`<small>${$.fn.dataTable.render.number( '.', '', 0, '').display(data[ar].qtd_ops)} ops.</small>`+
-					`</div>`+
-					`<div class="col mb-0 mt-3 small d-flex align-items-center">`+
-					`${((data[ar].qtd_usuarios > 1 && data[ar].criador)?"<i class='fas fa-user-shield me-3'></i>":"")}${((data[ar].qtd_usuarios > 1)?"<i class='fas fa-share-alt me-3'></i>":"")}`+
-					`<button class="btn btn-sm btn-light ms-auto" type="button" editar><i class="fas fa-edit"></i></button>`+
-					`<button class="btn btn-sm btn-light ms-2" type="button" remover><i class="fas fa-trash text-danger"></i></button>`+
-					`</div>`+
-					`</a>`;
-		}
-		arcaboucos.empty().append(html).promise().then(function (){
-			$(document.getElementById("table_arcaboucos")).children().first().trigger("click");
-		});
-	}
-	/*------------------------------ Table Operações ---------------------------------*/
 	/*
 		Atualiza a lista interna de operações do arcabouco, usada para reconstroir a interface.
 	*/
@@ -223,9 +196,144 @@ let Renda_variavel = (function(){
 		$("a.arcabouco-selected", document.getElementById("table_arcaboucos")).find("small").html(`${$.fn.dataTable.render.number( '.', '', 0, '').display(data.length)} ops.`);
 	}
 	/*
+		Reconstrói a seção de Dashboard estatistico ou a seção de lista de operações do arcabouço selecionado.
+	*/
+	function rebuildArcaboucoSection(){
+		let html = ``;
+		if (_operacoes_arcabouco.length > 0){
+			if (_selected_arcabouco_section === 'lista_ops'){
+				//Submenu acima da Tabela
+				html += `<div class="card mb-2 rounded-3 shadow-sm">`+
+						`<div class="card-body p-2">`+
+						`<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">`+
+						`<form class="row m-0 flex-fill">`+
+						`<div class="col-auto"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" placeholder="Data"></div>`+
+						`<div class="col-auto"><input type="text" name="ativo" class="form-control form-control-sm" onclick="this.select()" placeholder="Ativo"></div>`+
+						`<div class="col-auto"><input type="text" name="cenario" class="form-control form-control-sm ms-auto" onclick="this.select()" placeholder="Cenário"></div>`+
+						`</form>`+
+						`<button class="btn btn-sm btn-outline-primary me-2 d-none" type="button" name="alterar_sel"><i class="fas fa-edit me-2"></i>Editar</button>`+
+						`<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>`+
+						`<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>`+
+						`</div></div></div>`;
+				//Tabela de operações
+				html += `<div class="card mb-4 rounded-3 shadow-sm">`+
+						`<div class="card-body">`+
+						`<table id="lista_ops__table" class="table table-hover">`+
+						`<thead>${rebuildListaOps__Table('thead')}<thead>`+
+						`<tbody>${rebuildListaOps__Table('tbody')}</tbody>`+
+						`</table>`+
+						`</div></div>`;
+				$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
+					$(document.getElementById("lista_ops__table")).DataTable(_lista_ops__table_DT);
+				});
+			}
+			else if (_selected_arcabouco_section === 'dashboard_ops'){
+				let dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, {}, {}, {R: 26, valor_inicial: 5000.00, usa_custo: 1, usa_custo_offset: 1});
+				//Submenu de Filtros do Dashboard
+				html += `<div class="card mb-2 rounded-3 shadow-sm">`+
+						`<div class="card-body p-2">`+
+						`<div class="container-fluid d-flex justify-content-end px-0" id="dashboard_ops__filter">`+
+						`<form class="row m-0 flex-fill">`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Data</label><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" placeholder="Data"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Hora</label><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" placeholder="Hora"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Ativo</label><input type="text" name="ativo" class="form-control form-control-sm" onclick="this.select()" placeholder="Ativo"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label><input type="text" name="cenario" class="form-control form-control-sm ms-auto" onclick="this.select()" placeholder="Cenário"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label><select name="premissas" class="form-select form-select-sm ms-auto"></select></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label><select name="observacoes" class="form-select form-select-sm ms-auto"></select></div>`+
+						`</form>`+
+						`</div></div></div>`;
+				//Submenu de Simulação do Dashboard
+				html += `<div class="card mb-4 rounded-3 shadow-sm">`+
+						`<div class="card-body p-2">`+
+						`<div class="container-fluid d-flex justify-content-end px-0" id="dashboard_ops__simulate">`+
+						`<form class="row m-0 flex-fill">`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular R:R</label><select name="rr" class="form-select form-select-sm ms-auto">`+
+						`<option value="1">Padrão</option>`+
+						`<option value="2" disabled>2:1</option>`+
+						`<option value="2_1" disabled>2:1 (Escalado 1x)</option>`+
+						`<option value="2_2" disabled>2:1 (Escalado 1x Fixo)</option>`+
+						`<option value="3" disabled>3:1</option>`+
+						`<option value="3_1" disabled>3:1 (Escalado 1x)</option>`+
+						`<option value="3_2" disabled>3:1 (Escalado 1x Fixo)</option>`+
+						`<option value="3_3" disabled>3:1 (Escalado 2x)</option>`+
+						`</select></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular Vol.</label><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" placeholder="Vol"></div>`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular Cts</label><div class="input-group">`+
+						`<select class="form-select form-select-sm">`+
+						`<option value="">Padrão</option>`+
+						`<option value="1">Quantidade Fixa</option>`+
+						`<option value="2">Quantidade Máx por R</option>`+
+						`</select>`+
+						`<input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" placeholder="Cts" disabled></div></div>`+
+						`</form>`+
+						`</div></div></div>`;
+				//Info Estatistica + (Grafico Horário + Grafico Resultado no Tempo)
+				html += `<div class="row">`+
+						`<div class="col-4">`+
+						`<div class="card mb-2 rounded-3 shadow-sm">`+
+						`<div class="card-body">`+
+						`<table class="table table-sm table-borderless m-0" id="dashboard_ops__table_stats">`+
+						`<thead>${rebuildDashboardOps__Table_Stats('thead')}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Stats('tbody', dashboard_data.dashboard_ops__table_stats)}</tbody>`+
+						`</table></div></div>`+
+						`</div>`+
+						`<div class="col-8">`+
+						`<div class="row"><div class="col">`+
+						`<div class="card mb-2 rounded-3 shadow-sm">`+
+						`<div class="card-body" id="dashboard_ops__chart_porHorario">`+
+						`</div></div>`+
+						`</div></div>`+
+						`<div class="row"><div class="col">`+
+						`<div class="card mb-2 rounded-3 shadow-sm">`+
+						`<div class="card-body" id="dashboard_ops__chart_resultTempo">`+
+						`</div></div>`+
+						`</div></div>`+
+						`</div>`+
+						`</div>`;
+				$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
+					// $(document.getElementById("lista_ops__table")).DataTable(_lista_ops__table_DT);
+				});
+			}
+		}
+		else{
+			html += `<div class="card mb-2 rounded-3 shadow-sm">`+
+					`<div class="card-body">`+
+					`<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</div>`+
+					`</div></div>`;
+			$(document.getElementById("renda_variavel__section")).empty().append(html);
+		}
+	}
+	/*------------------------------ Lista Arcabouços --------------------------------*/
+	/*
+		Constroi a tabela de ativos. (Dados que recebe do BD)
+	*/
+	function buildTableArcaboucos(data){
+		let arcaboucos = $(document.getElementById("table_arcaboucos")),
+			html = ``,
+			first = 0;
+		//Constroi tabela de informacoes dos ativos
+		for (let ar in data){
+			html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action py-2 lh-tight" arcabouco="${data[ar].id}">`+
+					`<div class="d-flex w-100 justify-content-between mt-1">`+
+					`<h5 class="mb-1">${data[ar].nome}</h5>`+
+					`<small class="text-muted">${$.fn.dataTable.render.number( '.', '', 0, '').display(data[ar].qtd_ops)} ops.</small>`+
+					`</div>`+
+					`<div class="col mb-0 mt-4 small d-flex align-items-center">`+
+					`${((data[ar].qtd_usuarios > 1 && data[ar].criador)?"<i class='fas fa-user-shield me-3 arcabouco-badge'></i>":"")}${((data[ar].qtd_usuarios > 1)?"<i class='fas fa-share-alt me-3 arcabouco-badge'></i>":"")}`+
+					`<button class="btn btn-sm btn-light ms-auto" type="button" editar><i class="fas fa-edit"></i></button>`+
+					`<button class="btn btn-sm btn-light ms-2" type="button" remover><i class="fas fa-trash text-danger"></i></button>`+
+					`</div>`+
+					`</a>`;
+		}
+		arcaboucos.empty().append(html).promise().then(function (){
+			$(document.getElementById("table_arcaboucos")).children().first().trigger("click");
+		});
+	}
+	/*--------------------------------- Lista Ops ------------------------------------*/
+	/*
 		Retorna o html da lista de operacoes. (Head ou Body)
 	*/
-	function rebuildArcaboucoSection__List(section = ''){
+	function rebuildListaOps__Table(section = ''){
 		let html = ``;
 		if (section === 'thead'){
 			html += `<tr>`+
@@ -271,57 +379,41 @@ let Renda_variavel = (function(){
 		}
 		return html;
 	}
+	/*-------------------------------- Dashboard Ops ---------------------------------*/
 	/*
-		Reconstrói a seção de Dashboard estatistico ou a seção de lista de operações do arcabouço selecionado.
+		Retorna o html da lista de operacoes. (Head ou Body)
 	*/
-	function rebuildArcaboucoSection(){
+	function rebuildDashboardOps__Table_Stats(section = '', stats = {}){
 		let html = ``;
-		if (_selected_arcabouco_section === 'lista_ops'){
-			//Submenu acima da Tabela
-			html += `<div class="card mb-2 rounded-3 shadow-sm">`+
-					`<div class="card-body p-2">`+
-					`<div class="container-fluid d-flex justify-content-end px-0" id="table_operacoes__actions">`+
-					`<form class="row m-0 flex-fill">`+
-					`<div class="col-auto"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" placeholder="Data"></div>`+
-					`<div class="col-auto"><input type="text" name="ativo" class="form-control form-control-sm" onclick="this.select()" placeholder="Ativo"></div>`+
-					`<div class="col-auto"><input type="text" name="cenario" class="form-control form-control-sm ms-auto" onclick="this.select()" placeholder="Cenário"></div>`+
-					`</form>`+
-					`<button class="btn btn-sm btn-outline-primary me-2 d-none" type="button" name="alterar_sel"><i class="fas fa-edit me-2"></i>Editar</button>`+
-					`<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>`+
-					`<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>`+
-					`</div></div></div>`;
-			//Tabela de operações
-			html += `<div class="card mb-4 rounded-3 shadow-sm">`+
-					`<div class="card-body">`+
-					`<table id="table_operacoes" class="table table-hover">`+
-					`<thead>${rebuildArcaboucoSection__List('thead')}<thead>`+
-					`<tbody>${rebuildArcaboucoSection__List('tbody')}</tbody>`+
-					`</table>`+
-					`</div></div>`;
-			$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
-				$(document.getElementById("table_operacoes")).DataTable(_table_operacoes_DT);
-			});
+		if (section === 'thead')
+			html += `<tr></tr>`;
+		else if (section === 'tbody'){
+			//Dias
+			html += `<tr class="align-middle"><td class="fw-bold text-center">Dias</td><td class="text-center"><span name="dias__total" class="fs-6 fw-bold">${stats.dias__total}</span></td><td><span name="dias__trades_por_dia" class="text-muted">${stats.dias__trades_por_dia.toFixed(1)} Trades por Dia<span></td></tr>`;
+			//N° Trades
+			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Trades</td><td rowspan="3" class="text-center pt-3"><span name="trades__total" class="fs-6 fw-bold">${stats.trades__total}</span></td><td class="pt-3"><span name="trades__positivo" class="text-muted">${stats.trades__positivo} Positivos</span><span name="trades__positivo_perc" class="text-center text-muted ms-2">(${stats.trades__positivo_perc.toFixed(2)}%)</span></td></tr>`+
+					`<tr><td><span name="trades__negativo" class="text-muted">${stats.trades__negativo} Negativos</span><span name="trades__negativo_perc" class="text-center text-muted ms-2">(${stats.trades__negativo_perc.toFixed(2)}%)</span></td></tr>`+
+					`<tr><td><span name="trades__empate" class="text-muted">${stats.trades__empate} Empatados</span><span name="trades__empate_perc" class="text-center text-muted ms-2">(${stats.trades__empate_perc.toFixed(2)}%)</span></td></tr>`;
+			//Result.
+			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Result.</td><td rowspan="3" class="text-center pt-3"><span name="result__lucro_brl" class="fs-6 fw-bold">R$ ${stats.result__lucro_brl.toFixed(2)}</span></td><td class="pt-3"><span name="result__lucro_R" class="text-muted">${stats.result__lucro_R.toFixed(3)}R</span></td></tr>`+
+					`<tr><td><span name="result__lucro_pts" class="text-muted">${stats.result__lucro_pts.toFixed(0)} pts</span></td></tr>`+
+					`<tr><td><span name="result__lucro_perc" class="text-muted">${stats.result__lucro_perc.toFixed(2)}%</span></td></tr>`;
+			//Edge
+			html += `<tr class="align-middle"><td rowspan="2" class="fw-bold text-center pt-3">Edge</td><td rowspan="2" class="text-center pt-3"><span name="stats__edge" class="fs-6 fw-bold">${stats.stats__edge.toFixed(2)}%</span></td><td class="pt-3"><span name="stats__breakeven" class="text-muted">${stats.stats__breakeven.toFixed(2)}% Breakeven</span></td></tr>`+
+					`<tr><td><span name="stats__fatorLucro" class="text-muted">${stats.stats__fatorLucro.toFixed(2)} Fator de Lucro</span></td></tr>`;
+			//SQN
+			html += `<tr class="align-middle"><td class="fw-bold text-center pt-3">SQN</td><td class="text-center pt-3"><span name="stats__sqn" class="fs-6 fw-bold">${stats.stats__sqn.toFixed(2)}</span></td><td class="pt-3"><span name="stats__dp" class="text-muted">${stats.stats__dp.toFixed(2)} Desvio Padrão</span></td></tr>`;
+			//R.G
+			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">R.G</td><td rowspan="3" class="text-center pt-3"><span name="stats__rrMedio" class="fs-6 fw-bold">${stats.stats__rrMedio.toFixed(2)}</span></td><td class="pt-3"><span name="result__mediaGain_R" class="text-muted">${stats.result__mediaGain_R.toFixed(3)} Gain (R)</span><span name="result__mediaGain_brl" class="text-muted ms-2">R$ ${stats.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="text-muted ms-2">${stats.result__mediaGain_perc.toFixed(2)}%</span></td></tr>`+
+					`<tr><td><span name="result__mediaLoss_R" class="text-muted">${stats.result__mediaLoss_R.toFixed(3)} Loss (R)</span><span name="result__mediaLoss_brl" class="text-muted ms-2">R$ ${stats.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="text-muted ms-2">${stats.result__mediaLoss_perc.toFixed(2)}%</span></tr>`+
+					`<tr><td><span name="stats__expect" class="text-muted">${stats.stats__expect.toFixed(2)} Expect.</span></td></tr>`;
+			//Drawndown
+			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Drawndown</td><td rowspan="3" class="text-center pt-3"><span name="stats__drawdown" class="fs-6 fw-bold">R$ ${stats.stats__drawdown}</span></td><td class="pt-3"><span name="stats__drawdown_topoHistorico" class="text-muted">R$ ${stats.stats__drawdown_topoHistorico} Topo Histórico</span></td></tr>`+
+					`<tr><td><span name="stats__drawdown_max" class="text-muted">R$ ${stats.stats__drawdown_max} Máx. DD</span></tr>`+
+					`<tr><td><span name="stats__ruinaAtual" class="text-muted">R$ ${stats.stats__ruinaAtual} Limite Ruína</span></td></tr>`;
 		}
-		else if (_selected_arcabouco_section === 'dashboard_ops'){
-			//Submenu acima da Tabela
-			html += `<div class="card mb-2 rounded-3 shadow-sm">`+
-					`<div class="card-body p-2">`+
-					`<div class="container-fluid d-flex justify-content-end px-0" id="table_operacoes__actions">`+
-					`<form class="row m-0 flex-fill">`+
-					`<div class="col-auto"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" placeholder="Data"></div>`+
-					`<div class="col-auto"><input type="text" name="ativo" class="form-control form-control-sm" onclick="this.select()" placeholder="Ativo"></div>`+
-					`<div class="col-auto"><input type="text" name="cenario" class="form-control form-control-sm ms-auto" onclick="this.select()" placeholder="Cenário"></div>`+
-					`</form>`+
-					`<button class="btn btn-sm btn-outline-primary me-2 d-none" type="button" name="alterar_sel"><i class="fas fa-edit me-2"></i>Editar</button>`+
-					`<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>`+
-					`<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>`+
-					`</div></div></div>`;
-			$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
-				// $(document.getElementById("table_operacoes")).DataTable(_table_operacoes_DT);
-			});
-		}
+		return html;
 	}
-	/*---------------------------- Dashboard Operações -------------------------------*/
 	/*------------------------------ Section Cenarios --------------------------------*/
 	/*
 		Faz a reordenacao das linhas da tabela com base nas prioridades.
@@ -608,7 +700,7 @@ let Renda_variavel = (function(){
 	function resetOperacaoAddTable(){
 		let table = $(document.getElementById("table_operacoes_add"));
 		table.find("thead").empty();
-		table.find("tbody").empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0">Nada para Mostrar</td></tr>`);
+		table.find("tbody").empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
 	}
 	/*
 		Constroi o html do select de ativos em 'table_operacoes_add'.
@@ -913,17 +1005,17 @@ let Renda_variavel = (function(){
 	});
 	/*------------------------------ Table Operações ---------------------------------*/
 	/*
-		Processa o filtro na tabela 'table_operacoes'.
+		Processa o filtro na tabela 'lista_ops__table'.
 	*/
-	$(document.getElementById("renda_variavel__section")).on("keyup", "#table_operacoes__actions form input", function (){
-		$(document.getElementById("table_operacoes")).DataTable().column(`${this.name}:name`).search(this.value).draw();
+	$(document.getElementById("renda_variavel__section")).on("keyup", "#lista_ops__actions form input", function (){
+		$(document.getElementById("lista_ops__table")).DataTable().column(`${this.name}:name`).search(this.value).draw();
 	});
 	/*
 		Processa os cliques na tabela de operações de um arcabouço.
 		Click:
 			- (Ctrl): Selecionar 1 row.
 	*/
-	$(document.getElementById("renda_variavel__section")).on("mousedown", "#table_operacoes tbody tr", function (e){
+	$(document.getElementById("renda_variavel__section")).on("mousedown", "#lista_ops__table tbody tr", function (e){
 		//Ativa a seleção de linhas (Ctrl pressionado)
 		if (e.ctrlKey){
 			e.preventDefault();
@@ -931,15 +1023,15 @@ let Renda_variavel = (function(){
 			if (Global.hasClass(this, "selected"))
 				$(this).removeClass("selected");
 			else{
-				_table_operacoes_DT__clickState = 1;
+				_lista_ops__table_DT_clickState = 1;
 				$(this).addClass("selected");
 			}
-			let action_submenu = $(document.getElementById("table_operacoes__actions"));
-			if ($(document.getElementById("table_operacoes")).find("tbody tr.selected").length === 0){
+			let action_submenu = $(document.getElementById("lista_ops__actions"));
+			if ($(document.getElementById("lista_ops__table")).find("tbody tr.selected").length === 0){
 				action_submenu.find("button[name='alterar_sel']").addClass("d-none");
 				action_submenu.find("button[name='remove_sel']").addClass("d-none");
 			}
-			else if ($(document.getElementById("table_operacoes")).find("tbody tr.selected").length === 1){
+			else if ($(document.getElementById("lista_ops__table")).find("tbody tr.selected").length === 1){
 				action_submenu.find("button[name='alterar_sel']").removeClass("d-none");
 				action_submenu.find("button[name='remove_sel']").removeClass("d-none");
 			}
@@ -948,33 +1040,33 @@ let Renda_variavel = (function(){
 		}
 		//Deseleciona tudo
 		else{
-			$(document.getElementById("table_operacoes")).find("tbody tr.selected").removeClass("selected");
-			$(document.getElementById("table_operacoes__actions")).find("button[name='alterar_sel'], button[name='remove_sel']").addClass("d-none");
+			$(document.getElementById("lista_ops__table")).find("tbody tr.selected").removeClass("selected");
+			$(document.getElementById("lista_ops__actions")).find("button[name='alterar_sel'], button[name='remove_sel']").addClass("d-none");
 		}
-	}).on("mouseenter", "#table_operacoes tbody tr", function (e){
+	}).on("mouseenter", "#lista_ops__table tbody tr", function (e){
 		//Seleciona linhas caso esteje segurando (Ctrl e Click)
-		if (_table_operacoes_DT__clickState && e.ctrlKey){
+		if (_lista_ops__table_DT_clickState && e.ctrlKey){
 			e.preventDefault();
 			$(this).addClass("selected");
-			let action_submenu = $(document.getElementById("table_operacoes__actions"));
-			if ($(document.getElementById("table_operacoes")).find("tbody tr.selected").length > 1)
+			let action_submenu = $(document.getElementById("lista_ops__actions"));
+			if ($(document.getElementById("lista_ops__table")).find("tbody tr.selected").length > 1)
 				action_submenu.find("button[name='alterar_sel']").addClass("d-none");
 		}
-	}).on("mouseup", "#table_operacoes tbody tr", function (e){
+	}).on("mouseup", "#lista_ops__table tbody tr", function (e){
 		if (e.ctrlKey)
-			_table_operacoes_DT__clickState = 0;
+			_lista_ops__table_DT_clickState = 0;
 	});
 	/*
 		Processa a remocao de tudo ou das operações selecionadas com double click.
 	*/
-	$(document.getElementById("renda_variavel__section")).on("dblclick", "#table_operacoes__actions button[name]", function (){
+	$(document.getElementById("renda_variavel__section")).on("dblclick", "#lista_ops__actions button[name]", function (){
 		let remove_data = {};
 		//Remove todas as operações do arcabouço
 		if (this.name === "remove_all")
 			remove_data = {id_arcabouco: $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco"), operacoes: []};
 		else if (this.name === "remove_sel"){
 			remove_data = {id_arcabouco: $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco"), operacoes: []};
-			$(document.getElementById("table_operacoes")).find("tbody tr.selected").each(function (i, tr){
+			$(document.getElementById("lista_ops__table")).find("tbody tr.selected").each(function (i, tr){
 				remove_data["operacoes"].push(tr.getAttribute("operacao"));
 			});
 			if (remove_data["operacoes"].length === 0){
@@ -1421,7 +1513,7 @@ let Renda_variavel = (function(){
 		else{
 			table.find("thead th.error").removeClass("error");
 			Global.connect({
-				data: {module: "renda_variavel", action: "insert_operacoes", params: insert_data},
+				data: {module: "renda_variavel", action: "insert_operacoes", params: JSON.stringify(insert_data)},
 				success: function (result){
 					if (result.status){
 						updateOperacoes_Arcabouco(result.data);
