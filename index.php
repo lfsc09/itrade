@@ -270,6 +270,7 @@
 									<div class="col bg-light p-3">
 										<div class="row">
 											<div class="col-2">
+												<label class="form-label m-1 text-muted fw-bold">Fonte do Arquivo</label>
 												<select id="file_format" class="form-select form-select-sm">
 													<option value="excel">Excel</option>
 													<option value="profit">Profit</option>
@@ -277,12 +278,14 @@
 												</select>
 											</div>
 											<div class="col-2">
-												<select id="table_layout" class="form-select form-select-sm">
+												<label class="form-label m-1 text-muted fw-bold">Operações de</label>
+												<select id="table_layout" class="form-select form-select-sm" disabled>
 													<option value="scalp">Scalp</option>
-													<option value="tendencia">Tendencia</option>
+													<option value="tendencia">Tendência</option>
 												</select>
 											</div>
 											<div class="col-8">
+												<label class="form-label m-1 text-muted fw-bold">Arquivo</label>
 												<input class="form-control form-control-sm col" type="file" id="importa_arquivo_operacoes_modal">
 											</div>
 										</div>

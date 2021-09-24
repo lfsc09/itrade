@@ -130,6 +130,7 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #table_cenarios .accordion-button-with-input::after {margin-left: 1rem}
 #table_cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
 /*-------------------------------- Adicionar Operações -------------------------------*/
+#operacoes_modal .form-label {font-size: 12px}
 #table_operacoes_add {font-size: 13px}
 #table_operacoes_add tr.error {background-color: #f8d7dac4;}
 #table_operacoes_add th.error {color: #842029;}
