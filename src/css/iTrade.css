@@ -25,6 +25,14 @@
 		max-width: 100%
 	}
 }
+/*----------------------------------- SelectPicker -----------------------------------*/
+.bs-searchbox input[type="search"] {
+	min-height: calc(1.5em + (.5rem + 2px));
+	padding: .25rem .5rem;
+	font-size: .875rem;
+	border-radius: .2rem;
+}
+.bootstrap-select a.dropdown-item {font-size: 85%}
 /*------------------------------------ noUiSlider ------------------------------------*/
 .slider-styled, .slider-styled .noUi-handle {
     box-shadow: none;
@@ -38,9 +46,9 @@
     background: #0d6efd;
 }
 .slider-styled .noUi-handle {
-    height: 18px;
-    width: 18px;
-    top: -5px;
+    height: 15px;
+    width: 15px;
+    top: -3px;
     right: -9px; /* half the width */
     border-radius: 9px;
 }
@@ -50,10 +58,10 @@
 .slider-styled .noUi-active .noUi-tooltip {
     display: block;
 }
-/*-------------------------------------- Toasts --------------------------------------*/
+/*-------------------------------------- TOASTS --------------------------------------*/
 .toast {background-color: rgba(255,255,255)}
 #master_toasts {z-index: 1000}
-/*-------------------------------------- Scroll --------------------------------------*/
+/*-------------------------------------- SCROLL --------------------------------------*/
 ::-webkit-scrollbar{
     width: 6px;
     background-color: #F5F5F5;
@@ -134,7 +142,10 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 /*---------------------------------- Dashboard Ops -----------------------------------*/
 #dashboard_ops__filter .slider-styled.filter-hora {width: 100px; margin-top: 11px}
 #dashboard_ops__filter input[name='data'] {width: 175px}
-#dashboard_ops__filter input[name='ativo'] {width: 75px}
+#dashboard_ops__filter div[name='ativo'] {width: 160px}
+#dashboard_ops__filter div[name='cenario'] {width: 190px}
+#dashboard_ops__filter div[name='premissas'] {width: 190px}
+#dashboard_ops__filter div[name='observacoes'] {width: 190px}
 #dashboard_ops__simulate input[name='vol'] {width: 80px}
 #dashboard_ops__table_stats {font-size: 13px}
 #dashboard_ops__table_stats span.text-muted {font-weight: bold; font-size: 10px}

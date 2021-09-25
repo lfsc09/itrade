@@ -15,14 +15,22 @@
 				if ($action === "get_ativos")
 					echo json_encode(Ativos::get_ativos(null, $_SESSION["id"]));
 				else if ($action === "insert_ativos"){
-					if (!empty($params_data))
-						echo json_encode(Ativos::insert_ativos($params_data, $_SESSION["id"]));
+					if (!empty($params_data)){
+						$status = Ativos::insert_ativos($params_data, $_SESSION["id"]);
+						if ($status["status"])
+							$status = Ativos::get_ativos(null, $_SESSION["id"]);
+						echo json_encode($status);
+					}
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				else if ($action === "update_ativos"){
-					if (!empty($params_data))
-						echo json_encode(Ativos::update_ativos($params_data, $params_data["id"], $_SESSION["id"]));
+					if (!empty($params_data)){
+						$status = Ativos::update_ativos($params_data, $params_data["id"], $_SESSION["id"]);
+						if ($status["status"])
+							$status = Ativos::get_ativos(null, $_SESSION["id"]);
+						echo json_encode($status);
+					}
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
@@ -35,6 +43,24 @@
 				/*---------------------------------- Arcabouços -----------------------------------*/
 				if ($action === "get_arcaboucos")
 					echo json_encode(RendaVariavel::get_arcaboucos(null, $_SESSION["id"]));
+				else if ($action === "get_arcabouco_data"){
+					if (!empty($params_data)){
+						include_once 'api__ativos.php';
+						$return_data = [];
+						$status = RendaVariavel::get_cenarios($params_data, $_SESSION["id"]);
+						if ($status["status"])
+							$return_data["cenarios"] = $status["data"];
+						$status = Ativos::get_ativos(null, $_SESSION["id"]);
+						if ($status["status"])
+							$return_data["ativos"] = $status["data"];
+						$status = RendaVariavel::get_operacoes($params_data, $_SESSION["id"]);
+						if ($status["status"])
+							$return_data["operacoes"] = $status["data"];
+						echo json_encode(["status" => 1, "data" => $return_data]);
+					}
+					else
+						die(json_encode(["status" => 0, "error" => "No data passed"]));
+				}
 				else if ($action === "insert_arcaboucos"){
 					if (!empty($params_data))
 						echo json_encode(RendaVariavel::insert_arcaboucos($params_data, $_SESSION["id"]));
@@ -48,12 +74,6 @@
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
 				/*----------------------------------- Cenários ------------------------------------*/
-				else if ($action === "get_cenarios"){
-					if (!empty($params_data))
-						echo json_encode(RendaVariavel::get_cenarios($params_data, $_SESSION["id"]));
-					else
-						die(json_encode(["status" => 0, "error" => "No data passed"]));
-				}
 				else if ($action === "insert_cenarios"){
 					if (!empty($params_data)){
 						$status = RendaVariavel::insert_cenarios($params_data, $_SESSION["id"]);
@@ -80,28 +100,7 @@
 					else
 						die(json_encode(["status" => 0, "error" => "No data passed"]));
 				}
-				/*--------------------------------- Operação Add ----------------------------------*/
-				else if ($action === "get_operacoesAdd"){
-					if (!empty($params_data)){
-						include_once 'api__ativos.php';
-						$return_data = [];
-						$status = RendaVariavel::get_cenarios($params_data, $_SESSION["id"]);
-						if ($status["status"])
-							$return_data["cenarios"] = $status["data"];
-						$status = Ativos::get_ativos(null, $_SESSION["id"]);
-						if ($status["status"])
-							$return_data["ativos"] = $status["data"];
-						echo json_encode(["status" => 1, "data" => $return_data]);
-					}
-					else
-						die(json_encode(["status" => 0, "error" => "No data passed"]));
-				}
-				else if ($action === "get_operacoes"){
-					if (!empty($params_data))
-						echo json_encode(RendaVariavel::get_operacoes($params_data, $_SESSION["id"]));
-					else
-						die(json_encode(["status" => 0, "error" => "No data passed"]));
-				}
+				/*------------------------------------ Operação -----------------------------------*/
 				else if ($action === "insert_operacoes"){
 					if ($params_data === "")
 						die(json_encode(["status" => 0, "error" => "No data passed"]));

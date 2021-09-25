@@ -264,15 +264,9 @@ let Ativos = (function(){
 						success: function (result){
 							if (result.status){
 								$(document.getElementById("insert_modal")).modal("hide");
-								Global.connect({
-									data: {module: "ativos", action: "get_ativos"},
-									success: function (result){
-										if (result.status)
-											buildTableAtivos(result.data);
-										else
-											Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-									}
-								});
+								buildTableAtivos(result.data);
+								if (typeof Renda_variavel !== 'undefined')
+									Renda_variavel.updateAtivos(result.data);
 							}
 							else
 								Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "danger", body: result.error, delay: 4000});
@@ -359,15 +353,9 @@ let Ativos = (function(){
 				success: function (result){
 					if (result.status){
 						$(document.getElementById("table_ativos")).find("button[popup-editar]").popover("dispose");
-						Global.connect({
-							data: {module: "ativos", action: "get_ativos"},
-							success: function (result){
-								if (result.status)
-									buildTableAtivos(result.data);
-								else
-									Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-							}
-						});
+						buildTableAtivos(result.data);
+						if (typeof Renda_variavel !== 'undefined')
+							Renda_variavel.updateAtivos(result.data);
 					}
 					else
 						Global.toast.create({location: document.getElementById("update_popup_toasts"), color: "danger", body: result.error, delay: 4000});

@@ -36,6 +36,8 @@ let iTrade = (function(){
 						Global.request("src/js/iTrade_RendaVariavel_Statistics.js");
 						Global.request("src/js/iTrade_RendaVariavel.js");
 					}
+					else
+						Renda_variavel.rebuildArcaboucoSection();
 				}
 				else if (elem.id === "ativos"){
 					if (typeof Ativos === 'undefined')

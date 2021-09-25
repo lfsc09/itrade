@@ -1,9 +1,9 @@
 let Renda_variavel = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
-	//Contem a lista de cenarios atuais do arcabouço selecionado
-	let _cenarios__operacoes_add = {};
-	//Contem a lista de ativos cadastrados
-	let	_ativos__operacoes_add = [];
+	//Contem a lista atual de cenarios do arcabouço selecionado
+	let _cenarios_arcabouco = {};
+	//Contem a lista atual de ativos cadastrados
+	let	_ativos = [];
 	//Contem a lista atual de operações do arcabouço selecionado
 	let	_operacoes_arcabouco = [];
 	//Informa qual seção do Section Arcabouço está sendo mostrado (dashboard_ops|lista_ops)
@@ -199,6 +199,29 @@ let Renda_variavel = (function(){
 		$("a.arcabouco-selected", document.getElementById("table_arcaboucos")).find("small").html(`${$.fn.dataTable.render.number( '.', '', 0, '').display(data.length)} ops.`);
 	}
 	/*
+		Salva localmente os cenarios e ativos, para uso na parte de adição de operações. (recarrega toda vez que o modal for aberto)
+	*/
+	let updateCenarios_Arcabouco = {
+		create: function (data){
+			//Atualiza o objeto
+			_cenarios_arcabouco = {};
+			for (let cn in data)
+				_cenarios_arcabouco[data[cn].id] = data[cn];
+		},
+		update: function (data){
+			//Atualiza o objeto
+			_cenarios_arcabouco[data.id] = data;
+		},
+		remove: function (id){
+			//Atualiza o objeto
+			delete _cenarios_arcabouco[id];
+		}
+	}
+	function updateAtivos(data){
+		//Atualiza o array
+		_ativos = data;
+	}
+	/*
 		Reconstrói a seção de Dashboard estatistico ou a seção de lista de operações do arcabouço selecionado.
 	*/
 	function rebuildArcaboucoSection(){
@@ -239,10 +262,10 @@ let Renda_variavel = (function(){
 						`<form class="row m-0 flex-fill">`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Data</label><input type="text" name="data" class="form-control form-control-sm" placeholder="Data"></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Hora</label><div class="slider-styled filter-hora" name="hora"></div></div>`+
-						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Ativo</label><input type="text" name="ativo" class="form-control form-control-sm" onclick="this.select()" placeholder="Ativo"></div>`+
-						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label><input type="text" name="cenario" class="form-control form-control-sm ms-auto" onclick="this.select()" placeholder="Cenário"></div>`+
-						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label><select name="premissas" class="form-select form-select-sm ms-auto"></select></div>`+
-						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label><select name="observacoes" class="form-select form-select-sm ms-auto"></select></div>`+
+						`<div class="col-auto" name="ativo"><label class="form-label m-0 text-muted fw-bold">Filtrar Ativo</label><select name="ativo" multiple></select></div>`+
+						`<div class="col-auto" name="cenario"><label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label><select name="cenario" multiple></select></div>`+
+						`<div class="col-auto" name="premissas"><label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label><select name="premissas" multiple></select></div>`+
+						`<div class="col-auto" name="observacoes"><label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label><select name="observacoes" multiple></select></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Ignorar Erros</label><select name="ignora_erro" class="form-select form-select-sm ms-auto">`+
 						`<option value="0">Não</option>`+
 						`<option value="1">Sim</option>`+
@@ -305,8 +328,9 @@ let Renda_variavel = (function(){
 						`</div>`;
 				$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
 					//Inicia a seção de Filtros
-					let filters = $(document.getElementById("dashboard_ops__filter")),
-						data_inicial = Global.convertDate(_operacoes_arcabouco[0].data),
+					let filters = $(document.getElementById("dashboard_ops__filter"));
+					//Filtro da Data
+					let	data_inicial = Global.convertDate(_operacoes_arcabouco[0].data),
 						data_final = Global.convertDate(_operacoes_arcabouco[_operacoes_arcabouco.length-1].data);
 					filters.find("input[name='data']").daterangepicker({
 						"showDropdowns": true,
@@ -327,6 +351,7 @@ let Renda_variavel = (function(){
 							"monthNames": ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 						}
 					});
+					//Filtro da Hora
 					noUiSlider.create(filters.find("div[name='hora']")[0], {
 						connect: true,
 						range: {
@@ -338,6 +363,87 @@ let Renda_variavel = (function(){
 						tooltips: {
 							to: ((value) => moment(value).format("HH:mm"))
 						}
+					});
+					//Filtro do Ativo
+					let select_options_html = _ativos.reduce((p, c) => (p.nome ? `<option value="${p.nome}">${p.nome}</option>` : p) + `<option value="${c.nome}">${c.nome}</option>` );
+					filters.find("select[name='ativo']").append(select_options_html).promise().then(function (){
+						filters.find("select[name='ativo']").selectpicker({
+							title: 'Ativo',
+							selectedTextFormat: 'count > 1',
+							style: '',
+							styleBase: 'form-control form-control-sm'
+						}).on("loaded.bs.select", function (){
+							filters.find("select[name='ativo']").parent().addClass("form-control");
+						});
+					});
+					//Filtro de Cenario
+					select_options_html = Object.values(_cenarios_arcabouco).reduce((p, c) => (p.nome ? `<option value="${p.id}">${p.nome}</option>` : p) + `<option value="${c.id}">${c.nome}</option>` );
+					filters.find("select[name='cenario']").append(select_options_html).promise().then(function (){
+						filters.find("select[name='cenario']").selectpicker({
+							title: 'Cenários',
+							selectedTextFormat: 'count > 2',
+							actionsBox: true,
+							deselectAllText: 'Nenhum',
+							selectAllText: 'Todos',
+							liveSearch: true,
+							liveSearchNormalize: true,
+							style: '',
+							styleBase: 'form-control form-control-sm'
+						}).on("loaded.bs.select", function (){
+							filters.find("select[name='cenario']").parent().addClass("form-control");
+						}).on("changed.bs.select", function (){
+							let selected_cenarios = $(this).val(),
+								premissas_options = ``,
+								observacoes_options = ``;
+							for (let i in selected_cenarios){
+								if (_cenarios_arcabouco[selected_cenarios[i]]["premissas"].length){
+									premissas_options += `<optgroup label="${_cenarios_arcabouco[selected_cenarios[i]].nome}">`;
+									for (let p in _cenarios_arcabouco[selected_cenarios[i]]["premissas"])
+										premissas_options += `<option value="${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].ref}" cenario="${_cenarios_arcabouco[selected_cenarios[i]].id}" data-content="<i class='fas fa-square me-2' style='color: ${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].cor}'></i>${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].nome}">${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].nome}</option>`;
+									premissas_options += `</optgroup>`;
+								}
+								if (_cenarios_arcabouco[selected_cenarios[i]]["observacoes"].length){
+									observacoes_options += `<optgroup label="${_cenarios_arcabouco[selected_cenarios[i]].nome}">`;
+									for (let o in _cenarios_arcabouco[selected_cenarios[i]]["observacoes"])
+										observacoes_options += `<option value="${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].ref}" cenario="${_cenarios_arcabouco[selected_cenarios[i]].id}" data-content="<i class='fas fa-square me-2' style='color: ${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].cor}'></i>${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].nome}">${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].nome}</option>`;
+									observacoes_options += `</optgroup>`;
+								}
+							}
+							filters.find("select[name='premissas']").empty().append(premissas_options).selectpicker('refresh');
+							filters.find("select[name='observacoes']").empty().append(observacoes_options).selectpicker('refresh');
+						});
+					});
+					//Filtro de Premissas
+					filters.find("select[name='premissas']").selectpicker({
+						title: 'Premissas',
+						sanitize: false,
+						selectedTextFormat: 'count',
+						size: 15,
+						actionsBox: true,
+						deselectAllText: 'Nenhum',
+						selectAllText: 'Todos',
+						liveSearch: true,
+						liveSearchNormalize: true,
+						style: '',
+						styleBase: 'form-control form-control-sm'
+					}).on("loaded.bs.select", function (){
+						filters.find("select[name='premissas']").parent().addClass("form-control");
+					});
+					//Filtro de Observacoes
+					filters.find("select[name='observacoes']").selectpicker({
+						title: 'Observações',
+						sanitize: false,
+						selectedTextFormat: 'count',
+						size: 15,
+						actionsBox: true,
+						deselectAllText: 'Nenhum',
+						selectAllText: 'Todos',
+						liveSearch: true,
+						liveSearchNormalize: true,
+						style: '',
+						styleBase: 'form-control form-control-sm'
+					}).on("loaded.bs.select", function (){
+						filters.find("select[name='observacoes']").parent().addClass("form-control");
 					});
 				});
 			}
@@ -478,12 +584,18 @@ let Renda_variavel = (function(){
 		});
 	}
 	/*
+		Reconstroi o select de Cenarios, para copiar ao criar um novo cenario.
+	*/
+	function rebuildCenarios_modal_copiar(){
+		$(document.getElementById("cenarios_modal_copiar")).empty().append(buildCenariosCopySelect(_cenarios_arcabouco));
+	}
+	/*
 		Constroi o modal de gerenciamento de cenarios.
 	*/
 	function buildCenariosModal(data){
 		let modal = $(document.getElementById("cenarios_modal"));
-		$(document.getElementById("table_cenarios")).empty().append(buildCenariosTable(data));
-		$(document.getElementById("cenarios_modal_copiar")).empty().append(buildCenariosCopySelect(data));
+		$(document.getElementById("table_cenarios")).empty().append(buildCenariosTable(_cenarios_arcabouco));
+		rebuildCenarios_modal_copiar();
 		modal.modal("show");
 	}
 	/*
@@ -719,21 +831,6 @@ let Renda_variavel = (function(){
 	}
 	/*--------------------------- Section Operações Add ------------------------------*/
 	/*
-		Salva localmente os cenarios e ativos, para uso na parte de adição de operações. (recarrega toda vez que o modal for aberto)
-	*/
-	function updateOffData_forOperacoesAdd(data){
-		_ativos__operacoes_add = [];
-		_cenarios__operacoes_add = {};
-		if ("ativos" in data){
-			for (let at in data["ativos"])
-				_ativos__operacoes_add.push(data["ativos"][at]);
-		}
-		if ("cenarios" in data){
-			for (let cn in data["cenarios"])
-				_cenarios__operacoes_add[data["cenarios"][cn].id] = data["cenarios"][cn];
-		}
-	}
-	/*
 		Constroi o modal de Cadastro de Operações.
 	*/
 	function buildOperacoesModal(data){
@@ -757,8 +854,8 @@ let Renda_variavel = (function(){
 	*/
 	function buildAtivosSelect_OperacaoAddTable(){
 		let html = ``;
-		for (let at in _ativos__operacoes_add)
-			html += `<option value="${_ativos__operacoes_add[at].id}" custo="${_ativos__operacoes_add[at].custo}" valor_tick="${_ativos__operacoes_add[at].valor_tick}" pts_tick="${_ativos__operacoes_add[at].pts_tick}">${_ativos__operacoes_add[at].nome}</option>`;
+		for (let at in _ativos)
+			html += `<option value="${_ativos[at].id}" custo="${_ativos[at].custo}" valor_tick="${_ativos[at].valor_tick}" pts_tick="${_ativos[at].pts_tick}">${_ativos[at].nome}</option>`;
 		return html;
 	}
 	/*
@@ -766,29 +863,23 @@ let Renda_variavel = (function(){
 	*/
 	function buildCenariosSelect_OperacaoAddTable(){
 		let html = ``;
-		for (let cn in _cenarios__operacoes_add)
-			html += `<option value="${_cenarios__operacoes_add[cn].id}">${_cenarios__operacoes_add[cn].nome}</option>`;
+		for (let cn in _cenarios_arcabouco)
+			html += `<option value="${_cenarios_arcabouco[cn].id}">${_cenarios_arcabouco[cn].nome}</option>`;
 		return html;
 	}
 	/*
 		Constroi o html de options do select de Premissas e Observações, e seleciona algumas opções caso haja.
 	*/
-	// function buildPremissasEObservacoes_OperacaoAddTable(tr, cenario, selected_premissas = [], selected_observacoes = []){
-	// 	let premissas_html = ``,
-	// 		observacoes_html = ``;
-	// 	if (cenario in _cenarios__operacoes_add){
-	// 		for (let p in _cenarios__operacoes_add[cenario]["premissas"])
-	// 			premissas_html += `<option value="${_cenarios__operacoes_add[cenario]["premissas"][p]["id"]}" ref="${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}">(${_cenarios__operacoes_add[cenario]["premissas"][p]["ref"]}) ${_cenarios__operacoes_add[cenario]["premissas"][p]["nome"]}</option>`;
-	// 		for (let o in _cenarios__operacoes_add[cenario]["observacoes"])
-	// 			observacoes_html += `<option value="${_cenarios__operacoes_add[cenario]["observacoes"][o]["id"]}" ref="${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}">(${_cenarios__operacoes_add[cenario]["observacoes"][o]["ref"]}) ${_cenarios__operacoes_add[cenario]["observacoes"][o]["nome"]}</option>`;
-	// 	}
-	// 	tr.find("select[name='premissas']").empty().append(premissas_html).promise().then(function (){
-	// 		this.children().filter((i, el) => selected_premissas.includes(el.getAttribute("ref"))).prop("selected", true);
-	// 	});
-	// 	tr.find("select[name='observacoes']").empty().append(observacoes_html).promise().then(function (){
-	// 		this.children().filter((i, el) => selected_observacoes.includes(el.getAttribute("ref"))).prop("selected", true);
-	// 	});
-	// }
+	function buildPremissasEObservacoes_OperacaoAddTable(cenario){
+		let premissas_html = ``,
+			observacoes_html = ``;
+		if (cenario in _cenarios_arcabouco){
+			for (let p in _cenarios_arcabouco[cenario]["premissas"])
+				premissas_html += `<option value="${_cenarios_arcabouco[cenario]["premissas"][p]["id"]}" ref="${_cenarios_arcabouco[cenario]["premissas"][p]["ref"]}">(${_cenarios_arcabouco[cenario]["premissas"][p]["ref"]}) ${_cenarios_arcabouco[cenario]["premissas"][p]["nome"]}</option>`;
+			for (let o in _cenarios_arcabouco[cenario]["observacoes"])
+				observacoes_html += `<option value="${_cenarios_arcabouco[cenario]["observacoes"][o]["id"]}" ref="${_cenarios_arcabouco[cenario]["observacoes"][o]["ref"]}">(${_cenarios_arcabouco[cenario]["observacoes"][o]["ref"]}) ${_cenarios_arcabouco[cenario]["observacoes"][o]["nome"]}</option>`;
+		}
+	}
 	/*
 		Inicia os valores dos selects das linhas de 'table_operacoes_add'.
 	*/
@@ -1041,12 +1132,14 @@ let Renda_variavel = (function(){
 		else{
 			let me = this;
 			Global.connect({
-				data: {module: "renda_variavel", action: "get_operacoes", params: {id_arcabouco: this.getAttribute("arcabouco")}},
+				data: {module: "renda_variavel", action: "get_arcabouco_data", params: {id_arcabouco: this.getAttribute("arcabouco")}},
 				success: function (result){
 					if (result.status){
 						$(document.getElementById("table_arcaboucos")).find("a.arcabouco-selected").removeClass("arcabouco-selected");
 						$(me).addClass("arcabouco-selected");
-						updateOperacoes_Arcabouco(result.data);
+						updateOperacoes_Arcabouco(result.data["operacoes"]);
+						updateCenarios_Arcabouco.create(result.data["cenarios"]);
+						updateAtivos(result.data["ativos"]);
 						rebuildArcaboucoSection();
 					}
 					else
@@ -1206,6 +1299,8 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "success", body: "Cenário Removido.", delay: 4000});
+							updateCenarios_Arcabouco.remove(remove_data.id);
+							rebuildCenarios_modal_copiar();
 							cenario_div.remove();
 							if (table_cenarios.children().length === 0)
 								table_cenarios.append(buildCenariosTable());
@@ -1321,6 +1416,8 @@ let Renda_variavel = (function(){
 						if (result.status){
 							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "success", body: "Cenário Adicionado.", delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
+							updateCenarios_Arcabouco.update(result.data[0]);
+							rebuildCenarios_modal_copiar();
 						}
 						else
 							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "danger", body: result.error, delay: 4000});
@@ -1339,6 +1436,8 @@ let Renda_variavel = (function(){
 						if (result.status){
 							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "success", body: "Cenário Atualizado.", delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
+							updateCenarios_Arcabouco.update(result.data[0]);
+							rebuildCenarios_modal_copiar();
 						}
 						else
 							Global.toast.create({location: document.getElementById("cenarios_modal_toasts"), color: "danger", body: result.error, delay: 4000});
@@ -1602,30 +1701,10 @@ let Renda_variavel = (function(){
 		Comanda cliques no menu de renda variavel.
 	*/
 	$("button", document.getElementById("renda_variavel__menu")).click(function (){
-		if (this.name === "cenarios"){
-			Global.connect({
-				data: {module: "renda_variavel", action: "get_cenarios", params: {id_arcabouco: $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco")}},
-				success: function (result){
-					if (result.status)
-						buildCenariosModal(result.data);
-					else
-						Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-				}
-			});
-		}
-		else if (this.name === "adicionar_operacoes"){
-			Global.connect({
-				data: {module: "renda_variavel", action: "get_operacoesAdd", params: {id_arcabouco: $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco")}},
-				success: function (result){
-					if (result.status){
-						updateOffData_forOperacoesAdd(result.data);
-						buildOperacoesModal();
-					}
-					else
-						Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-				}
-			});
-		}
+		if (this.name === "cenarios")
+			buildCenariosModal();
+		else if (this.name === "adicionar_operacoes")
+			buildOperacoesModal();
 		else if (this.name === "dashboard_ops" || this.name === "lista_ops"){
 			_selected_arcabouco_section = this.name;
 			rebuildArcaboucoSection();
@@ -1642,5 +1721,8 @@ let Renda_variavel = (function(){
 		}
 	});
 	/*--------------------------------------------------------------------------------*/
-	return {}
+	return {
+		updateAtivos: updateAtivos,
+		rebuildArcaboucoSection: rebuildArcaboucoSection
+	}
 })();
