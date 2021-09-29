@@ -221,11 +221,13 @@ let Renda_variavel = (function(){
 		//Atualiza o array
 		_ativos = data;
 	}
+
 	/*
 		Reconstrói a seção de Dashboard estatistico ou a seção de lista de operações do arcabouço selecionado.
 	*/
 	function rebuildArcaboucoSection(){
-		let html = ``;
+		let html = ``,
+			id_arcabouco = $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco");
 		if (_operacoes_arcabouco.length > 0){
 			if (_selected_arcabouco_section === 'lista_ops'){
 				//Submenu acima da Tabela
@@ -254,9 +256,16 @@ let Renda_variavel = (function(){
 				});
 			}
 			else if (_selected_arcabouco_section === 'dashboard_ops'){
-				let dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, {ignora_erro: 0}, {rr: "1", usa_custo: 1, R: 26, valor_inicial: 5000.00});
+				let dashboard_filters = dashboard__filters_LS.getFromArcabouco(id_arcabouco),
+					dashboard_simulations = dashboard__simulations_LS.getFromArcabouco(id_arcabouco),
+					dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, dashboard_filters, dashboard_simulations);
+				html += `<div class="row">`+
+						`<div class="col-1 d-flex pe-0" style="width: 50px">`+
+						`<button class="btn btn-sm btn-primary flex-fill" type="button" id="dashboard_ops__refresh"><i class="fas fa-sync"></i></button>`+
+						`</div>`;
 				//Submenu de Filtros do Dashboard
-				html += `<div class="card mb-2 rounded-3 shadow-sm">`+
+				html += `<div class="col">`+
+						`<div class="card mb-2 rounded-3 shadow-sm">`+
 						`<div class="card-body p-2">`+
 						`<div class="container-fluid d-flex justify-content-end px-0" id="dashboard_ops__filter">`+
 						`<form class="row m-0 flex-fill">`+
@@ -273,10 +282,15 @@ let Renda_variavel = (function(){
 						`</form>`+
 						`</div></div></div>`;
 				//Submenu de Simulação do Dashboard
-				html += `<div class="card mb-4 rounded-3 shadow-sm">`+
+				html += `<div class="card rounded-3 shadow-sm">`+
 						`<div class="card-body p-2">`+
 						`<div class="container-fluid d-flex justify-content-end px-0" id="dashboard_ops__simulate">`+
 						`<form class="row m-0 flex-fill">`+
+						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Período</label><select name="periodo_calc" class="form-select form-select-sm ms-auto">`+
+						`<option value="1">Por Trade</option>`+
+						`<option value="2">Por Dia</option>`+
+						`<option value="3">Por Mes</option>`+
+						`</select></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular R:R</label><select name="rr" class="form-select form-select-sm ms-auto">`+
 						`<option value="1">Padrão</option>`+
 						`<option value="2" disabled>2:1</option>`+
@@ -289,10 +303,10 @@ let Renda_variavel = (function(){
 						`</select></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular Vol.</label><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" placeholder="Vol"></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular Cts</label><div class="input-group">`+
-						`<select class="form-select form-select-sm">`+
-						`<option value="">Padrão</option>`+
-						`<option value="1">Quantidade Fixa</option>`+
-						`<option value="2">Quantidade Máx por R</option>`+
+						`<select class="form-select form-select-sm" name="tipo_cts">`+
+						`<option value="1">Padrão</option>`+
+						`<option value="2">Quantidade Fixa</option>`+
+						`<option value="3">Quantidade Máx por R</option>`+
 						`</select>`+
 						`<input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" placeholder="Cts" disabled></div></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Custos</label><select name="usa_custo" class="form-select form-select-sm ms-auto">`+
@@ -302,9 +316,9 @@ let Renda_variavel = (function(){
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular Capital</label><input type="text" name="valor_inicial" class="form-control form-control-sm" onclick="this.select()" placeholder="Capital"></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular R</label><input type="text" name="R" class="form-control form-control-sm" onclick="this.select()" placeholder="R"></div>`+
 						`</form>`+
-						`</div></div></div>`;
+						`</div></div></div></div></div>`;
 				//Info Estatistica + (Grafico Horário + Grafico Resultado no Tempo)
-				html += `<div class="row">`+
+				html += `<div class="row mt-4">`+
 						`<div class="col-4">`+
 						`<div class="card mb-2 rounded-3 shadow-sm">`+
 						`<div class="card-body">`+
@@ -329,14 +343,16 @@ let Renda_variavel = (function(){
 				$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
 					//Inicia a seção de Filtros
 					let filters = $(document.getElementById("dashboard_ops__filter"));
+					//////////////////////////////////
 					//Filtro da Data
+					//////////////////////////////////
 					let	data_inicial = Global.convertDate(_operacoes_arcabouco[0].data),
 						data_final = Global.convertDate(_operacoes_arcabouco[_operacoes_arcabouco.length-1].data);
 					filters.find("input[name='data']").daterangepicker({
 						"showDropdowns": true,
 						"minDate": data_inicial,
-						"startDate": data_inicial,
-						"endDate": data_final,
+						"startDate": ("data_inicial" in dashboard_filters) ? dashboard_filters["data_inicial"] : data_inicial,
+						"endDate": ("data_final" in dashboard_filters) ? dashboard_filters["data_final"] : data_final,
 						"maxDate": data_final,
 						"locale": {
 							"format": "DD/MM/YYYY",
@@ -351,21 +367,32 @@ let Renda_variavel = (function(){
 							"monthNames": ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"]
 						}
 					});
+					//////////////////////////////////
 					//Filtro da Hora
-					noUiSlider.create(filters.find("div[name='hora']")[0], {
+					//////////////////////////////////
+					dashboard__filter_noUiSlider = noUiSlider.create(filters.find("div[name='hora']")[0], {
 						connect: true,
 						range: {
 							'min': new Date('2000-01-01 09:00:00').getTime(),
 							'max': new Date('2000-01-01 18:00:00').getTime()
 						},
 						step: 60 * 60 * 1000,
-						start: [new Date('2000-01-01 09:00:00').getTime(), new Date('2000-01-01 18:00:00').getTime()],
+						start: [
+							("hora_inicial" in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters["hora_inicial"]}`).getTime() : new Date('2000-01-01 09:00:00').getTime(),
+							("hora_final" in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters["hora_final"]}`).getTime() : new Date('2000-01-01 18:00:00').getTime()
+						],
 						tooltips: {
 							to: ((value) => moment(value).format("HH:mm"))
 						}
 					});
+					filters.find("div[name='hora']")[0].noUiSlider.on("change", function (values, handle, unencoded, isTap, positions){
+						let handle_dic = ["hora_inicial", "hora_final"];
+						dashboard__filters_LS.update(id_arcabouco, handle_dic[handle], moment(parseInt(values[handle])).format("HH:mm"));
+					});
+					//////////////////////////////////
 					//Filtro do Ativo
-					let select_options_html = _ativos.reduce((p, c) => (p.nome ? `<option value="${p.nome}">${p.nome}</option>` : p) + `<option value="${c.nome}">${c.nome}</option>` );
+					//////////////////////////////////
+					let select_options_html = _ativos.reduce((p, c) => (p.nome ? `<option value="${p.nome}" ${(("ativo" in dashboard_filters && dashboard_filters["ativo"].includes(p.nome)) ? "selected" : "" )}>${p.nome}</option>` : p) + `<option value="${c.nome}" ${(("ativo" in dashboard_filters && dashboard_filters["ativo"].includes(c.nome)) ? "selected" : "" )}>${c.nome}</option>` );
 					filters.find("select[name='ativo']").append(select_options_html).promise().then(function (){
 						filters.find("select[name='ativo']").selectpicker({
 							title: 'Ativo',
@@ -374,10 +401,14 @@ let Renda_variavel = (function(){
 							styleBase: 'form-control form-control-sm'
 						}).on("loaded.bs.select", function (){
 							filters.find("select[name='ativo']").parent().addClass("form-control");
+						}).on("changed.bs.select", function (){
+							dashboard__filters_LS.update(id_arcabouco, "ativo", $(this).val());
 						});
 					});
+					//////////////////////////////////
 					//Filtro de Cenario
-					select_options_html = Object.values(_cenarios_arcabouco).reduce((p, c) => (p.nome ? `<option value="${p.id}">${p.nome}</option>` : p) + `<option value="${c.id}">${c.nome}</option>` );
+					//////////////////////////////////
+					select_options_html = Object.values(_cenarios_arcabouco).reduce((p, c) => (p.nome ? `<option value="${p.id}" ${(("cenario" in dashboard_filters && p.nome in dashboard_filters["cenario"]) ? "selected" : "" )}>${p.nome}</option>` : p) + `<option value="${c.id}" ${(("cenario" in dashboard_filters && c.nome in dashboard_filters["cenario"]) ? "selected" : "" )}>${c.nome}</option>` );
 					filters.find("select[name='cenario']").append(select_options_html).promise().then(function (){
 						filters.find("select[name='cenario']").selectpicker({
 							title: 'Cenários',
@@ -394,7 +425,8 @@ let Renda_variavel = (function(){
 						}).on("changed.bs.select", function (){
 							let selected_cenarios = $(this).val(),
 								premissas_options = ``,
-								observacoes_options = ``;
+								observacoes_options = ``,
+								localStorage_data = {};
 							for (let i in selected_cenarios){
 								if (_cenarios_arcabouco[selected_cenarios[i]]["premissas"].length){
 									premissas_options += `<optgroup label="${_cenarios_arcabouco[selected_cenarios[i]].nome}">`;
@@ -409,11 +441,21 @@ let Renda_variavel = (function(){
 									observacoes_options += `</optgroup>`;
 								}
 							}
+							$(this).find("option:selected").each(function (i, el){
+								localStorage_data[el.innerText] = {
+									id: this.value,
+									premissas: (el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["premissas"] : [],
+									observacoes: (el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["observacoes"] : []
+								}
+							});
+							dashboard__filters_LS.update(id_arcabouco, "cenario", localStorage_data);
 							filters.find("select[name='premissas']").empty().append(premissas_options).selectpicker('refresh');
 							filters.find("select[name='observacoes']").empty().append(observacoes_options).selectpicker('refresh');
 						});
 					});
+					//////////////////////////////////
 					//Filtro de Premissas
+					//////////////////////////////////
 					filters.find("select[name='premissas']").selectpicker({
 						title: 'Premissas',
 						sanitize: false,
@@ -429,21 +471,67 @@ let Renda_variavel = (function(){
 					}).on("loaded.bs.select", function (){
 						filters.find("select[name='premissas']").parent().addClass("form-control");
 					});
+					//////////////////////////////////
 					//Filtro de Observacoes
-					filters.find("select[name='observacoes']").selectpicker({
-						title: 'Observações',
-						sanitize: false,
-						selectedTextFormat: 'count',
-						size: 15,
-						actionsBox: true,
-						deselectAllText: 'Nenhum',
-						selectAllText: 'Todos',
-						liveSearch: true,
-						liveSearchNormalize: true,
-						style: '',
-						styleBase: 'form-control form-control-sm'
-					}).on("loaded.bs.select", function (){
-						filters.find("select[name='observacoes']").parent().addClass("form-control");
+					//////////////////////////////////
+					select_options_html = "";
+					if ("cenario" in dashboard_filters){
+						for (let cenario_nome in dashboard_filters["cenario"]){
+							if (_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"].length){
+								select_options_html += `<optgroup label="${cenario_nome}">`;
+								for (let o in _cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"])
+									select_options_html += `<option value="${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].ref}" cenario="${dashboard_filters["cenario"][cenario_nome].id}" data-content="<i class='fas fa-square me-2' style='color: ${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].cor}'></i>${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].nome}" ${((dashboard_filters["cenario"][cenario_nome]["observacoes"].includes(_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].ref)) ? "selected" : "" )}>${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].nome}</option>`;
+								select_options_html += `</optgroup>`;
+							}
+						}
+					}
+					filters.find("select[name='observacoes']").append(select_options_html).promise().then(function (){
+						filters.find("select[name='observacoes']").selectpicker({
+							title: 'Observações',
+							sanitize: false,
+							selectedTextFormat: 'count',
+							size: 15,
+							actionsBox: true,
+							deselectAllText: 'Nenhum',
+							selectAllText: 'Todos',
+							liveSearch: true,
+							liveSearchNormalize: true,
+							style: '',
+							styleBase: 'form-control form-control-sm'
+						}).on("loaded.bs.select", function (){
+							filters.find("select[name='observacoes']").parent().addClass("form-control");
+						}).on("changed.bs.select", function (){
+							let selected_observacoes = {};
+							$(this).find("option:selected").each(function (i, el){
+								let cenario_nome = Object.keys(dashboard_filters["cenario"]).find(key => dashboard_filters["cenario"][key].id === el.getAttribute("cenario"));
+								if (!(cenario_nome in selected_observacoes))
+									selected_observacoes[cenario_nome] = [];
+								selected_observacoes[cenario_nome].push(el.value);
+							});
+							for (cenario_nome in selected_observacoes)
+								dashboard_filters["cenario"][cenario_nome]["observacoes"] = selected_observacoes[cenario_nome];
+							dashboard__filters_LS.update(id_arcabouco, "cenario", dashboard_filters["cenario"]);
+						});
+					});
+					//////////////////////////////////
+					//Filtro de Ignora Erros
+					//////////////////////////////////
+					if ("ignora_erro" in dashboard_filters)
+						filters.find("select[name='ignora_erro']").val(dashboard_filters["ignora_erro"]);
+					//Inicia a seção de Simulações
+					let simulations = $(document.getElementById("dashboard_ops__simulate"));
+					simulations.find("input[name],select[name]").each(function (){
+						me = $(this);
+						if (this.name in dashboard_simulations)
+							me.val(dashboard_simulations[this.name]);
+						if (this.name === "vol")
+							me.inputmask({alias: "numeric", digitsOptional: false, digits: 0, rightAlign: false, placeholder: "0"});
+						else if (this.name === "cts")
+							me.inputmask({alias: "numeric", digitsOptional: false, digits: 0, rightAlign: false, placeholder: "0"});
+						else if (this.name === "valor_inicial")
+							me.inputmask({alias: "numeric", digitsOptional: false, digits: 2, rightAlign: false, placeholder: "0"});
+						else if (this.name === "R")
+							me.inputmask({alias: "numeric", digitsOptional: false, digits: 2, rightAlign: false, placeholder: "0"});
 					});
 				});
 			}
@@ -536,6 +624,120 @@ let Renda_variavel = (function(){
 	}
 	/*-------------------------------- Dashboard Ops ---------------------------------*/
 	/*
+		Adiciona ou altera 'filters' passados no localStorage do arcabouço selecionado.
+	*/
+	let dashboard__filters_LS = {
+		/*
+			Retorna os 'filters' de todos os arcabouços.
+		*/
+		getAll: function () {
+			let filters = localStorage.getItem("dashboard_filters");
+			if (filters === null)
+				return {};
+			else
+				return JSON.parse(filters);
+		},
+		/*
+			Retorna os 'filters' de um arcabouço.
+		*/
+		getFromArcabouco: function (id_arcabouco) {
+			let filters = localStorage.getItem("dashboard_filters");
+			if (filters === null)
+				return {};
+			else
+				filters = JSON.parse(filters);
+			if (!(id_arcabouco in filters))
+				return {};
+			return filters[id_arcabouco];
+		},
+		/*
+			Cadastra ou atualiza 'filters' de um arcabouço.
+		*/
+		update: function (id_arcabouco, key, value) {
+			let filters = localStorage.getItem("dashboard_filters");
+			//Nao existe nada relacionado a 'filters' no localStorage
+			if (filters === null)
+				filters = {};
+			//Se existe pega e processa
+			else
+				filters = JSON.parse(filters);
+			if (value !== ""){
+				//Se o arcabouco nao tem nenhum filtro ainda iniciado
+				if (!(id_arcabouco in filters))
+					filters[id_arcabouco] = {};
+				//Adiciona ou altera a chave-valor passada
+				filters[id_arcabouco][key] = value;
+				localStorage.setItem("dashboard_filters", JSON.stringify(filters));
+			}
+			//Valores vazios sao removidos
+			else{
+				if (id_arcabouco in filters){
+					if (key in filters[id_arcabouco]){
+						delete filters[id_arcabouco][key];
+						localStorage.setItem("dashboard_filters", JSON.stringify(filters));
+					}
+				}
+			}
+		}
+	}
+	/*
+		Adiciona ou altera 'simulations' passados no localStorage do arcabouço selecionado.
+	*/
+	let dashboard__simulations_LS = {
+		/*
+			Retorna os 'simulations' de todos os arcabouços.
+		*/
+		getAll: function () {
+			let simulations = localStorage.getItem("dashboard_simulations");
+			if (simulations === null)
+				return {};
+			else
+				return JSON.parse(simulations);
+		},
+		/*
+			Retorna os 'simulations' de um arcabouço.
+		*/
+		getFromArcabouco: function (id_arcabouco) {
+			let simulations = localStorage.getItem("dashboard_simulations");
+			if (simulations === null)
+				return {};
+			else
+				simulations = JSON.parse(simulations);
+			if (!(id_arcabouco in simulations))
+				return {};
+			return simulations[id_arcabouco];
+		},
+		/*
+			Cadastra ou atualiza 'simulations' de um arcabouço.
+		*/
+		update: function (id_arcabouco, key, value) {
+			let simulations = localStorage.getItem("dashboard_simulations");
+			//Nao existe nada relacionado a 'simulations' no localStorage
+			if (simulations === null)
+				simulations = {};
+			//Se existe pega e processa
+			else
+				simulations = JSON.parse(simulations);
+			if (value !== ""){
+				//Se o arcabouco nao tem nenhum filtro ainda iniciado
+				if (!(id_arcabouco in simulations))
+					simulations[id_arcabouco] = {};
+				//Adiciona ou altera a chave-valor passada
+				simulations[id_arcabouco][key] = value;
+				localStorage.setItem("dashboard_simulations", JSON.stringify(simulations));
+			}
+			//Valores vazios sao removidos
+			else{
+				if (id_arcabouco in simulations){
+					if (key in simulations[id_arcabouco]){
+						delete simulations[id_arcabouco][key];
+						localStorage.setItem("dashboard_simulations", JSON.stringify(simulations));
+					}
+				}
+			}
+		}
+	}
+	/*
 		Retorna o html da lista de operacoes. (Head ou Body)
 	*/
 	function rebuildDashboardOps__Table_Stats(section = '', stats = {}){
@@ -551,18 +753,18 @@ let Renda_variavel = (function(){
 					`<tr><td><span name="trades__empate" class="text-muted">${stats.trades__empate} Empatados</span><span name="trades__empate_perc" class="text-center text-muted ms-2">(${stats.trades__empate_perc.toFixed(2)}%)</span></td></tr>`+
 					`<tr><td><span name="trades__erro" class="text-muted">${stats.trades__erro} Errados</span><span name="trades__erro_perc" class="text-center text-muted ms-2">(${((stats.trades__erro_perc !== "--") ? stats.trades__erro_perc.toFixed(2) : stats.trades__erro_perc )}%)</span></td></tr>`;
 			//Result.
-			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Result.</td><td rowspan="3" class="text-center pt-3"><span name="result__lucro_brl" class="fs-6 fw-bold">R$ ${stats.result__lucro_brl.toFixed(2)}</span></td><td class="pt-3"><span name="result__lucro_R" class="text-muted">${stats.result__lucro_R.toFixed(3)}R</span></td></tr>`+
+			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Result.</td><td rowspan="3" class="text-center pt-3"><span name="result__lucro_brl" class="fs-6 fw-bold">R$ ${stats.result__lucro_brl.toFixed(2)}</span></td><td class="pt-3"><span name="result__lucro_R" class="text-muted">${((stats.result__lucro_R !== "--") ? stats.result__lucro_R.toFixed(3) : stats.result__lucro_R )}R</span></td></tr>`+
 					`<tr><td><span name="result__lucro_pts" class="text-muted">${stats.result__lucro_pts.toFixed(0)} pts</span></td></tr>`+
-					`<tr><td><span name="result__lucro_perc" class="text-muted">${stats.result__lucro_perc.toFixed(2)}%</span></td></tr>`;
+					`<tr><td><span name="result__lucro_perc" class="text-muted">${((stats.result__lucro_perc !== "--") ? stats.result__lucro_perc.toFixed(2) : stats.result__lucro_perc )}%</span></td></tr>`;
 			//Edge
 			html += `<tr class="align-middle"><td rowspan="2" class="fw-bold text-center pt-3">Edge</td><td rowspan="2" class="text-center pt-3"><span name="stats__edge" class="fs-6 fw-bold">${stats.stats__edge.toFixed(2)}%</span></td><td class="pt-3"><span name="stats__breakeven" class="text-muted">${stats.stats__breakeven.toFixed(2)}% Breakeven</span></td></tr>`+
 					`<tr><td><span name="stats__fatorLucro" class="text-muted">${stats.stats__fatorLucro.toFixed(2)} Fator de Lucro</span></td></tr>`;
 			//SQN
-			html += `<tr class="align-middle"><td class="fw-bold text-center pt-3">SQN</td><td class="text-center pt-3"><span name="stats__sqn" class="fs-6 fw-bold">${stats.stats__sqn.toFixed(2)}</span></td><td class="pt-3"><span name="stats__dp" class="text-muted">${stats.stats__dp.toFixed(2)} Desvio Padrão</span></td></tr>`;
+			html += `<tr class="align-middle"><td class="fw-bold text-center pt-3">SQN</td><td class="text-center pt-3"><span name="stats__sqn" class="fs-6 fw-bold">${((stats.stats__sqn !== "--") ? stats.stats__sqn.toFixed(2) : stats.stats__sqn )}</span></td><td class="pt-3"><span name="stats__dp" class="text-muted">${((stats.stats__dp !== "--") ? stats.stats__dp.toFixed(2) : stats.stats__dp )} Desvio Padrão</span></td></tr>`;
 			//R.G
-			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">R.G</td><td rowspan="3" class="text-center pt-3"><span name="stats__rrMedio" class="fs-6 fw-bold">${stats.stats__rrMedio.toFixed(2)}</span></td><td class="pt-3"><span name="result__mediaGain_R" class="text-muted">${stats.result__mediaGain_R.toFixed(3)} Gain (R)</span><span name="result__mediaGain_brl" class="text-muted ms-2">R$ ${stats.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="text-muted ms-2">${stats.result__mediaGain_perc.toFixed(2)}%</span></td></tr>`+
-					`<tr><td><span name="result__mediaLoss_R" class="text-muted">${stats.result__mediaLoss_R.toFixed(3)} Loss (R)</span><span name="result__mediaLoss_brl" class="text-muted ms-2">R$ ${stats.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="text-muted ms-2">${stats.result__mediaLoss_perc.toFixed(2)}%</span></tr>`+
-					`<tr><td><span name="stats__expect" class="text-muted">${stats.stats__expect.toFixed(2)} Expect.</span></td></tr>`;
+			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">R.G</td><td rowspan="3" class="text-center pt-3"><span name="stats__rrMedio" class="fs-6 fw-bold">${stats.stats__rrMedio.toFixed(2)}</span></td><td class="pt-3"><span name="result__mediaGain_R" class="text-muted">${((stats.result__mediaGain_R !== "--") ? stats.result__mediaGain_R.toFixed(3) : stats.result__mediaGain_R )} Gain (R)</span><span name="result__mediaGain_brl" class="text-muted ms-2">R$ ${stats.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="text-muted ms-2">${((stats.result__mediaGain_perc !== "--") ? stats.result__mediaGain_perc.toFixed(2) : stats.result__mediaGain_perc )}%</span></td></tr>`+
+					`<tr><td><span name="result__mediaLoss_R" class="text-muted">${((stats.result__mediaLoss_R !== "--") ? stats.result__mediaLoss_R.toFixed(3) : stats.result__mediaLoss_R )} Loss (R)</span><span name="result__mediaLoss_brl" class="text-muted ms-2">R$ ${stats.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="text-muted ms-2">${((stats.result__mediaLoss_perc !== "--") ? stats.result__mediaLoss_perc.toFixed(2) : stats.result__mediaLoss_perc )}%</span></tr>`+
+					`<tr><td><span name="stats__expect" class="text-muted">${((stats.stats__expect !== "--") ? stats.stats__expect.toFixed(2) : stats.stats__expect )} Expect.</span></td></tr>`;
 			//Drawndown
 			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Drawndown</td><td rowspan="3" class="text-center pt-3"><span name="stats__drawdown" class="fs-6 fw-bold">R$ ${stats.stats__drawdown}</span></td><td class="pt-3"><span name="stats__drawdown_topoHistorico" class="text-muted">R$ ${stats.stats__drawdown_topoHistorico} Topo Histórico</span></td></tr>`+
 					`<tr><td><span name="stats__drawdown_max" class="text-muted">R$ ${stats.stats__drawdown_max} Máx. DD</span></tr>`+
@@ -1148,7 +1350,7 @@ let Renda_variavel = (function(){
 			});
 		}
 	});
-	/*------------------------------ Table Operações ---------------------------------*/
+	/*--------------------------------- Lista Ops ------------------------------------*/
 	/*
 		Processa o filtro na tabela 'lista_ops__table'.
 	*/
@@ -1234,11 +1436,46 @@ let Renda_variavel = (function(){
 			});
 		}
 	});
-	/*---------------------------- Dashboard Operações -------------------------------*/
+	/*------------------------------- Dashboard Ops ----------------------------------*/
 	/*
-		Processa a aplicacao dos filtros.
+		Processa a mudança em 'filters' do DatePicker.
 	*/
-	$(document.getElementById("renda_variavel__section")).find("#dashboard_ops__filter input[name='ativo']");
+	$(document.getElementById("renda_variavel__section")).on("apply.daterangepicker", "#dashboard_ops__filter input[name='data']", function (ev, picker){
+		let id_arcabouco = $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco");
+		dashboard__filters_LS.update(id_arcabouco, "data_inicial", picker.startDate.format("DD/MM/YYYY"));
+		dashboard__filters_LS.update(id_arcabouco, "data_final", picker.endDate.format("DD/MM/YYYY"));
+	});
+	/*
+		Processa a mudança em 'filters' que usam select cru.
+	*/
+	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__filter select[name='ignora_erro']", function (){
+		dashboard__filters_LS.update($("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco"), this.name, $(this).val());
+	});
+	/*
+		Processa a mudança em 'simulate' que usam select cru.
+	*/
+	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__simulate select[name]", function (){
+		let id_arcabouco = $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco"),
+			value = $(this).val();
+		if (this.name === "tipo_cts"){
+			if (value === "1" || value === "3"){
+				$(document.getElementById("dashboard_ops__simulate")).find("input[name='cts']").val("").prop("disabled", true);
+				dashboard__simulations_LS.update(id_arcabouco, "cts", "");
+			}
+			else
+				$(document.getElementById("dashboard_ops__simulate")).find("input[name='cts']").prop("disabled", false);
+		}
+		dashboard__simulations_LS.update(id_arcabouco, this.name, value);
+	});
+	/*
+		Processa a mudança em 'simulate' que usam input cru.
+	*/
+	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__simulate input[name]", function (){
+		dashboard__simulations_LS.update($("a.arcabouco-selected", document.getElementById("table_arcaboucos")).attr("arcabouco"), this.name, $(this).val());
+	});
+	$(document.getElementById("renda_variavel__section")).on("click", "#dashboard_ops__refresh", function (){
+		rebuildArcaboucoSection();
+	});
 	/*------------------------------ Section Cenarios --------------------------------*/
 	/*
 		Processa a adição de um novo Cenário.
