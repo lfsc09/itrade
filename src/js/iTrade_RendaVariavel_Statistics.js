@@ -1,6 +1,57 @@
 let RV_Statistics = (function(){
 	/*---------------------------------- FUNCTIONS -----------------------------------*/
 	/*
+		Compara duas datas ou dois horarios, retornando:
+			 1: v1 > v2
+			 0: v1 = v2
+			-1: v1 < v2
+	*/
+	let compareDate_Time = function(v1, v2, method = 'date'){
+		if (method === 'date'){
+			let e_v2 = v2.split("/");
+			v1 = new Date(`${v1}`);
+			v2 = new Date(`${e_v2[2]}-${e_v2[1]}-${e_v2[0]}`);
+		}
+		else if (method === 'time'){
+			v1 = new Date(`2000-01-01 ${v1}`);
+			v2 = new Date(`2000-01-01 ${v2}`);
+		}
+		if (v1 > v2) return 1;
+		else if (v1 < v2) return -1;
+		else return 0;
+	}
+	/*
+		Busca premissas do cenario passado na lista de premissas dos filtros.
+	*/
+	let checkPremissas_Observacoes = function (opCenario, opPrem_Obs, filter_cenarios, key = '', method = 'OR'){
+		//Verifica se o cenario está nos filtros
+		if (opCenario in filter_cenarios){
+			//Verifica se há premissas ou observações escolhidas nos filtros do cenario
+			if (filter_cenarios[key].length){
+				let opPrem_Obs__Array = opPrem_Obs.split(",");
+				//Descarta operações sem premissas/observações cadastradas
+				if (opPrem_Obs__Array.length === 0)
+					return false;
+				//A operação deve ter pelo menos um dos filtros escolhidos 
+				if (method === 'OR'){
+					for (let c_o in filter_cenarios[key]){
+						if (opPrem_Obs__Array.includes(filter_cenarios[key][c_o]))
+							return true;
+					}
+					return false;
+				}
+				//A operação deve ter todos os filtros escolhidos 
+				if (method === 'AND'){
+					for (let c_o in filter_cenarios[key]){
+						if (!opPrem_Obs__Array.includes(filter_cenarios[key][c_o]))
+							return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
+	/*
 		Calcula a quantidade de Cts, baseado no 'tipo_cts' passado.
 	*/
 	let findCts_toUse = function (opCts, stopBrl, simulate){
@@ -18,8 +69,32 @@ let RV_Statistics = (function(){
 		Aplica os 'filters' na operacao passada.
 	*/
 	let okToUse_filterOp = function (op, filters){
+		//Filtra a data com a data inicial
+		if (filters.data_inicial !== null && compareDate_Time(op.data, filters.data_inicial, 'date') === -1)
+			return false;
+		//Filtra a data com a data final
+		if (filters.data_final !== null && compareDate_Time(op.data, filters.data_final, 'date') === 1)
+			return false;
+		//Filtra a hora com a hora inicial
+		if (filters.hora_inicial !== null && compareDate_Time(op.hora, filters.hora_inicial, 'time') === -1)
+			return false;
+		//Filtra a hora com a hora final
+		if (filters.hora_final !== null && compareDate_Time(op.hora, filters.hora_final, 'time') === 1)
+			return false;
+		//Filtra apenas os ativos selecionados
+		if (filters.ativo.length > 0 && !filters.ativo.includes(op.ativo))
+			return false;
+		//Filtra apenas os cenarios selecionados
+		if (!Global.isObjectEmpty(filters.cenario) && !(op.cenario in filters.cenario))
+			return false;
+		//Filtra apenas as premissas selecionadas dos cenarios
+		if (!checkPremissas_Observacoes(op.cenario, op.premissas, filters.cenario, 'premissas', 'OR'))
+			return false;
+		//Filtra apenas as observações selecionadas dos cenarios
+		if (!checkPremissas_Observacoes(op.cenario, op.observacoes, filters.cenario, 'observacoes', 'OR'))
+			return false;
 		//Filtra operações com Erro
-		if (op.erro == 1 && filters.ignora_erro)
+		if (filters.ignora_erro && op.erro == 1)
 			return false;
 		return true;
 	}
