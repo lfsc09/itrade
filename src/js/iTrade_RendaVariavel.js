@@ -259,6 +259,7 @@ let Renda_variavel = (function(){
 				let dashboard_filters = dashboard__filters_LS.getFromArcabouco(id_arcabouco),
 					dashboard_simulations = dashboard__simulations_LS.getFromArcabouco(id_arcabouco),
 					dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, dashboard_filters, dashboard_simulations);
+				console.log(dashboard_data);
 				html += `<div class="row">`+
 						`<div class="col-1 d-flex pe-0" style="width: 50px">`+
 						`<button class="btn btn-sm btn-primary flex-fill" type="button" id="dashboard_ops__refresh"><i class="fas fa-sync"></i></button>`+
@@ -273,8 +274,8 @@ let Renda_variavel = (function(){
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Filtrar Hora</label><div class="slider-styled filter-hora" name="hora"></div></div>`+
 						`<div class="col-auto" name="ativo"><label class="form-label m-0 text-muted fw-bold">Filtrar Ativo</label><select name="ativo" multiple></select></div>`+
 						`<div class="col-auto" name="cenario"><label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label><select name="cenario" multiple></select></div>`+
-						`<div class="col-auto" name="premissas"><label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label><select name="premissas" multiple></select></div>`+
-						`<div class="col-auto" name="observacoes"><label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label><select name="observacoes" multiple></select></div>`+
+						`<div class="col-auto" name="premissas"><label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label></div>`+
+						`<div class="col-auto" name="observacoes"><label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label><div class="dropdown bootstrap-select w-100" name="observacoes"><button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Observações</button><ul class="dropdown-menu overflow-auto"></ul></div></div>`+
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Ignorar Erros</label><select name="ignora_erro" class="form-select form-select-sm ms-auto">`+
 						`<option value="0">Não</option>`+
 						`<option value="1">Sim</option>`+
@@ -317,29 +318,30 @@ let Renda_variavel = (function(){
 						`<div class="col-auto"><label class="form-label m-0 text-muted fw-bold">Simular R</label><input type="text" name="R" class="form-control form-control-sm" onclick="this.select()" placeholder="R"></div>`+
 						`</form>`+
 						`</div></div></div></div></div>`;
-				//Info Estatistica + (Grafico Horário + Grafico Resultado no Tempo)
+				//Info Estatistica (Total + Por Cenário)
 				html += `<div class="row mt-4">`+
-						`<div class="col-4">`+
+						`<div class="col">`+
 						`<div class="card mb-2 rounded-3 shadow-sm">`+
 						`<div class="card-body">`+
-						`<table class="table table-sm table-borderless m-0" id="dashboard_ops__table_stats">`+
-						`<thead>${rebuildDashboardOps__Table_Stats('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Stats('tbody', dashboard_data.dashboard_ops__table_stats)}</tbody>`+
-						`</table></div></div>`+
-						`</div>`+
-						`<div class="col-8">`+
-						`<div class="row"><div class="col">`+
-						`<div class="card mb-2 rounded-3 shadow-sm">`+
-						`<div class="card-body" id="dashboard_ops__chart_porHorario">`+
-						`</div></div>`+
-						`</div></div>`+
-						`<div class="row"><div class="col">`+
-						`<div class="card mb-2 rounded-3 shadow-sm">`+
-						`<div class="card-body" id="dashboard_ops__chart_resultTempo">`+
-						`</div></div>`+
-						`</div></div>`+
-						`</div>`+
+						`<table class="table table-sm m-0" id="dashboard_ops__table_stats__byCenario">`+
+						`<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario)}</tbody>`+
+						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats)}</tfoot>`+
+						`</table>`+
+						`</div></div></div>`+
 						`</div>`;
+				//Graficos Horario + Grafico Evolução Patrimonial
+				html += `<div class="row mt-2">`+
+						`<div class="col">`+
+						`<div class="card rounded-3 shadow-sm">`+
+						`<div class="card-body" id="dashboard_ops__chart_porHorario">`+
+						`</div></div></div>`+
+						`<div class="col">`+
+						`<div class="card rounded-3 shadow-sm">`+
+						`<div class="card-body" id="dashboard_ops__chart_resultTempo">`+
+						`</div></div></div>`+
+						`</div>`;
+				html += `</div>`;
 				$(document.getElementById("renda_variavel__section")).empty().append(html).promise().then(function (){
 					//Inicia a seção de Filtros
 					let filters = $(document.getElementById("dashboard_ops__filter"));
@@ -423,96 +425,69 @@ let Renda_variavel = (function(){
 						}).on("loaded.bs.select", function (){
 							filters.find("select[name='cenario']").parent().addClass("form-control");
 						}).on("changed.bs.select", function (){
-							let selected_cenarios = $(this).val(),
-								premissas_options = ``,
-								observacoes_options = ``,
-								localStorage_data = {};
-							for (let i in selected_cenarios){
-								if (_cenarios_arcabouco[selected_cenarios[i]]["premissas"].length){
-									premissas_options += `<optgroup label="${_cenarios_arcabouco[selected_cenarios[i]].nome}">`;
-									for (let p in _cenarios_arcabouco[selected_cenarios[i]]["premissas"])
-										premissas_options += `<option value="${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].ref}" cenario="${_cenarios_arcabouco[selected_cenarios[i]].id}" data-content="<i class='fas fa-square me-2' style='color: ${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].cor}'></i>${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].nome}">${_cenarios_arcabouco[selected_cenarios[i]]["premissas"][p].nome}</option>`;
-									premissas_options += `</optgroup>`;
-								}
-								if (_cenarios_arcabouco[selected_cenarios[i]]["observacoes"].length){
-									observacoes_options += `<optgroup label="${_cenarios_arcabouco[selected_cenarios[i]].nome}">`;
-									for (let o in _cenarios_arcabouco[selected_cenarios[i]]["observacoes"])
-										observacoes_options += `<option value="${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].ref}" cenario="${_cenarios_arcabouco[selected_cenarios[i]].id}" data-content="<i class='fas fa-square me-2' style='color: ${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].cor}'></i>${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].nome}">${_cenarios_arcabouco[selected_cenarios[i]]["observacoes"][o].nome}</option>`;
-									observacoes_options += `</optgroup>`;
-								}
-							}
+							let localStorage_data = {};
 							$(this).find("option:selected").each(function (i, el){
 								localStorage_data[el.innerText] = {
 									id: this.value,
-									premissas: (el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["premissas"] : [],
-									observacoes: (el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["observacoes"] : []
+									premissas: ("cenario" in dashboard_filters && el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["premissas"] : [],
+									observacoes: ("cenario" in dashboard_filters && el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["observacoes"] : []
 								}
 							});
 							dashboard__filters_LS.update(id_arcabouco, "cenario", localStorage_data);
-							filters.find("select[name='premissas']").empty().append(premissas_options).selectpicker('refresh');
-							filters.find("select[name='observacoes']").empty().append(observacoes_options).selectpicker('refresh');
+							// rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='premissas']"), "premissas", id_arcabouco);
+							rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='observacoes']"), "observacoes", id_arcabouco);
 						});
 					});
 					//////////////////////////////////
 					//Filtro de Premissas
 					//////////////////////////////////
-					filters.find("select[name='premissas']").selectpicker({
-						title: 'Premissas',
-						sanitize: false,
-						selectedTextFormat: 'count',
-						size: 15,
-						actionsBox: true,
-						deselectAllText: 'Nenhum',
-						selectAllText: 'Todos',
-						liveSearch: true,
-						liveSearchNormalize: true,
-						style: '',
-						styleBase: 'form-control form-control-sm'
-					}).on("loaded.bs.select", function (){
-						filters.find("select[name='premissas']").parent().addClass("form-control");
-					});
+					// filters.find("select[name='premissas']").selectpicker({
+					// 	title: 'Premissas',
+					// 	sanitize: false,
+					// 	selectedTextFormat: 'count',
+					// 	size: 15,
+					// 	actionsBox: true,
+					// 	deselectAllText: 'Nenhum',
+					// 	selectAllText: 'Todos',
+					// 	liveSearch: true,
+					// 	liveSearchNormalize: true,
+					// 	style: '',
+					// 	styleBase: 'form-control form-control-sm'
+					// }).on("loaded.bs.select", function (){
+					// 	filters.find("select[name='premissas']").parent().addClass("form-control");
+					// });
 					//////////////////////////////////
 					//Filtro de Observacoes
 					//////////////////////////////////
-					select_options_html = "";
-					if ("cenario" in dashboard_filters){
-						for (let cenario_nome in dashboard_filters["cenario"]){
-							if (_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"].length){
-								select_options_html += `<optgroup label="${cenario_nome}">`;
-								for (let o in _cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"])
-									select_options_html += `<option value="${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].ref}" cenario="${dashboard_filters["cenario"][cenario_nome].id}" data-content="<i class='fas fa-square me-2' style='color: ${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].cor}'></i>${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].nome}" ${((dashboard_filters["cenario"][cenario_nome]["observacoes"].includes(_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].ref)) ? "selected" : "" )}>${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id]["observacoes"][o].nome}</option>`;
-								select_options_html += `</optgroup>`;
-							}
-						}
-					}
-					filters.find("select[name='observacoes']").append(select_options_html).promise().then(function (){
-						filters.find("select[name='observacoes']").selectpicker({
-							title: 'Observações',
-							sanitize: false,
-							selectedTextFormat: 'count',
-							size: 15,
-							actionsBox: true,
-							deselectAllText: 'Nenhum',
-							selectAllText: 'Todos',
-							liveSearch: true,
-							liveSearchNormalize: true,
-							style: '',
-							styleBase: 'form-control form-control-sm'
-						}).on("loaded.bs.select", function (){
-							filters.find("select[name='observacoes']").parent().addClass("form-control");
-						}).on("changed.bs.select", function (){
-							let selected_observacoes = {};
-							$(this).find("option:selected").each(function (i, el){
-								let cenario_nome = Object.keys(dashboard_filters["cenario"]).find(key => dashboard_filters["cenario"][key].id === el.getAttribute("cenario"));
-								if (!(cenario_nome in selected_observacoes))
-									selected_observacoes[cenario_nome] = [];
-								selected_observacoes[cenario_nome].push(el.value);
-							});
-							for (cenario_nome in selected_observacoes)
-								dashboard_filters["cenario"][cenario_nome]["observacoes"] = selected_observacoes[cenario_nome];
-							dashboard__filters_LS.update(id_arcabouco, "cenario", dashboard_filters["cenario"]);
-						});
-					});
+					rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='observacoes']"), "observacoes", id_arcabouco);
+					// filters.find("select[name='observacoes']").append(select_options_html).promise().then(function (){
+					// 	filters.find("select[name='observacoes']").selectpicker({
+					// 		title: 'Observações',
+					// 		sanitize: false,
+					// 		selectedTextFormat: 'count',
+					// 		size: 15,
+					// 		actionsBox: true,
+					// 		deselectAllText: 'Nenhum',
+					// 		selectAllText: 'Todos',
+					// 		liveSearch: true,
+					// 		liveSearchNormalize: true,
+					// 		style: '',
+					// 		styleBase: 'form-control form-control-sm'
+					// 	}).on("loaded.bs.select", function (){
+					// 		filters.find("select[name='observacoes']").parent().addClass("form-control");
+					// 	}).on("changed.bs.select", function (){
+					// 		let selected_observacoes = {};
+					// 		$(this).find("option:selected").each(function (i, el){
+					// 			let cenario_nome = Object.keys(dashboard_filters["cenario"]).find(key => dashboard_filters["cenario"][key].id === el.getAttribute("cenario"));
+					// 			if (!(cenario_nome in selected_observacoes))
+					// 				selected_observacoes[cenario_nome] = [];
+					// 			selected_observacoes[cenario_nome].push(el.value);
+					// 		});
+					// 		for (cenario_nome in selected_observacoes)
+					// 			dashboard_filters["cenario"][cenario_nome]["observacoes"] = selected_observacoes[cenario_nome];
+					// 		dashboard__filters_LS.update(id_arcabouco, "cenario", dashboard_filters["cenario"]);
+					// 	});
+					// });
 					//////////////////////////////////
 					//Filtro de Ignora Erros
 					//////////////////////////////////
@@ -738,38 +713,115 @@ let Renda_variavel = (function(){
 		}
 	}
 	/*
-		Retorna o html da lista de operacoes. (Head ou Body)
+		Reconstroi a lista de 'premissas' ou 'observações', usada nos selects dos mesmos em 'filters'.
 	*/
-	function rebuildDashboardOps__Table_Stats(section = '', stats = {}){
+	function rebuildSelect_PremissasOuObservacoes__content(el, el_name, id_arcabouco){
+		let dashboard_filters = dashboard__filters_LS.getFromArcabouco(id_arcabouco),
+			options_html = "",
+			first = true;
+		if ("cenario" in dashboard_filters){
+			for (let cenario_nome in dashboard_filters["cenario"]){
+				if (first)
+					first = false;
+				else
+					options_html += `<li><hr class="dropdown-divider"></li>`;
+				if (_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id][el_name].length){
+					options_html += `<li><h6 class="dropdown-header">${cenario_nome}</h6></li>`;
+					for (let o in _cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id][el_name])
+						options_html += `<li><button class="dropdown-item ${((dashboard_filters["cenario"][cenario_nome][el_name].includes(_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id][el_name][o].ref)) ? "active" : "" )}" type="button" value="${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id][el_name][o].ref}" cenario="${dashboard_filters["cenario"][cenario_nome].id}"><input class="form-check-input me-3" type="checkbox" name="negar_valor"><i class="fas fa-square me-2" style="color: ${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id][el_name][o].cor}"></i>${_cenarios_arcabouco[dashboard_filters["cenario"][cenario_nome].id][el_name][o].nome}</button>`;
+				}
+			}
+		}
+		el.find("ul.dropdown-menu").empty().append(options_html);
+	}
+	/*
+		Retorna o html de uma linha usada em 'dashboard_ops__table_stats__byCenario', separando se é para o 'tbody' ou 'tfoot'.
+	*/
+	function dashboardOps__Table_Stats__byCenario__newLine(cenario, line_data, method){
+		if (method === 'tbody'){
+			return `<tr class="align-middle">`+
+					`<td><span name="trades__total_perc" class="data-tiny text-muted">(${line_data.trades__total_perc.toFixed(2)}%)</span></td>`+
+					`<td><span name="cenario" class="fw-bold">${cenario}</span></td>`+
+					//Dias
+					//N° Trades
+					`<td class="text-center"><span name="trades__total" class="data-small">${line_data.trades__total}</span></td>`+
+					`<td class="text-center"><span name="trades__positivo" class="data-small text-success">${line_data.trades__positivo}</span><span name="trades__positivo_perc" class="data-tiny text-success ms-2">(${line_data.trades__positivo_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__negativo" class="data-small text-danger">${line_data.trades__negativo}</span><span name="trades__negativo_perc" class="data-tiny text-danger ms-2">(${line_data.trades__negativo_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__empate" class="data-small text-muted">${line_data.trades__empate}</span><span name="trades__empate_perc" class="data-tiny text-muted ms-2">(${line_data.trades__empate_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__erro" class="data-small text-primary">${line_data.trades__erro}</span><span name="trades__erro_perc" class="data-tiny text-primary ms-2">(${line_data.trades__erro_perc.toFixed(2)}%)</span></td>`+
+					//Result.
+					`<td class="text-center"><span name="result__lucro_brl" class="data-small">R$ ${line_data.result__lucro_brl.toFixed(2)}</span></td>`+
+					`<td class="text-center"><span name="result__lucro_R" class="data-small">${((line_data.result__lucro_R !== "--") ? `${line_data.result__lucro_R.toFixed(3)}R` : line_data.result__lucro_R )}</span></td>`+
+					`<td class="text-center"><span name="result__lucro_perc" class="data-small">${line_data.result__lucro_perc.toFixed(2)}%</span></td>`+
+					//R:G
+					`<td class="text-center"><span name="stats__rrMedio" class="data-small">${line_data.stats__rrMedio.toFixed(2)}</span></td>`+
+					`<td class="text-center"><span name="result__mediaGain_R" class="data-small text-success">${((line_data.result__mediaGain_R !== "--") ? `${line_data.result__mediaGain_R.toFixed(3)}R` : line_data.result__mediaGain_R )}</span><span name="result__mediaGain_brl" class="data-tiny text-success ms-2">R$ ${line_data.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="data-tiny text-success ms-2">${((line_data.result__mediaGain_perc !== "--") ? `${line_data.result__mediaGain_perc.toFixed(2)}%` : line_data.result__mediaGain_perc )}</span></td>`+
+					`<td class="text-center"><span name="result__mediaLoss_R" class="data-small text-danger">${((line_data.result__mediaLoss_R !== "--") ? `${line_data.result__mediaLoss_R.toFixed(3)}R` : line_data.result__mediaLoss_R )}</span><span name="result__mediaLoss_brl" class="data-tiny text-danger ms-2">R$ ${line_data.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="data-tiny text-danger ms-2">${((line_data.result__mediaLoss_perc !== "--") ? `${line_data.result__mediaLoss_perc.toFixed(2)}%` : line_data.result__mediaLoss_perc )}</span></td>`+
+					//Expect.
+					`<td class="text-center"><span name="stats__expect" class="data-small">${((line_data.stats__expect !== "--") ? line_data.stats__expect.toFixed(2) : line_data.stats__expect )}</span></td>`+
+					//DP
+					`<td class="text-center"><span name="stats__dp" class="data-small">${((line_data.stats__dp !== "--") ? line_data.stats__dp.toFixed(2) : line_data.stats__dp )}</span></td>`+
+					//SQN
+					`<td class="text-center"><span name="stats__sqn" class="data-small">${((line_data.stats__sqn !== "--") ? line_data.stats__sqn.toFixed(2) : line_data.stats__sqn )}</span></td>`+
+					//Edge
+					`<td class="text-center"><span name="stats__breakeven" class="data-tiny text-muted">${line_data.stats__breakeven.toFixed(2)}%</span></td>`+
+					`<td class="text-center"><span name="stats__edge" class="data-small">${line_data.stats__edge.toFixed(2)}%</span></td>`+
+					`</tr>`;
+		}
+		else if (method === 'tfoot'){
+			return `<tr class="align-middle">`+
+					`<td></td>`+
+					`<td><span name="cenario" class="fw-bold">${cenario}</span></td>`+
+					//Dias
+					//N° Trades
+					`<td class="text-center"><span name="trades__total" class="fw-bold">${line_data.trades__total}</span></td>`+
+					`<td class="text-center"><span name="trades__positivo" class="data-small text-success">${line_data.trades__positivo}</span><span name="trades__positivo_perc" class="data-tiny text-success ms-2">(${line_data.trades__positivo_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__negativo" class="data-small text-danger">${line_data.trades__negativo}</span><span name="trades__negativo_perc" class="data-tiny text-danger ms-2">(${line_data.trades__negativo_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__empate" class="data-small text-muted">${line_data.trades__empate}</span><span name="trades__empate_perc" class="data-tiny text-muted ms-2">(${line_data.trades__empate_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__erro" class="data-small text-primary">${line_data.trades__erro}</span><span name="trades__erro_perc" class="data-tiny text-primary ms-2">(${line_data.trades__erro_perc.toFixed(2)}%)</span></td>`+
+					//Result.
+					`<td class="text-center"><span name="result__lucro_brl" class="data-small">R$ ${line_data.result__lucro_brl.toFixed(2)}</span></td>`+
+					`<td class="text-center"><span name="result__lucro_R" class="data-small">${((line_data.result__lucro_R !== "--") ? `${line_data.result__lucro_R.toFixed(3)}R` : line_data.result__lucro_R )}</span></td>`+
+					`<td class="text-center"><span name="result__lucro_perc" class="data-small">${line_data.result__lucro_perc.toFixed(2)}%</span></td>`+
+					//R:G
+					`<td class="text-center"><span name="stats__rrMedio" class="fw-bold">${line_data.stats__rrMedio.toFixed(2)}</span></td>`+
+					`<td class="text-center"><span name="result__mediaGain_R" class="data-small text-success">${((line_data.result__mediaGain_R !== "--") ? `${line_data.result__mediaGain_R.toFixed(3)}R` : line_data.result__mediaGain_R )}</span><span name="result__mediaGain_brl" class="data-tiny text-success ms-2">R$ ${line_data.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="data-tiny text-success ms-2">${((line_data.result__mediaGain_perc !== "--") ? `${line_data.result__mediaGain_perc.toFixed(2)}%` : line_data.result__mediaGain_perc )}</span></td>`+
+					`<td class="text-center"><span name="result__mediaLoss_R" class="data-small text-danger">${((line_data.result__mediaLoss_R !== "--") ? `${line_data.result__mediaLoss_R.toFixed(3)}R` : line_data.result__mediaLoss_R )}</span><span name="result__mediaLoss_brl" class="data-tiny text-danger ms-2">R$ ${line_data.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="data-tiny text-danger ms-2">${((line_data.result__mediaLoss_perc !== "--") ? `${line_data.result__mediaLoss_perc.toFixed(2)}%` : line_data.result__mediaLoss_perc )}</span></td>`+
+					//Expect.
+					`<td class="text-center"><span name="stats__expect" class="data-small">${((line_data.stats__expect !== "--") ? line_data.stats__expect.toFixed(2) : line_data.stats__expect )}</span></td>`+
+					//DP
+					`<td class="text-center"><span name="stats__dp" class="data-small">${((line_data.stats__dp !== "--") ? line_data.stats__dp.toFixed(2) : line_data.stats__dp )}</span></td>`+
+					//SQN
+					`<td class="text-center"><span name="stats__sqn" class="data-small">${((line_data.stats__sqn !== "--") ? line_data.stats__sqn.toFixed(2) : line_data.stats__sqn )}</span></td>`+
+					//Edge
+					`<td class="text-center"><span name="stats__breakeven" class="data-tiny text-muted">${line_data.stats__breakeven.toFixed(2)}%</span></td>`+
+					`<td class="text-center"><span name="stats__edge" class="data-small">${line_data.stats__edge.toFixed(2)}%</span></td>`+
+					`</tr>`;
+		}
+	}
+	/*
+		Retorna o html da seção de 'thead' ou 'tbody' ou 'tfoot' da 'dashboard_ops__table_stats__byCenario'.
+	*/
+	function rebuildDashboardOps__Table_Stats__byCenario(section = '', stats = {}){
 		let html = ``;
 		if (section === 'thead')
-			html += `<tr></tr>`;
+			html += `<tr class="align-middle">`+
+					`<th colspan="2">Cenário</th>`+
+					`<th colspan="5" class="text-center">Trades</th>`+
+					`<th colspan="3" class="text-center">Result.</th>`+
+					`<th colspan="3" class="text-center">R:G</th>`+
+					`<th class="text-center">Expect.</th>`+
+					`<th class="text-center">DP</th>`+
+					`<th class="text-center">SQN</th>`+
+					`<th colspan="2" class="text-center">Edge</th>`+
+					`<tr>`+
+					`</tr>`;
 		else if (section === 'tbody'){
-			//Dias
-			html += `<tr class="align-middle"><td class="fw-bold text-center">Dias</td><td class="text-center"><span name="dias__total" class="fs-6 fw-bold">${stats.dias__total}</span></td><td><span name="dias__trades_por_dia" class="text-muted">${stats.dias__trades_por_dia.toFixed(1)} Trades por Dia<span></td></tr>`;
-			//N° Trades
-			html += `<tr class="align-middle"><td rowspan="4" class="fw-bold text-center pt-3">Trades</td><td rowspan="4" class="text-center pt-3"><span name="trades__total" class="fs-6 fw-bold">${stats.trades__total}</span></td><td class="pt-3"><span name="trades__positivo" class="text-muted">${stats.trades__positivo} Positivos</span><span name="trades__positivo_perc" class="text-center text-muted ms-2">(${stats.trades__positivo_perc.toFixed(2)}%)</span></td></tr>`+
-					`<tr><td><span name="trades__negativo" class="text-muted">${stats.trades__negativo} Negativos</span><span name="trades__negativo_perc" class="text-center text-muted ms-2">(${stats.trades__negativo_perc.toFixed(2)}%)</span></td></tr>`+
-					`<tr><td><span name="trades__empate" class="text-muted">${stats.trades__empate} Empatados</span><span name="trades__empate_perc" class="text-center text-muted ms-2">(${stats.trades__empate_perc.toFixed(2)}%)</span></td></tr>`+
-					`<tr><td><span name="trades__erro" class="text-muted">${stats.trades__erro} Errados</span><span name="trades__erro_perc" class="text-center text-muted ms-2">(${((stats.trades__erro_perc !== "--") ? stats.trades__erro_perc.toFixed(2) : stats.trades__erro_perc )}%)</span></td></tr>`;
-			//Result.
-			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Result.</td><td rowspan="3" class="text-center pt-3"><span name="result__lucro_brl" class="fs-6 fw-bold">R$ ${stats.result__lucro_brl.toFixed(2)}</span></td><td class="pt-3"><span name="result__lucro_R" class="text-muted">${((stats.result__lucro_R !== "--") ? stats.result__lucro_R.toFixed(3) : stats.result__lucro_R )}R</span></td></tr>`+
-					`<tr><td><span name="result__lucro_pts" class="text-muted">${stats.result__lucro_pts.toFixed(0)} pts</span></td></tr>`+
-					`<tr><td><span name="result__lucro_perc" class="text-muted">${((stats.result__lucro_perc !== "--") ? stats.result__lucro_perc.toFixed(2) : stats.result__lucro_perc )}%</span></td></tr>`;
-			//Edge
-			html += `<tr class="align-middle"><td rowspan="2" class="fw-bold text-center pt-3">Edge</td><td rowspan="2" class="text-center pt-3"><span name="stats__edge" class="fs-6 fw-bold">${stats.stats__edge.toFixed(2)}%</span></td><td class="pt-3"><span name="stats__breakeven" class="text-muted">${stats.stats__breakeven.toFixed(2)}% Breakeven</span></td></tr>`+
-					`<tr><td><span name="stats__fatorLucro" class="text-muted">${stats.stats__fatorLucro.toFixed(2)} Fator de Lucro</span></td></tr>`;
-			//SQN
-			html += `<tr class="align-middle"><td class="fw-bold text-center pt-3">SQN</td><td class="text-center pt-3"><span name="stats__sqn" class="fs-6 fw-bold">${((stats.stats__sqn !== "--") ? stats.stats__sqn.toFixed(2) : stats.stats__sqn )}</span></td><td class="pt-3"><span name="stats__dp" class="text-muted">${((stats.stats__dp !== "--") ? stats.stats__dp.toFixed(2) : stats.stats__dp )} Desvio Padrão</span></td></tr>`;
-			//R.G
-			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">R.G</td><td rowspan="3" class="text-center pt-3"><span name="stats__rrMedio" class="fs-6 fw-bold">${stats.stats__rrMedio.toFixed(2)}</span></td><td class="pt-3"><span name="result__mediaGain_R" class="text-muted">${((stats.result__mediaGain_R !== "--") ? stats.result__mediaGain_R.toFixed(3) : stats.result__mediaGain_R )} Gain (R)</span><span name="result__mediaGain_brl" class="text-muted ms-2">R$ ${stats.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="text-muted ms-2">${((stats.result__mediaGain_perc !== "--") ? stats.result__mediaGain_perc.toFixed(2) : stats.result__mediaGain_perc )}%</span></td></tr>`+
-					`<tr><td><span name="result__mediaLoss_R" class="text-muted">${((stats.result__mediaLoss_R !== "--") ? stats.result__mediaLoss_R.toFixed(3) : stats.result__mediaLoss_R )} Loss (R)</span><span name="result__mediaLoss_brl" class="text-muted ms-2">R$ ${stats.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="text-muted ms-2">${((stats.result__mediaLoss_perc !== "--") ? stats.result__mediaLoss_perc.toFixed(2) : stats.result__mediaLoss_perc )}%</span></tr>`+
-					`<tr><td><span name="stats__expect" class="text-muted">${((stats.stats__expect !== "--") ? stats.stats__expect.toFixed(2) : stats.stats__expect )} Expect.</span></td></tr>`;
-			//Drawndown
-			html += `<tr class="align-middle"><td rowspan="3" class="fw-bold text-center pt-3">Drawndown</td><td rowspan="3" class="text-center pt-3"><span name="stats__drawdown" class="fs-6 fw-bold">R$ ${stats.stats__drawdown}</span></td><td class="pt-3"><span name="stats__drawdown_topoHistorico" class="text-muted">R$ ${stats.stats__drawdown_topoHistorico} Topo Histórico</span></td></tr>`+
-					`<tr><td><span name="stats__drawdown_max" class="text-muted">R$ ${stats.stats__drawdown_max} Máx. DD</span></tr>`+
-					`<tr><td><span name="stats__ruinaAtual" class="text-muted">R$ ${stats.stats__ruinaAtual} Limite Ruína</span></td></tr>`;
+			for (let cenario in stats)
+				html += dashboardOps__Table_Stats__byCenario__newLine(cenario, stats[cenario], section);
 		}
+		else if (section === 'tfoot')
+			html += dashboardOps__Table_Stats__byCenario__newLine("Total", stats, section);
 		return html;
 	}
 	/*------------------------------ Section Cenarios --------------------------------*/
