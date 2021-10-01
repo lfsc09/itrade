@@ -25,6 +25,9 @@
 		max-width: 100%
 	}
 }
+/*----------------------------------- iSelectKami ------------------------------------*/
+div.iSelectKami ul li button:active {color: #1e2125; background-color: #e9ecef}
+div.iSelectKami ul li button:focus {color: #212529; background-color: transparent;}
 /*----------------------------------- SelectPicker -----------------------------------*/
 .bs-searchbox input[type="search"] {
 	min-height: calc(1.5em + (.5rem + 2px));
@@ -147,6 +150,7 @@ a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #dashboard_ops__filter div[name='premissas'] {width: 190px; font-size: 13px}
 #dashboard_ops__filter div[name='observacoes'] {width: 190px}
 #dashboard_ops__filter div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
+#dashboard_ops__filter div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
 #dashboard_ops__simulate input[name='vol'] {width: 80px}
 #dashboard_ops__simulate select[name='tipo_cts'] {width: 115px}
 #dashboard_ops__table_stats__byCenario {font-size: 12px}

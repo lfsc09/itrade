@@ -27,24 +27,40 @@ let RV_Statistics = (function(){
 		//Verifica se o cenario está nos filtros
 		if (opCenario in filter_cenarios){
 			//Verifica se há premissas ou observações escolhidas nos filtros do cenario
-			if (filter_cenarios[opCenario][key].length){
+			if (!Global.isObjectEmpty(filter_cenarios[opCenario][key])){
 				let opPrem_Obs__Array = opPrem_Obs.split(",");
 				//Descarta operações sem premissas/observações cadastradas
 				if (opPrem_Obs__Array.length === 0)
 					return false;
 				//A operação deve ter pelo menos um dos filtros escolhidos 
 				if (method === 'OR'){
-					for (let c_o in filter_cenarios[opCenario][key]){
-						if (opPrem_Obs__Array.includes(filter_cenarios[opCenario][key][c_o]))
-							return true;
+					for (let ref in filter_cenarios[opCenario][key]){
+						//Operações que TENHAM a premissa/observação
+						if (filter_cenarios[opCenario][key][ref] == 0){
+							if (opPrem_Obs__Array.includes(ref))
+								return true;
+						}
+						//Operações que NÃO TENHAM a premissa/observação
+						else if (filter_cenarios[opCenario][key][ref] == 1){
+							if (!opPrem_Obs__Array.includes(ref))
+								return true;
+						}
 					}
 					return false;
 				}
 				//A operação deve ter todos os filtros escolhidos 
 				if (method === 'AND'){
-					for (let c_o in filter_cenarios[opCenario][key]){
-						if (!opPrem_Obs__Array.includes(filter_cenarios[opCenario][key][c_o]))
-							return false;
+					for (let ref in filter_cenarios[opCenario][key]){
+						//Operações que TENHAM a premissa/observação
+						if (filter_cenarios[opCenario][key][ref] == 0){
+							if (!opPrem_Obs__Array.includes(ref))
+								return false;
+						}
+						//Operações que NÃO TENHAM a premissa/observação
+						else if (filter_cenarios[opCenario][key][ref] == 1){
+							if (opPrem_Obs__Array.includes(ref))
+								return false;
+						}
 					}
 				}
 			}
@@ -88,10 +104,10 @@ let RV_Statistics = (function(){
 		if (!Global.isObjectEmpty(filters.cenario) && !(op.cenario in filters.cenario))
 			return false;
 		//Filtra apenas as premissas selecionadas dos cenarios
-		if (!checkPremissas_Observacoes(op.cenario, op.premissas, filters.cenario, 'premissas', 'OR'))
+		if (!checkPremissas_Observacoes(op.cenario, op.premissas, filters.cenario, 'premissas', filters.premissas_query_union))
 			return false;
 		//Filtra apenas as observações selecionadas dos cenarios
-		if (!checkPremissas_Observacoes(op.cenario, op.observacoes, filters.cenario, 'observacoes', 'OR'))
+		if (!checkPremissas_Observacoes(op.cenario, op.observacoes, filters.cenario, 'observacoes', filters.observacoes_query_union))
 			return false;
 		//Filtra operações com Erro
 		if (filters.ignora_erro && op.erro == 1)
@@ -242,12 +258,14 @@ let RV_Statistics = (function(){
 		/*------------------------------------ Vars --------------------------------------*/
 		//Modifca alguns valores do 'filters' e 'simulate'
 		_filters = {
-			data_inicial: ("data_inicial" in filters) ? filters.data_inicial : null, 
-			data_final: ("data_final" in filters) ? filters.data_final : null, 
-			hora_inicial: ("hora_inicial" in filters) ? filters.hora_inicial : null, 
-			hora_final: ("hora_final" in filters) ? filters.hora_final : null, 
-			ativo: ("ativo" in filters) ? filters.ativo : [], 
-			cenario: ("cenario" in filters) ? filters.cenario : {}, 
+			data_inicial: ("data_inicial" in filters) ? filters.data_inicial : null,
+			data_final: ("data_final" in filters) ? filters.data_final : null,
+			hora_inicial: ("hora_inicial" in filters) ? filters.hora_inicial : null,
+			hora_final: ("hora_final" in filters) ? filters.hora_final : null,
+			ativo: ("ativo" in filters) ? filters.ativo : [],
+			cenario: ("cenario" in filters) ? filters.cenario : {},
+			premissas_query_union: ("premissas_query_union" in filters) ? filters.premissas_query_union : 'OR',
+			observacoes_query_union: ("observacoes_query_union" in filters) ? filters.observacoes_query_union : 'OR',
 			ignora_erro: ("ignora_erro" in filters) ? filters.ignora_erro == 1 : false
 		};
 		_simulate = {
