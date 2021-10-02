@@ -91,7 +91,7 @@
 			<div class="container-fluid" id="renda_variavel">
 				<div class="row">
 					<!-- Arcabouço de Operacionais -->
-					<div class="col-2 border-end">
+					<!-- <div class="col-2 border-end">
 						<div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white">
 							<a href="javascript:void(0)" class="d-flex align-items-center flex-shrink-0 p-3 pe-2 link-dark text-decoration-none border-bottom">
 								<span class="fs-5 fw-bold">Arcabouços</span>
@@ -99,10 +99,11 @@
 							</a>
 							<div class="list-group list-group-flush border-bottom scrollarea" id="table_arcaboucos"></div>
 						</div>
-					</div>
-					<div class="col-10 d-flex">
-						<div class="container-fluid bg-light p-5 pt-3 rounded">
+					</div> -->
+					<div class="col d-flex">
+						<div class="container bg-light p-5 pt-3 rounded">
 							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
+								<button class="btn btn-sm btn-primary me-4" type="button" name="arcaboucos"><i class="fas fa-box me-2"></i>Arcabouços</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-plus me-2"></i>Adicionar Operações</button>
 								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="dashboard_ops"><i class="fas fa-chart-line me-2"></i>Dashboard</button>
@@ -183,7 +184,6 @@
 			</div>
 			<footer class="footer mt-auto fixed-bottom py-2 bg-light">
 				<div class="container-fluid d-flex" id="menu_bottom">
-					<!-- <button class="btn btn-sm btn-secondary me-2" type="button" name="dashboard">Dashboard</button> -->
 					<button class="btn btn-sm btn-secondary me-2" type="button" name="renda_variavel">Renda Variável</button>
 					<button class="btn btn-sm btn-secondary me-4 ms-auto" type="button" name="ativos">Ativos</button>
 					<button class="btn btn-sm btn-light me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
@@ -236,6 +236,62 @@
 				</div>
 			</div>
 			<!-- MODAIS RENDA VARIAVEL -->
+			<div class="modal fade" id="arcaboucos_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Arcabouços</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="container-fluid">
+								<div class="row"><div class="col p-0"><div id="arcaboucos_modal_toasts"></div></div></div>
+								<div class="row">
+									<div class="col">
+										<div class="card rounded-3 shadow-sm">
+											<div class="card-body">
+												<div class="container-fluid d-flex px-0">
+													<form class="row m-0 flex-fill" id="arcaboucos_modal_form">
+														<div class="col-4"><label class="form-label m-1 text-muted fw-bold">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>
+														<div class="col-2"><label class="form-label m-1 text-muted fw-bold">Meta</label><input type="text" name="meta" class="form-control form-control-sm" onclick="this.select()"></div>
+														<div class="col-6"><label class="form-label m-1 text-muted fw-bold">Usuários com Acesso</label><select name="usuarios" multiple></select></div>
+														<div class="col-12">
+															<button type="button" class="btn btn-sm btn-primary w-100 mt-3" id="arcaboucos_modal_enviar">Enviar</button>
+														</div>
+													</form>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row mt-2">
+									<div class="col">
+										<div class="card rounded-3 shadow-sm">
+											<div class="card-body">
+												<table class="table" id="table_arcaboucos">
+													<thead>
+														<tr>
+															<th>Nome</th>
+															<th>Criado Em</th>
+															<th>Atualizado</th>
+															<th>Trades</th>
+															<th>Meta</th>
+															<th>Usuários</th>
+															<th></th>
+															<th></th>
+														</tr>
+													</thead>
+													<tbody></tbody>
+												</table>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 					<div class="modal-content">

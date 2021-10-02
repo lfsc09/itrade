@@ -1,7 +1,33 @@
 let Renda_variavel = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
+	//Contem a lista atual de usuarios cadastrados
+	let	_usuarios = [];
+	//Contem a lista atual de arcaboucos cadastrados
+	let	_arcaboucos = {};
 	//Arcabouço selecionado no momento
 	let _selected_arcabouco = null;
+	//Funcoes usadas em '_arcabouco__table_DT'
+	let _arcabouco__table_DT_ext = {
+		meta_render: function (data, type, row){
+			return (type === 'display') ? `<progress class="mx-3" value="${data}" max="100"></progress>` : data;
+		}
+	}
+	//Configuração da tabela de arcabouços em 'arcabouco_modal'
+	let _arcabouco__table_DT = {
+		"columns": [
+			{"name": "nome", "orderable": true},
+			{"name": "data_criacao", "orderable": true},
+			{"name": "data_atualizacao", "orderable": true},
+			{"name": "qtd_ops", "orderable": true},
+			{"name": "meta", "orderable": true, render: _arcabouco__table_DT_ext.meta_render},
+			{"name": "usuarios", "orderable": false},
+			{"name": "editar", "orderable": false},
+			{"name": "remover", "orderable": false}
+		],
+		"order": [[ 2, 'desc' ]],
+		"pageLength": 25,
+		"pagingType": "input"
+	}
 	//Informa qual seção do Section Arcabouço está sendo mostrado (dashboard_ops|lista_ops)
 	let	_selected_arcabouco_section = 'dashboard_ops';
 	//Contem a lista atual de cenarios do arcabouço selecionado
@@ -192,16 +218,35 @@ let Renda_variavel = (function(){
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
 	/*
-		Atualiza a lista interna de operações do arcabouco, usada para reconstroir a interface.
+		Atualiza a lista interna de usuarios.
+	*/
+	function updateUsuarios(data){
+		//Atualiza o array
+		_usuarios = data;
+	}
+	/*
+		Atualiza a lista interna de arcabouços.
+	*/
+	function updateArcaboucos(data){
+		//Atualiza o array
+		_arcaboucos = {};
+		for (let a in data){
+			//Reordena a lista de usuarios
+			data[a]["usuarios"].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
+			_arcaboucos[data[a].id] = data[a];
+		}
+	}
+	/*
+		Atualiza a lista interna de operações do arcabouco selecionado.
 	*/
 	function updateOperacoes_Arcabouco(data){
 		//Atualiza o array
 		_operacoes_arcabouco = data;
 		//Atualiza a contagem de operacoes na lista de arcabouco
-		$("a.arcabouco-selected", document.getElementById("table_arcaboucos")).find("small").html(`${$.fn.dataTable.render.number( '.', '', 0, '').display(data.length)} ops.`);
+		// $("a.arcabouco-selected", document.getElementById("table_arcaboucos")).find("small").html(`${$.fn.dataTable.render.number( '.', '', 0, '').display(data.length)} ops.`);
 	}
 	/*
-		Salva localmente os cenarios e ativos, para uso na parte de adição de operações. (recarrega toda vez que o modal for aberto)
+		Atualiza a lista interna de cenários.
 	*/
 	let updateCenarios_Arcabouco = {
 		create: function (data){
@@ -219,11 +264,13 @@ let Renda_variavel = (function(){
 			delete _cenarios_arcabouco[id];
 		}
 	}
+	/*
+		Atualiza a lista interna de ativos.
+	*/
 	function updateAtivos(data){
 		//Atualiza o array
 		_ativos = data;
 	}
-
 	/*
 		Reconstrói a seção de Dashboard estatistico ou a seção de lista de operações do arcabouço selecionado.
 	*/
@@ -481,28 +528,65 @@ let Renda_variavel = (function(){
 	}
 	/*------------------------------ Lista Arcabouços --------------------------------*/
 	/*
+		Constroi o modal de gerenciamento de cenarios.
+	*/
+	function buildArcaboucosModal(method = ''){
+		let form = $(document.getElementById("arcaboucos_modal_form"));
+		if (method === 'build'){
+			//Inicia o select de usuarios
+			let select_options_html = _usuarios.reduce((p, c) => (p.usuario ? `<option value="${p.usuario}">${p.usuario}</option>` : p) + `<option value="${c.usuario}">${c.usuario}</option>` ); 
+			form.find("select[name='usuarios']").append(select_options_html).promise().then(function (){
+				form.find("select[name='usuarios']").selectpicker({
+					title: 'Usuários',
+					selectedTextFormat: 'count > 2',
+					actionsBox: true,
+					deselectAllText: 'Nenhum',
+					selectAllText: 'Todos',
+					liveSearch: true,
+					liveSearchNormalize: true,
+					style: '',
+					styleBase: 'form-control form-control-sm'
+				}).on("loaded.bs.select", function (){
+					form.find("select[name='usuarios']").parent().addClass("form-control");
+				});
+			});
+			//Inicia a mascara da meta
+			form.find("input[name='meta']").inputmask({alias: "numeric", digitsOptional: false, digits: 0, rightAlign: false, placeholder: "0"});
+			buildArcaboucosTable();
+		}
+		else{
+			let modal = $(document.getElementById("arcaboucos_modal"));
+			form.find("input[name]").val("");
+			form.find("select[name='usuarios']").selectpicker('deselectAll');
+			modal.modal("show");
+		}
+	}
+	/*
 		Constroi a tabela de ativos. (Dados que recebe do BD)
 	*/
-	function buildTableArcaboucos(data){
-		let arcaboucos = $(document.getElementById("table_arcaboucos")),
+	function buildArcaboucosTable(){
+		let table = $(document.getElementById("table_arcaboucos")),
 			html = ``,
 			first = 0;
-		//Constroi tabela de informacoes dos ativos
-		for (let ar in data){
-			html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action py-2 lh-tight" arcabouco="${data[ar].id}">`+
-					`<div class="d-flex w-100 justify-content-between mt-1">`+
-					`<h5 class="mb-1">${data[ar].nome}</h5>`+
-					`<small class="text-muted">${$.fn.dataTable.render.number( '.', '', 0, '').display(data[ar].qtd_ops)} ops.</small>`+
-					`</div>`+
-					`<div class="col mb-0 mt-4 small d-flex align-items-center">`+
-					`${((data[ar].qtd_usuarios > 1 && data[ar].criador)?"<i class='fas fa-user-shield me-3 arcabouco-badge'></i>":"")}${((data[ar].qtd_usuarios > 1)?"<i class='fas fa-share-alt me-3 arcabouco-badge'></i>":"")}`+
-					`<button class="btn btn-sm btn-light ms-auto" type="button" editar><i class="fas fa-edit"></i></button>`+
-					`<button class="btn btn-sm btn-light ms-2" type="button" remover><i class="fas fa-trash text-danger"></i></button>`+
-					`</div>`+
-					`</a>`;
+		//Constroi tabela de informacoes dos arcabouços
+		for (let ar in _arcaboucos){
+			let meta = (_arcaboucos[ar].meta !== 0) ? ((_arcaboucos[ar].qtd_ops / _arcaboucos[ar].meta) * 100).toFixed(2) : 0,
+				usuarios_html = ``;
+			for (let usu in _arcaboucos[ar]["usuarios"])
+				usuarios_html += `<span class="badge ${((_arcaboucos[ar]["usuarios"][usu].criador == 1) ? "bg-primary" : "bg-secondary")} ${((usu !== 0) ? "ms-1" : "")} my-1">${_arcaboucos[ar]["usuarios"][usu].usuario}</span>`;
+			html += `<tr arcabouco="${_arcaboucos[ar].id}">`+
+					`<td name="nome" class="fw-bold">${_arcaboucos[ar].nome}</td>`+
+					`<td name="data_criacao" class="fw-bold text-muted">${Global.convertDate(_arcaboucos[ar].data_criacao)}</td>`+
+					`<td name="data_atualizacao" class="fw-bold text-muted">${((_arcaboucos[ar].data_atualizacao !== "0000-00-00") ? Global.convertDate(_arcaboucos[ar].data_atualizacao) : "")}</td>`+
+					`<td name="qtd_ops" class="fw-bold text-center">${_arcaboucos[ar].qtd_ops}</td>`+
+					`<td name="meta">${meta}</td>`+
+					`<td name="usuarios">${usuarios_html}</td>`+
+					((_arcaboucos[ar].sou_criador == 1) ? `<td name="editar" class="text-center"><button class="btn btn-sm btn-light" type="button" name="editar"><i class="fas fa-edit"></i></button></td>` : `<td></td>`)+
+					((_arcaboucos[ar].sou_criador == 1) ? `<td name="remover" class="text-center"><button class="btn btn-sm btn-light" type="button" name="remover"><i class="fas fa-trash text-danger"></i></button></td>` : `<td></td>`)+
+					`</tr>`;
 		}
-		arcaboucos.empty().append(html).promise().then(function (){
-			$(document.getElementById("table_arcaboucos")).children().first().trigger("click");
+		table.find("tbody").empty().append(html).promise().then(function (){
+			table.DataTable(_arcabouco__table_DT);
 		});
 	}
 	/*--------------------------------- Lista Ops ------------------------------------*/
@@ -720,7 +804,7 @@ let Renda_variavel = (function(){
 					`<td class="text-center"><span name="trades__positivo" class="data-small text-success">${line_data.trades__positivo}</span><span name="trades__positivo_perc" class="data-tiny text-success ms-2">(${line_data.trades__positivo_perc.toFixed(2)}%)</span></td>`+
 					`<td class="text-center"><span name="trades__negativo" class="data-small text-danger">${line_data.trades__negativo}</span><span name="trades__negativo_perc" class="data-tiny text-danger ms-2">(${line_data.trades__negativo_perc.toFixed(2)}%)</span></td>`+
 					`<td class="text-center"><span name="trades__empate" class="data-small text-muted">${line_data.trades__empate}</span><span name="trades__empate_perc" class="data-tiny text-muted ms-2">(${line_data.trades__empate_perc.toFixed(2)}%)</span></td>`+
-					`<td class="text-center"><span name="trades__erro" class="data-small text-primary">${line_data.trades__erro}</span><span name="trades__erro_perc" class="data-tiny text-primary ms-2">(${line_data.trades__erro_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__erro" class="data-small text-primary">${line_data.trades__erro}</span><span name="trades__erro_perc" class="data-tiny text-primary ms-2">(${((line_data.trades__erro_perc !== "--") ? `${line_data.trades__erro_perc.toFixed(2)}%` : line_data.trades__erro_perc)})</span></td>`+
 					//Result.
 					`<td class="text-center"><span name="result__lucro_brl" class="data-small">R$ ${line_data.result__lucro_brl.toFixed(2)}</span></td>`+
 					`<td class="text-center"><span name="result__lucro_R" class="data-small">${((line_data.result__lucro_R !== "--") ? `${line_data.result__lucro_R.toFixed(3)}R` : line_data.result__lucro_R )}</span></td>`+
@@ -750,7 +834,7 @@ let Renda_variavel = (function(){
 					`<td class="text-center"><span name="trades__positivo" class="data-small text-success">${line_data.trades__positivo}</span><span name="trades__positivo_perc" class="data-tiny text-success ms-2">(${line_data.trades__positivo_perc.toFixed(2)}%)</span></td>`+
 					`<td class="text-center"><span name="trades__negativo" class="data-small text-danger">${line_data.trades__negativo}</span><span name="trades__negativo_perc" class="data-tiny text-danger ms-2">(${line_data.trades__negativo_perc.toFixed(2)}%)</span></td>`+
 					`<td class="text-center"><span name="trades__empate" class="data-small text-muted">${line_data.trades__empate}</span><span name="trades__empate_perc" class="data-tiny text-muted ms-2">(${line_data.trades__empate_perc.toFixed(2)}%)</span></td>`+
-					`<td class="text-center"><span name="trades__erro" class="data-small text-primary">${line_data.trades__erro}</span><span name="trades__erro_perc" class="data-tiny text-primary ms-2">(${line_data.trades__erro_perc.toFixed(2)}%)</span></td>`+
+					`<td class="text-center"><span name="trades__erro" class="data-small text-primary">${line_data.trades__erro}</span><span name="trades__erro_perc" class="data-tiny text-primary ms-2">(${((line_data.trades__erro_perc !== "--") ? `${line_data.trades__erro_perc.toFixed(2)}%` : line_data.trades__erro_perc)})</span></td>`+
 					//Result.
 					`<td class="text-center"><span name="result__lucro_brl" class="data-small">R$ ${line_data.result__lucro_brl.toFixed(2)}</span></td>`+
 					`<td class="text-center"><span name="result__lucro_R" class="data-small">${((line_data.result__lucro_R !== "--") ? `${line_data.result__lucro_R.toFixed(3)}R` : line_data.result__lucro_R )}</span></td>`+
@@ -818,7 +902,7 @@ let Renda_variavel = (function(){
 	/*
 		Constroi o modal de gerenciamento de cenarios.
 	*/
-	function buildCenariosModal(data){
+	function buildCenariosModal(){
 		let modal = $(document.getElementById("cenarios_modal"));
 		$(document.getElementById("table_cenarios")).empty().append(buildCenariosTable(_cenarios_arcabouco));
 		rebuildCenarios_modal_copiar();
@@ -1058,7 +1142,7 @@ let Renda_variavel = (function(){
 	/*
 		Constroi o modal de Cadastro de Operações.
 	*/
-	function buildOperacoesModal(data){
+	function buildOperacoesModal(){
 		let modal = $(document.getElementById("operacoes_modal"));
 		document.getElementById("importa_arquivo_operacoes_modal").value = "";
 		document.getElementById("file_format").selectedIndex = 0;
@@ -1218,162 +1302,185 @@ let Renda_variavel = (function(){
 	/*
 		Adição de arcabouços na 'tabela' de arcabouços.
 	*/
-	$(document.getElementById("table_arcaboucos_adicionar")).click(function (){
-		Global.insertModal({
-			size: "modal-sm",
-			title: "Novo Arcabouço",
-			build_body: function (modal_body){
-				let html = ``;
-				html += `<div id="insert_modal_toasts"></div>`+
-						`<form class="row g-2 m-0" id="insert_modal_form">`+
-						`<div class="col-md-12 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>`+
-						`</form>`;
-				modal_body.append(html);
-			},
-			send: function (){
-				let error = false,
-					form = $(document.getElementById("insert_modal_form")),
-					data = {};
-				form.find("input").each(function (i, input){
-					if (input.value !== "")
-						data[input.name] = input.value;
-					else
-						error = true;
-				});
-				if (error)
-					Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
-				else{
-					Global.connect({
-						data: {module: "renda_variavel", action: "insert_arcaboucos", params: data},
-						success: function (result){
-							if (result.status){
-								$(document.getElementById("insert_modal")).modal("hide");
-								Global.connect({
-									data: {module: "renda_variavel", action: "get_arcaboucos"},
-									success: function (result){
-										if (result.status)
-											buildTableArcaboucos(result.data);
-										else
-											Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-									}
-								});
-							}
-							else
-								Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "danger", body: result.error, delay: 4000});
-						}
-					});		
-				}
-			}
-		}).modal("show");
+	// $(document.getElementById("table_arcaboucos_adicionar")).click(function (){
+	// 	Global.insertModal({
+	// 		size: "modal-sm",
+	// 		title: "Novo Arcabouço",
+	// 		build_body: function (modal_body){
+	// 			let html = ``;
+	// 			html += `<div id="insert_modal_toasts"></div>`+
+	// 					`<form class="row g-2 m-0" id="insert_modal_form">`+
+	// 					`<div class="col-md-12 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>`+
+	// 					`</form>`;
+	// 			modal_body.append(html);
+	// 		},
+	// 		send: function (){
+	// 			let error = false,
+	// 				form = $(document.getElementById("insert_modal_form")),
+	// 				data = {};
+	// 			form.find("input").each(function (i, input){
+	// 				if (input.value !== "")
+	// 					data[input.name] = input.value;
+	// 				else
+	// 					error = true;
+	// 			});
+	// 			if (error)
+	// 				Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
+	// 			else{
+	// 				Global.connect({
+	// 					data: {module: "renda_variavel", action: "insert_arcaboucos", params: data},
+	// 					success: function (result){
+	// 						if (result.status){
+	// 							$(document.getElementById("insert_modal")).modal("hide");
+	// 							Global.connect({
+	// 								data: {module: "renda_variavel", action: "get_arcaboucos"},
+	// 								success: function (result){
+	// 									if (result.status)
+	// 										buildArcaboucosTable(result.data);
+	// 									else
+	// 										Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+	// 								}
+	// 							});
+	// 						}
+	// 						else
+	// 							Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "danger", body: result.error, delay: 4000});
+	// 					}
+	// 				});		
+	// 			}
+	// 		}
+	// 	}).modal("show");
+	// });
+	/*
+		Processa os cliques em 'table_arcaboucos'.
+			 - Clicar na linha: Muda o arcabouço principal/(selecionado) na lista de instancias de arcabouço.
+			 - Clicar + (Ctrl): Inclui esse arcabouço na lista de instancias de arcabouço.
+			 - (Criador Apenas) Clicar em alterar arcabouço: Joga os dados para o formulario.
+	*/
+	$(document.getElementById("table_arcaboucos")).on("click", "tbody td", function (e){
+		let target = $(e.target).parentsUntil("tr").last().attr("name");
+		console.log(e.target, target);
+		if (target === "editar"){
+			console.log("edita");
+		}
+		else{
+			if (e.ctrlKey)
+				console.log("adiciona instancia");
+			else
+				console.log("muda selected");
+		}
 	});
 	/*
-		Processa a Seleção / Edição e Remoção de um arcabouço.
+		Processa os duplos cliques em 'table_arcaboucos'.
+			 - (Criador Apenas) Duplo clique em remover arcabouço: Excluir esse arcabouço e todas as suas instancias da lista.
 	*/
-	$(document.getElementById("table_arcaboucos")).on("click", "a[arcabouco]", function (event){
-		if (event.target.tagName === "BUTTON" || event.target.tagName === "I"){
-			let target = $(event.target),
-				action = "";
-			if (event.target.tagName === "BUTTON"){
-				if (event.target.hasAttribute("editar"))
-					action = "editar";
-				else if (event.target.hasAttribute("remover"))
-					action = "remover";
-			}
-			else if (event.target.tagName === "I"){
-				if (event.target.parentElement.hasAttribute("editar"))
-					action = "editar";
-				else if (event.target.parentElement.hasAttribute("remover"))
-					action = "remover";	
-			}
-			//Edita o Arcabouço
-			if (action === "editar"){
-				let me = $(this),
-					data = {
-						id: me.attr("arcabouco"),
-						nome: me.find("h5").text()
-					};
-				Global.updateModal({
-					size: "modal-sm",
-					title: "Atualizar Arcabouço",
-					build_body: function (modal_body){
-						let html = ``;
-						html += `<div id="update_modal_toasts"></div>`+
-								`<form class="row g-2 m-0" id="update_modal_form" arcabouco="${data.id}">`+
-								`<div class="col-md-12 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
-								`</form>`;
-						modal_body.append(html).promise().then(function (){
-							let form = modal_body.find("form");
-							form.find("input").on("change", function (){
-								this.setAttribute("changed", "");
-							});
-						});
-					},
-					send: function (){
-						let error = false,
-							form = $(document.getElementById("update_modal_form")),
-							data = {};
-						form.find("input[changed]").each(function (i, input){
-							if (input.value !== "")
-								data[input.name] = input.value;
-							else
-								error = true;
-						});
-						if (error)
-							Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
-						else if (Global.isObjectEmpty(data))
-							$(document.getElementById("update_modal")).modal("hide");
-						else {
-							data.id = form.attr("arcabouco");
-							Global.connect({
-								data: {module: "renda_variavel", action: "update_arcaboucos", params: data},
-								success: function (result){
-									if (result.status){
-										$(document.getElementById("update_modal")).modal("hide");
-										Global.connect({
-											data: {module: "renda_variavel", action: "get_arcaboucos"},
-											success: function (result){
-												if (result.status)
-													buildTableArcaboucos(result.data);
-												else
-													Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-											}
-										});
-									}
-									else
-										Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "danger", body: result.error, delay: 4000});
-								}
-							});		
-						}
-					}
-				}).modal("show");
-			}
-			//Apagar um arcabouço
-			else if (action === "remover")
-				Global.removeModal({
-
-				}).modal("show");
-		}
-		//Seleção do arcabouço
-		else{
-			let me = this;
-			_selected_arcabouco = this.getAttribute("arcabouco");
-			Global.connect({
-				data: {module: "renda_variavel", action: "get_arcabouco_data", params: {id_arcabouco: this.getAttribute("arcabouco")}},
-				success: function (result){
-					if (result.status){
-						$(document.getElementById("table_arcaboucos")).find("a.arcabouco-selected").removeClass("arcabouco-selected");
-						$(me).addClass("arcabouco-selected");
-						updateOperacoes_Arcabouco(result.data["operacoes"]);
-						updateCenarios_Arcabouco.create(result.data["cenarios"]);
-						updateAtivos(result.data["ativos"]);
-						rebuildArcaboucoSection();
-					}
-					else
-						Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-				}
-			});
-		}
+	$(document.getElementById("table_arcaboucos")).on("dblclick", "tbody tr td button[name='remover']", function (e){
+		console.log("remove");
 	});
+	// $(document.getElementById("table_arcaboucos")).on("click", "tbody tr", function (event){
+	// 	if (event.target.tagName === "BUTTON" || event.target.tagName === "I"){
+	// 		let target = $(event.target),
+	// 			action = "";
+	// 		if (event.target.tagName === "BUTTON"){
+	// 			if (event.target.hasAttribute("editar"))
+	// 				action = "editar";
+	// 			else if (event.target.hasAttribute("remover"))
+	// 				action = "remover";
+	// 		}
+	// 		else if (event.target.tagName === "I"){
+	// 			if (event.target.parentElement.hasAttribute("editar"))
+	// 				action = "editar";
+	// 			else if (event.target.parentElement.hasAttribute("remover"))
+	// 				action = "remover";	
+	// 		}
+	// 		//Edita o Arcabouço
+	// 		if (action === "editar"){
+	// 			let me = $(this),
+	// 				data = {
+	// 					id: me.attr("arcabouco"),
+	// 					nome: me.find("h5").text()
+	// 				};
+	// 			Global.updateModal({
+	// 				size: "modal-sm",
+	// 				title: "Atualizar Arcabouço",
+	// 				build_body: function (modal_body){
+	// 					let html = ``;
+	// 					html += `<div id="update_modal_toasts"></div>`+
+	// 							`<form class="row g-2 m-0" id="update_modal_form" arcabouco="${data.id}">`+
+	// 							`<div class="col-md-12 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
+	// 							`</form>`;
+	// 					modal_body.append(html).promise().then(function (){
+	// 						let form = modal_body.find("form");
+	// 						form.find("input").on("change", function (){
+	// 							this.setAttribute("changed", "");
+	// 						});
+	// 					});
+	// 				},
+	// 				send: function (){
+	// 					let error = false,
+	// 						form = $(document.getElementById("update_modal_form")),
+	// 						data = {};
+	// 					form.find("input[changed]").each(function (i, input){
+	// 						if (input.value !== "")
+	// 							data[input.name] = input.value;
+	// 						else
+	// 							error = true;
+	// 					});
+	// 					if (error)
+	// 						Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
+	// 					else if (Global.isObjectEmpty(data))
+	// 						$(document.getElementById("update_modal")).modal("hide");
+	// 					else {
+	// 						data.id = form.attr("arcabouco");
+	// 						Global.connect({
+	// 							data: {module: "renda_variavel", action: "update_arcaboucos", params: data},
+	// 							success: function (result){
+	// 								if (result.status){
+	// 									$(document.getElementById("update_modal")).modal("hide");
+	// 									Global.connect({
+	// 										data: {module: "renda_variavel", action: "get_arcaboucos"},
+	// 										success: function (result){
+	// 											if (result.status)
+	// 												buildArcaboucosTable(result.data);
+	// 											else
+	// 												Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+	// 										}
+	// 									});
+	// 								}
+	// 								else
+	// 									Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "danger", body: result.error, delay: 4000});
+	// 							}
+	// 						});		
+	// 					}
+	// 				}
+	// 			}).modal("show");
+	// 		}
+	// 		//Apagar um arcabouço
+	// 		else if (action === "remover")
+	// 			Global.removeModal({
+
+	// 			}).modal("show");
+	// 	}
+	// 	//Seleção do arcabouço
+	// 	else{
+	// 		let me = this;
+	// 		_selected_arcabouco = this.getAttribute("arcabouco");
+	// 		Global.connect({
+	// 			data: {module: "renda_variavel", action: "get_arcabouco_data", params: {id_arcabouco: this.getAttribute("arcabouco")}},
+	// 			success: function (result){
+	// 				if (result.status){
+	// 					$(document.getElementById("table_arcaboucos")).find("a.arcabouco-selected").removeClass("arcabouco-selected");
+	// 					$(me).addClass("arcabouco-selected");
+	// 					updateOperacoes_Arcabouco(result.data["operacoes"]);
+	// 					updateCenarios_Arcabouco.create(result.data["cenarios"]);
+	// 					updateAtivos(result.data["ativos"]);
+	// 					rebuildArcaboucoSection();
+	// 				}
+	// 				else
+	// 					Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+	// 			}
+	// 		});
+	// 	}
+	// });
 	/*--------------------------------- Lista Ops ------------------------------------*/
 	/*
 		Processa o filtro na tabela 'lista_ops__table'.
@@ -2020,7 +2127,9 @@ let Renda_variavel = (function(){
 		Comanda cliques no menu de renda variavel.
 	*/
 	$("button", document.getElementById("renda_variavel__menu")).click(function (){
-		if (this.name === "cenarios")
+		if (this.name === "arcaboucos")
+			buildArcaboucosModal();
+		else if (this.name === "cenarios")
 			buildCenariosModal();
 		else if (this.name === "adicionar_operacoes")
 			buildOperacoesModal();
@@ -2031,10 +2140,19 @@ let Renda_variavel = (function(){
 	});
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
 	Global.connect({
-		data: {module: "renda_variavel", action: "get_arcaboucos"},
+		data: {module: "renda_variavel", action: "get_arcabouco_data"},
 		success: function (result){
-			if (result.status)
-				buildTableArcaboucos(result.data);
+			if (result.status){
+				updateUsuarios(result.data["usuarios"]);
+				if (result.data["arcaboucos"].length)
+					_selected_arcabouco = result.data["arcaboucos"][0].id;
+				updateArcaboucos(result.data["arcaboucos"]);
+				updateOperacoes_Arcabouco(result.data["operacoes"]);
+				updateCenarios_Arcabouco.create(result.data["cenarios"]);
+				updateAtivos(result.data["ativos"]);
+				buildArcaboucosModal('build');
+				rebuildArcaboucoSection();
+			}
 			else
 				Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
 		}

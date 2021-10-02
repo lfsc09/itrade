@@ -138,10 +138,23 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #insert_modal_form, #insert_modal_form input {font-size: .9em}
 /*----------------------------------- MENU BOTTOM ------------------------------------*/
 /*---------------------------------- RENDA VARIAVEL ----------------------------------*/
-/*------------------------------------ Arcabouco -------------------------------------*/
-a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}
 #renda_variavel__section .form-label {font-size: 11px}
-#table_arcaboucos .arcabouco-badge {font-size: 11px; color: #00000096}
+/*------------------------------------ Arcabouco -------------------------------------*/
+#arcaboucos_modal_form .form-label {font-size: 12px}
+#table_arcaboucos {font-size: .85em}
+#table_arcaboucos tbody td{vertical-align: middle}
+#table_arcaboucos tbody td[name='data_criacao'] {width: 10%; font-size: 12px}
+#table_arcaboucos tbody td[name='data_atualizacao'] {width: 10%; font-size: 12px}
+#table_arcaboucos tbody td[name='qtd_ops'] {width: 8%; font-size: 12px}
+#table_arcaboucos tbody td[name='meta'] {width: 10%}
+#table_arcaboucos tbody td[name='meta'] progress {width: 85px}
+#table_arcaboucos tbody td[name='usuarios'] {width: 20%}
+#table_arcaboucos tbody td[name='usuarios'] span.badge {vertical-align: middle}
+#table_arcaboucos tbody td[name='usuarios'] span.badge i {font-size: 8px}
+#table_arcaboucos tbody td[name='editar'] {width: 4%}
+#table_arcaboucos tbody td[name='remover'] {width: 4%}
+/*a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}*/
+/*#table_arcaboucos .arcabouco-badge {font-size: 11px; color: #00000096}*/
 /*---------------------------------- Dashboard Ops -----------------------------------*/
 #dashboard_ops__filter .slider-styled.filter-hora {width: 100px; margin-top: 11px}
 #dashboard_ops__filter input[name='data'] {width: 175px}

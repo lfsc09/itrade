@@ -11,14 +11,27 @@
 			$mysqli->set_charset('utf8');
 			if ($mysqli->connect_errno)
 				return ["status" => 0, "error" => "Failed to connect to MySQL: " . $mysqli->connect_errno];
-			$result_raw = $mysqli->query("SELECT rva.*,crva_u.qtd_usuarios,crvo.qtd_ops FROM rv__arcabouco rva INNER JOIN rv__arcabouco__usuario rva_u ON rva.id=rva_u.id_arcabouco INNER JOIN (SELECT COUNT(_rva_u.id_arcabouco) AS qtd_usuarios,_rva_u.id_arcabouco FROM rv__arcabouco__usuario _rva_u GROUP BY _rva_u.id_arcabouco) crva_u ON rva.id=crva_u.id_arcabouco LEFT JOIN (SELECT COUNT(_rvo.id) AS qtd_ops,_rvo.id_arcabouco FROM rv__operacoes _rvo GROUP BY _rvo.id_arcabouco) crvo ON rva.id=crvo.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' ORDER BY rva.id DESC");
+			$result_raw = $mysqli->query("SELECT rva.*,DATE(rva.data_criacao) AS data_criacao,DATE(rva.data_atualizacao) AS data_atualizacao,crvo.qtd_ops FROM rv__arcabouco rva INNER JOIN rv__arcabouco__usuario rva_u ON rva.id=rva_u.id_arcabouco LEFT JOIN (SELECT COUNT(_rvo.id) AS qtd_ops,_rvo.id_arcabouco FROM rv__operacoes _rvo GROUP BY _rvo.id_arcabouco) crvo ON rva.id=crvo.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' ORDER BY rva.data_atualizacao DESC, rva.id DESC");
 			while($row = $result_raw->fetch_assoc()){
+				$result_usuarios = $mysqli->query("SELECT u.id,u.usuario,u.nome FROM rv__arcabouco__usuario rva_u INNER JOIN usuario u ON rva_u.id_usuario=u.id WHERE rva_u.id_arcabouco='{$row["id"]}'");
+				$usuarios_arcabouco = [];
+				while($row_u = $result_usuarios->fetch_assoc()){
+					$usuarios_arcabouco[] = [
+						"usuario" => $row_u["usuario"],
+						"nome" => $row_u["nome"],
+						"criador" => ($row["id_usuario_criador"] == $row_u["id"]) ? 1 : 0
+					];
+				}
+				$result_usuarios->free();
 				$result[] = [
 					"id" => $row["id"],
+					"sou_criador" => ($row["id_usuario_criador"] == $id_usuario) ? 1 : 0,
 					"nome" => $row["nome"],
-					"criador" => ($row["id_usuario_criador"] == $id_usuario)?1:0,
-					"qtd_usuarios" => $row["qtd_usuarios"],
-					"qtd_ops" => (!is_null($row["qtd_ops"])?$row["qtd_ops"]:0)
+					"data_criacao" => $row["data_criacao"],
+					"data_atualizacao" => $row["data_atualizacao"],
+					"meta" => (int) $row["meta"],
+					"usuarios" => $usuarios_arcabouco,
+					"qtd_ops" => !is_null($row["qtd_ops"]) ? (int) $row["qtd_ops"] : 0
 				];
 			}
 			$result_raw->free();
