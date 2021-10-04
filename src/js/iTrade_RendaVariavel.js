@@ -4,8 +4,9 @@ let Renda_variavel = (function(){
 	let	_usuarios = [];
 	//Contem a lista atual de arcaboucos cadastrados
 	let	_arcaboucos = {};
-	//Arcabouço selecionado no momento
-	let _selected_arcabouco = null;
+	//Contem a lista de instancias de arcabouços selecionadas
+	let	_arcaboucos__instancias = [];
+	let	_arcaboucos__instancias_colors = ['--bs-blue', '--bs-red', '--bs-green', '--bs-orange', '--bs-indigo'];
 	//Funcoes usadas em '_arcabouco__table_DT'
 	let _arcabouco__table_DT_ext = {
 		meta_render: function (data, type, row){
@@ -218,6 +219,54 @@ let Renda_variavel = (function(){
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	/*----------------------------- Section Arcabouço --------------------------------*/
 	/*
+		Controla a lista de instancias de arcabouço selecionadas.
+	*/
+	let ctrl__instancias = {
+		get: function (id_inst){
+			for (let i in _arcaboucos__instancias){
+				if (_arcaboucos__instancias[i].instancia === id_inst)
+					return _arcaboucos__instancias[i];
+			}
+			return null;
+		},
+		getSelected: function (key = ''){
+			for (let i in _arcaboucos__instancias){
+				if (_arcaboucos__instancias[i].selected){
+					if (key !== '')
+						return _arcaboucos__instancias[i][key];
+					return _arcaboucos__instancias[i];
+				}
+			}
+			return null;
+		},
+		size: function (){
+			return _arcaboucos__instancias.length;
+		},
+		add: function (inst, refresh = true){
+			if (_arcaboucos__instancias.length !== 0 && _arcaboucos__instancias.length === _arcaboucos__instancias_colors.length)
+				return false;
+			_arcaboucos__instancias.push(inst);
+			if (refresh){
+				let html = ``;
+				for (let i in _arcaboucos__instancias)
+					html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? "ms-2" : "")}" style="background-color: var(${_arcaboucos__instancias[i].color}) !important" instancia="${_arcaboucos__instancias[i].instancia}">${((_arcaboucos__instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : "")}${_arcaboucos__instancias[i].nome}</span>`;
+				$(document.getElementById("renda_variavel__instancias")).empty().append(html);
+			}
+		},
+		delete: function (id_inst, refresh = true){
+			for (let i in _arcaboucos__instancias){
+				if (_arcaboucos__instancias[i].instancia === id_inst)
+					_arcaboucos__instancias.splice(i, 1);
+			}
+			if (refresh){
+				let html = ``;
+				for (let i in _arcaboucos__instancias)
+					html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? "ms-2" : "")}" style="background-color: var(${_arcaboucos__instancias[i].color}) !important" instancia="${_arcaboucos__instancias[i].instancia}">${((_arcaboucos__instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : "")}${_arcaboucos__instancias[i].nome}</span>`;
+				$(document.getElementById("renda_variavel__instancias")).empty().append(html);
+			}
+		}
+	}
+	/*
 		Atualiza a lista interna de usuarios.
 	*/
 	function updateUsuarios(data){
@@ -227,13 +276,24 @@ let Renda_variavel = (function(){
 	/*
 		Atualiza a lista interna de arcabouços.
 	*/
-	function updateArcaboucos(data){
-		//Atualiza o array
-		_arcaboucos = {};
-		for (let a in data){
-			//Reordena a lista de usuarios
-			data[a]["usuarios"].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
-			_arcaboucos[data[a].id] = data[a];
+	let updateArcaboucos = {
+		create: function (data){
+			//Atualiza o objeto
+			_arcaboucos = {};
+			for (let a in data){
+				//Reordena a lista de usuarios
+				data[a]["usuarios"].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
+				_arcaboucos[data[a].id] = data[a];
+			}
+		},
+		update: function (data){
+			//Atualiza o objeto
+			data["usuarios"].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
+			_arcaboucos[data.id] = data;
+		},
+		remove: function (id){
+			//Atualiza o objeto
+			delete _arcaboucos[id];
 		}
 	}
 	/*
@@ -304,13 +364,13 @@ let Renda_variavel = (function(){
 				});
 			}
 			else if (_selected_arcabouco_section === 'dashboard_ops'){
-				let dashboard_filters = dashboard__filters_LS.getFromArcabouco(_selected_arcabouco),
-					dashboard_simulations = dashboard__simulations_LS.getFromArcabouco(_selected_arcabouco),
+				let dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
+					dashboard_simulations = dashboard__simulations_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
 					dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, dashboard_filters, dashboard_simulations);
 				console.log(dashboard_data);
 				html += `<div class="row">`+
-						`<div class="col-1 d-flex pe-0" style="width: 50px">`+
-						`<button class="btn btn-sm btn-primary flex-fill" type="button" id="dashboard_ops__refresh"><i class="fas fa-sync"></i></button>`+
+						`<div class="col-1 d-flex pe-0" style="width: 65px">`+
+						`<button class="btn btn-sm btn-primary flex-fill" type="button" id="dashboard_ops__refresh"><i class="fas fa-magic"></i></button>`+
 						`</div>`;
 				//Submenu de Filtros do Dashboard
 				html += `<div class="col">`+
@@ -437,7 +497,7 @@ let Renda_variavel = (function(){
 					});
 					filters.find("div[name='hora']")[0].noUiSlider.on("change", function (values, handle, unencoded, isTap, positions){
 						let handle_dic = ["hora_inicial", "hora_final"];
-						dashboard__filters_LS.update(_selected_arcabouco, handle_dic[handle], moment(parseInt(values[handle])).format("HH:mm"));
+						dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), handle_dic[handle], moment(parseInt(values[handle])).format("HH:mm"));
 					});
 					//////////////////////////////////
 					//Filtro do Ativo
@@ -452,7 +512,7 @@ let Renda_variavel = (function(){
 						}).on("loaded.bs.select", function (){
 							filters.find("select[name='ativo']").parent().addClass("form-control");
 						}).on("changed.bs.select", function (){
-							dashboard__filters_LS.update(_selected_arcabouco, "ativo", $(this).val());
+							dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "ativo", $(this).val());
 						});
 					});
 					//////////////////////////////////
@@ -473,7 +533,7 @@ let Renda_variavel = (function(){
 						}).on("loaded.bs.select", function (){
 							filters.find("select[name='cenario']").parent().addClass("form-control");
 						}).on("changed.bs.select", function (){
-							let dashboard_filters = dashboard__filters_LS.getFromArcabouco(_selected_arcabouco),
+							let dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
 								localStorage_data = {};
 							$(this).find("option:selected").each(function (i, el){
 								localStorage_data[el.innerText] = {
@@ -482,19 +542,19 @@ let Renda_variavel = (function(){
 									observacoes: ("cenario" in dashboard_filters && el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["observacoes"] : {}
 								}
 							});
-							dashboard__filters_LS.update(_selected_arcabouco, "cenario", localStorage_data);
-							rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='premissas']"), _selected_arcabouco);
-							rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='observacoes']"), _selected_arcabouco);
+							dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "cenario", localStorage_data);
+							rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='premissas']"), ctrl__instancias.getSelected('id'));
+							rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='observacoes']"), ctrl__instancias.getSelected('id'));
 						});
 					});
 					//////////////////////////////////
 					//Filtro de Observacoes
 					//////////////////////////////////
-					rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='premissas']"), _selected_arcabouco);
+					rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='premissas']"), ctrl__instancias.getSelected('id'));
 					//////////////////////////////////
 					//Filtro de Observacoes
 					//////////////////////////////////
-					rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='observacoes']"), _selected_arcabouco);
+					rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='observacoes']"), ctrl__instancias.getSelected('id'));
 					//////////////////////////////////
 					//Filtro de Ignora Erros
 					//////////////////////////////////
@@ -528,13 +588,27 @@ let Renda_variavel = (function(){
 	}
 	/*------------------------------ Lista Arcabouços --------------------------------*/
 	/*
+		Reseta o formulário 'arcaboucos_modal_form'.
+	*/
+	function resetFormArcaboucoModal(){
+		let form = $(document.getElementById("arcaboucos_modal_form"));
+		form.removeAttr("id_arcabouco");
+		form.find("input[name]").val("");
+		form.find("select[name='usuarios']").selectpicker('deselectAll');
+		form.find("input[name],select[name]").removeAttr("changed");
+	}
+	/*
 		Constroi o modal de gerenciamento de cenarios.
 	*/
 	function buildArcaboucosModal(method = ''){
 		let form = $(document.getElementById("arcaboucos_modal_form"));
 		if (method === 'build'){
 			//Inicia o select de usuarios
-			let select_options_html = _usuarios.reduce((p, c) => (p.usuario ? `<option value="${p.usuario}">${p.usuario}</option>` : p) + `<option value="${c.usuario}">${c.usuario}</option>` ); 
+			select_options_html = "";
+			for (let usu in _usuarios){
+				if (_usuarios[usu].is_me === 0)
+					select_options_html += `<option value="${_usuarios[usu].usuario}">${_usuarios[usu].usuario}</option>`;
+			}
 			form.find("select[name='usuarios']").append(select_options_html).promise().then(function (){
 				form.find("select[name='usuarios']").selectpicker({
 					title: 'Usuários',
@@ -548,6 +622,8 @@ let Renda_variavel = (function(){
 					styleBase: 'form-control form-control-sm'
 				}).on("loaded.bs.select", function (){
 					form.find("select[name='usuarios']").parent().addClass("form-control");
+				}).on("changed.bs.select", function (){
+					this.setAttribute("changed", "");
 				});
 			});
 			//Inicia a mascara da meta
@@ -574,7 +650,7 @@ let Renda_variavel = (function(){
 				usuarios_html = ``;
 			for (let usu in _arcaboucos[ar]["usuarios"])
 				usuarios_html += `<span class="badge ${((_arcaboucos[ar]["usuarios"][usu].criador == 1) ? "bg-primary" : "bg-secondary")} ${((usu !== 0) ? "ms-1" : "")} my-1">${_arcaboucos[ar]["usuarios"][usu].usuario}</span>`;
-			html += `<tr arcabouco="${_arcaboucos[ar].id}">`+
+			html += `<tr arcabouco="${_arcaboucos[ar].id}" ${((_arcaboucos[ar].id == ctrl__instancias.getSelected('id')) ? "selected" : "")}>`+
 					`<td name="nome" class="fw-bold">${_arcaboucos[ar].nome}</td>`+
 					`<td name="data_criacao" class="fw-bold text-muted">${Global.convertDate(_arcaboucos[ar].data_criacao)}</td>`+
 					`<td name="data_atualizacao" class="fw-bold text-muted">${((_arcaboucos[ar].data_atualizacao !== "0000-00-00") ? Global.convertDate(_arcaboucos[ar].data_atualizacao) : "")}</td>`+
@@ -1005,7 +1081,7 @@ let Renda_variavel = (function(){
 			data.nome = cenario.find("input[name='cenario_nome']").val();
 			if (data.nome === "")
 				return {};
-			data.id_arcabouco = _selected_arcabouco;
+			data.id_arcabouco = ctrl__instancias.getSelected('id');
 			data.premissas = [];
 			cenario.find("tr[new_premissa]").each(function (r, row){
 				let nome = row.querySelector("input[name='nome']").value,
@@ -1037,7 +1113,7 @@ let Renda_variavel = (function(){
 		//Cenario ja existe
 		else if (cenario[0].hasAttribute("cenario")){
 			data = {
-				id_arcabouco: _selected_arcabouco,
+				id_arcabouco: ctrl__instancias.getSelected('id'),
 				id_cenario: cenario.attr("cenario"),
 				insert: {
 					//Premissas de cenarios ja existentes
@@ -1300,74 +1376,46 @@ let Renda_variavel = (function(){
 	/*----------------------------- Section Arcabouço --------------------------------*/
 	/*------------------------------ Lista Arcabouços --------------------------------*/
 	/*
-		Adição de arcabouços na 'tabela' de arcabouços.
+		Marca os inputs que forem alterados.
 	*/
-	// $(document.getElementById("table_arcaboucos_adicionar")).click(function (){
-	// 	Global.insertModal({
-	// 		size: "modal-sm",
-	// 		title: "Novo Arcabouço",
-	// 		build_body: function (modal_body){
-	// 			let html = ``;
-	// 			html += `<div id="insert_modal_toasts"></div>`+
-	// 					`<form class="row g-2 m-0" id="insert_modal_form">`+
-	// 					`<div class="col-md-12 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>`+
-	// 					`</form>`;
-	// 			modal_body.append(html);
-	// 		},
-	// 		send: function (){
-	// 			let error = false,
-	// 				form = $(document.getElementById("insert_modal_form")),
-	// 				data = {};
-	// 			form.find("input").each(function (i, input){
-	// 				if (input.value !== "")
-	// 					data[input.name] = input.value;
-	// 				else
-	// 					error = true;
-	// 			});
-	// 			if (error)
-	// 				Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
-	// 			else{
-	// 				Global.connect({
-	// 					data: {module: "renda_variavel", action: "insert_arcaboucos", params: data},
-	// 					success: function (result){
-	// 						if (result.status){
-	// 							$(document.getElementById("insert_modal")).modal("hide");
-	// 							Global.connect({
-	// 								data: {module: "renda_variavel", action: "get_arcaboucos"},
-	// 								success: function (result){
-	// 									if (result.status)
-	// 										buildArcaboucosTable(result.data);
-	// 									else
-	// 										Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-	// 								}
-	// 							});
-	// 						}
-	// 						else
-	// 							Global.toast.create({location: document.getElementById("insert_modal_toasts"), color: "danger", body: result.error, delay: 4000});
-	// 					}
-	// 				});		
-	// 			}
-	// 		}
-	// 	}).modal("show");
-	// });
+	$(document.getElementById("arcaboucos_modal_form")).on("change", "input[name]", function (){
+		this.setAttribute("changed", "");
+	});
 	/*
 		Processa os cliques em 'table_arcaboucos'.
 			 - Clicar na linha: Muda o arcabouço principal/(selecionado) na lista de instancias de arcabouço.
 			 - Clicar + (Ctrl): Inclui esse arcabouço na lista de instancias de arcabouço.
+	*/
+	$(document.getElementById("table_arcaboucos")).on("click", "tbody tr", function (e){
+		if (window.getSelection().toString() || document.getSelection().toString())
+			return false;
+		if (e.target.nodeName !== "BUTTON" && e.target.nodeName !== "I"){
+			let id_arcabouco = this.getAttribute("arcabouco");
+			if (e.ctrlKey){
+				ctrl__instancias.add({
+					instancia: Global._random.str("i"),
+					id: id_arcabouco,
+					nome: _arcaboucos[id_arcabouco].nome,
+					color: _arcaboucos__instancias_colors[ctrl__instancias.size()],
+					selected: false
+				});
+			}
+		}
+	});
+	/*
+		Processa click em 'table_arcabouco' (Para Edição dos arcabouços)
 			 - (Criador Apenas) Clicar em alterar arcabouço: Joga os dados para o formulario.
 	*/
-	$(document.getElementById("table_arcaboucos")).on("click", "tbody td", function (e){
-		let target = $(e.target).parentsUntil("tr").last().attr("name");
-		console.log(e.target, target);
-		if (target === "editar"){
-			console.log("edita");
-		}
-		else{
-			if (e.ctrlKey)
-				console.log("adiciona instancia");
-			else
-				console.log("muda selected");
-		}
+	$(document.getElementById("table_arcaboucos")).on("click", "tbody tr td button[name='editar']", function (e){
+		let id_arcabouco = $(this).parentsUntil("tbody").last().attr("arcabouco"),
+			usuarios_select = [],
+			form = $(document.getElementById("arcaboucos_modal_form"));
+		for (let u in _arcaboucos[id_arcabouco].usuarios)
+			usuarios_select.push(_arcaboucos[id_arcabouco]["usuarios"][u].usuario);
+		form.find("input[name='nome']").val(_arcaboucos[id_arcabouco].nome).removeAttr("changed");
+		form.find("input[name='meta']").val(_arcaboucos[id_arcabouco].meta).removeAttr("changed");
+		form.find("select[name='usuarios']").selectpicker('val', usuarios_select).removeAttr("changed");
+		form.attr("id_arcabouco", id_arcabouco);
 	});
 	/*
 		Processa os duplos cliques em 'table_arcaboucos'.
@@ -1376,111 +1424,59 @@ let Renda_variavel = (function(){
 	$(document.getElementById("table_arcaboucos")).on("dblclick", "tbody tr td button[name='remover']", function (e){
 		console.log("remove");
 	});
-	// $(document.getElementById("table_arcaboucos")).on("click", "tbody tr", function (event){
-	// 	if (event.target.tagName === "BUTTON" || event.target.tagName === "I"){
-	// 		let target = $(event.target),
-	// 			action = "";
-	// 		if (event.target.tagName === "BUTTON"){
-	// 			if (event.target.hasAttribute("editar"))
-	// 				action = "editar";
-	// 			else if (event.target.hasAttribute("remover"))
-	// 				action = "remover";
-	// 		}
-	// 		else if (event.target.tagName === "I"){
-	// 			if (event.target.parentElement.hasAttribute("editar"))
-	// 				action = "editar";
-	// 			else if (event.target.parentElement.hasAttribute("remover"))
-	// 				action = "remover";	
-	// 		}
-	// 		//Edita o Arcabouço
-	// 		if (action === "editar"){
-	// 			let me = $(this),
-	// 				data = {
-	// 					id: me.attr("arcabouco"),
-	// 					nome: me.find("h5").text()
-	// 				};
-	// 			Global.updateModal({
-	// 				size: "modal-sm",
-	// 				title: "Atualizar Arcabouço",
-	// 				build_body: function (modal_body){
-	// 					let html = ``;
-	// 					html += `<div id="update_modal_toasts"></div>`+
-	// 							`<form class="row g-2 m-0" id="update_modal_form" arcabouco="${data.id}">`+
-	// 							`<div class="col-md-12 text-start"><label class="form-label">Nome</label><input type="text" name="nome" class="form-control form-control-sm" value="${data.nome}" onclick="this.select()"></div>`+
-	// 							`</form>`;
-	// 					modal_body.append(html).promise().then(function (){
-	// 						let form = modal_body.find("form");
-	// 						form.find("input").on("change", function (){
-	// 							this.setAttribute("changed", "");
-	// 						});
-	// 					});
-	// 				},
-	// 				send: function (){
-	// 					let error = false,
-	// 						form = $(document.getElementById("update_modal_form")),
-	// 						data = {};
-	// 					form.find("input[changed]").each(function (i, input){
-	// 						if (input.value !== "")
-	// 							data[input.name] = input.value;
-	// 						else
-	// 							error = true;
-	// 					});
-	// 					if (error)
-	// 						Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "warning", body: "Preencha todos os campos", delay: 1500});
-	// 					else if (Global.isObjectEmpty(data))
-	// 						$(document.getElementById("update_modal")).modal("hide");
-	// 					else {
-	// 						data.id = form.attr("arcabouco");
-	// 						Global.connect({
-	// 							data: {module: "renda_variavel", action: "update_arcaboucos", params: data},
-	// 							success: function (result){
-	// 								if (result.status){
-	// 									$(document.getElementById("update_modal")).modal("hide");
-	// 									Global.connect({
-	// 										data: {module: "renda_variavel", action: "get_arcaboucos"},
-	// 										success: function (result){
-	// 											if (result.status)
-	// 												buildArcaboucosTable(result.data);
-	// 											else
-	// 												Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-	// 										}
-	// 									});
-	// 								}
-	// 								else
-	// 									Global.toast.create({location: document.getElementById("update_modal_toasts"), color: "danger", body: result.error, delay: 4000});
-	// 							}
-	// 						});		
-	// 					}
-	// 				}
-	// 			}).modal("show");
-	// 		}
-	// 		//Apagar um arcabouço
-	// 		else if (action === "remover")
-	// 			Global.removeModal({
-
-	// 			}).modal("show");
-	// 	}
-	// 	//Seleção do arcabouço
-	// 	else{
-	// 		let me = this;
-	// 		_selected_arcabouco = this.getAttribute("arcabouco");
-	// 		Global.connect({
-	// 			data: {module: "renda_variavel", action: "get_arcabouco_data", params: {id_arcabouco: this.getAttribute("arcabouco")}},
-	// 			success: function (result){
-	// 				if (result.status){
-	// 					$(document.getElementById("table_arcaboucos")).find("a.arcabouco-selected").removeClass("arcabouco-selected");
-	// 					$(me).addClass("arcabouco-selected");
-	// 					updateOperacoes_Arcabouco(result.data["operacoes"]);
-	// 					updateCenarios_Arcabouco.create(result.data["cenarios"]);
-	// 					updateAtivos(result.data["ativos"]);
-	// 					rebuildArcaboucoSection();
-	// 				}
-	// 				else
-	// 					Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
-	// 			}
-	// 		});
-	// 	}
-	// });
+	/*
+		Cancela envio de adição ou edição de arcabouços, removendo os dados do formulário e resetando ele.
+	*/
+	$(document.getElementById("arcaboucos_modal_cancelar")).click(function (){
+		resetFormArcaboucoModal();
+	});
+	/*
+		Envia info do formulario de arcabouços para adicionar ou editar um arcabouço.
+	*/
+	$(document.getElementById("arcaboucos_modal_enviar")).click(function (){
+		let form = $(document.getElementById("arcaboucos_modal_form"));
+			id_arcabouco = form.attr("id_arcabouco"),
+			data = {};
+		form.find("input[name][changed],select[name][changed]").each(function (){
+			data[this.name] = $(this).val();
+		});
+		//Se for edição
+		if (id_arcabouco){
+			if (!Global.isObjectEmpty(data)){
+				Global.connect({
+					data: {module: "renda_variavel", action: "update_arcaboucos", params: data},
+					success: function (result){
+						if (result.status){
+							resetFormArcaboucoModal();
+							updateArcaboucos.update(data);
+							buildArcaboucosTable();
+						}
+						else
+							Global.toast.create({location: document.getElementById("arcaboucos_modal_toasts"), color: "danger", body: result.error, delay: 4000});
+					}
+				});
+			}
+		}
+		//Se for adição
+		else{
+			if (!("nome" in data) || data["nome"] === ""){
+				Global.toast.create({location: document.getElementById("arcaboucos_modal_toasts"), color: "warning", body: "Nome inválido.", delay: 4000});
+				return;
+			}
+			Global.connect({
+				data: {module: "renda_variavel", action: "insert_arcaboucos", params: data},
+				success: function (result){
+					if (result.status){
+						resetFormArcaboucoModal();
+						updateArcaboucos.update(data);
+						buildArcaboucosTable();
+					}
+					else
+						Global.toast.create({location: document.getElementById("arcaboucos_modal_toasts"), color: "danger", body: result.error, delay: 4000});
+				}
+			});
+		}
+	});
 	/*--------------------------------- Lista Ops ------------------------------------*/
 	/*
 		Processa o filtro na tabela 'lista_ops__table'.
@@ -1541,9 +1537,9 @@ let Renda_variavel = (function(){
 		let remove_data = {};
 		//Remove todas as operações do arcabouço
 		if (this.name === "remove_all")
-			remove_data = {id_arcabouco: _selected_arcabouco, operacoes: []};
+			remove_data = {id_arcabouco: ctrl__instancias.getSelected('id'), operacoes: []};
 		else if (this.name === "remove_sel"){
-			remove_data = {id_arcabouco: _selected_arcabouco, operacoes: []};
+			remove_data = {id_arcabouco: ctrl__instancias.getSelected('id'), operacoes: []};
 			$(document.getElementById("lista_ops__table")).find("tbody tr.selected").each(function (i, tr){
 				remove_data["operacoes"].push(tr.getAttribute("operacao"));
 			});
@@ -1572,14 +1568,14 @@ let Renda_variavel = (function(){
 		Processa a mudança em 'filters' do DatePicker.
 	*/
 	$(document.getElementById("renda_variavel__section")).on("apply.daterangepicker", "#dashboard_ops__filter input[name='data']", function (ev, picker){
-		dashboard__filters_LS.update(_selected_arcabouco, "data_inicial", picker.startDate.format("DD/MM/YYYY"));
-		dashboard__filters_LS.update(_selected_arcabouco, "data_final", picker.endDate.format("DD/MM/YYYY"));
+		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "data_inicial", picker.startDate.format("DD/MM/YYYY"));
+		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "data_final", picker.endDate.format("DD/MM/YYYY"));
 	});
 	/*
 		Processa a mudança em 'filters' que usam select cru.
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__filter select[name='ignora_erro']", function (){
-		dashboard__filters_LS.update(_selected_arcabouco, this.name, $(this).val());
+		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
 	});
 	/*
 		Processa as seleções de premissas e observações em 'filters'.
@@ -1590,7 +1586,7 @@ let Renda_variavel = (function(){
 			div_holder = me.parent().parent().parent(),
 			select_name = div_holder.attr("name"),
 			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
-			dashboard_filters = dashboard__filters_LS.getFromArcabouco(_selected_arcabouco),
+			dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
 			selected_values = {},
 			qtd_selected = 0;
 		//Se o target não for um clique no input, processa a seleção da observação
@@ -1612,7 +1608,7 @@ let Renda_variavel = (function(){
 				dashboard_filters["cenario"][cenario_nome][select_name][me.attr("value")] = (me.find("input[name='negar_valor']").prop("checked")) ? 1 : 0;	
 		}
 		//Atualiza no localStorage
-		dashboard__filters_LS.update(_selected_arcabouco, "cenario", dashboard_filters["cenario"]);
+		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "cenario", dashboard_filters["cenario"]);
 		//Atualiza o placeholder
 		qtd_selected = div_holder.find("ul button.dropdown-item[selected]").length;
 		div_holder.find("button.dropdown-toggle").html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[select_name]}`)));
@@ -1624,14 +1620,14 @@ let Renda_variavel = (function(){
 		let div_holder = $(this).parent().parent().parent().parent(),
 			select_name = div_holder.attr("name"),
 			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
-			dashboard_filters = dashboard__filters_LS.getFromArcabouco(_selected_arcabouco);
+			dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id'));
 		div_holder.find("ul button.dropdown-item[selected]").each(function (i, el){
 			el.removeAttribute("selected");
 			el.querySelector("input[name='negar_valor']").checked = false;
 		});
 		for (cenario_nome in dashboard_filters["cenario"])
 			dashboard_filters["cenario"][cenario_nome][select_name] = {};
-		dashboard__filters_LS.update(_selected_arcabouco, "cenario", dashboard_filters["cenario"]);
+		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "cenario", dashboard_filters["cenario"]);
 		//Atualiza o placeholder
 		div_holder.find("button.dropdown-toggle").html(`${placeholder[select_name]}`);
 	});
@@ -1639,7 +1635,7 @@ let Renda_variavel = (function(){
 		Processa no select de observações e premissasa mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__filter div.iSelectKami[name] ul li select.iSelectKami", function (){
-		dashboard__filters_LS.update(_selected_arcabouco, this.name, $(this).val());
+		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
 	});
 	/*
 		Processa a mudança em 'simulate' que usam select cru.
@@ -1649,18 +1645,18 @@ let Renda_variavel = (function(){
 		if (this.name === "tipo_cts"){
 			if (value === "1" || value === "3"){
 				$(document.getElementById("dashboard_ops__simulate")).find("input[name='cts']").val("").prop("disabled", true);
-				dashboard__simulations_LS.update(_selected_arcabouco, "cts", "");
+				dashboard__simulations_LS.update(ctrl__instancias.getSelected('id'), "cts", "");
 			}
 			else
 				$(document.getElementById("dashboard_ops__simulate")).find("input[name='cts']").prop("disabled", false);
 		}
-		dashboard__simulations_LS.update(_selected_arcabouco, this.name, value);
+		dashboard__simulations_LS.update(ctrl__instancias.getSelected('id'), this.name, value);
 	});
 	/*
 		Processa a mudança em 'simulate' que usam input cru.
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__simulate input[name]", function (){
-		dashboard__simulations_LS.update(_selected_arcabouco, this.name, $(this).val());
+		dashboard__simulations_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
 	});
 	$(document.getElementById("renda_variavel__section")).on("click", "#dashboard_ops__refresh", function (){
 		rebuildArcaboucoSection();
@@ -2025,7 +2021,7 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById("operacoes_modal_enviar")).click(function (){
 		let table = $(document.getElementById("table_operacoes_add")),
-			insert_data = {id_arcabouco: _selected_arcabouco, operacoes: []},
+			insert_data = {id_arcabouco: ctrl__instancias.getSelected('id'), operacoes: []},
 			error = false;
 		$(document.getElementById("table_operacoes_add")).find("tbody tr").each(function (t, tr){
 			tr = $(tr);
@@ -2144,9 +2140,17 @@ let Renda_variavel = (function(){
 		success: function (result){
 			if (result.status){
 				updateUsuarios(result.data["usuarios"]);
-				if (result.data["arcaboucos"].length)
-					_selected_arcabouco = result.data["arcaboucos"][0].id;
-				updateArcaboucos(result.data["arcaboucos"]);
+				//Seleciona o primeiro arcabouço na ordem que veio
+				if (result.data["arcaboucos"].length){
+					ctrl__instancias.add({
+						instancia: Global._random.str("i"),
+						id: result.data["arcaboucos"][0].id,
+						nome: result.data["arcaboucos"][0].nome,
+						color: _arcaboucos__instancias_colors[ctrl__instancias.size()],
+						selected: true
+					});
+				}
+				updateArcaboucos.create(result.data["arcaboucos"]);
 				updateOperacoes_Arcabouco(result.data["operacoes"]);
 				updateCenarios_Arcabouco.create(result.data["cenarios"]);
 				updateAtivos(result.data["ativos"]);

@@ -90,24 +90,17 @@
 			<div class="position-fixed top-0 end-0 p-3" id="master_toasts"></div>
 			<div class="container-fluid" id="renda_variavel">
 				<div class="row">
-					<!-- Arcabouço de Operacionais -->
-					<!-- <div class="col-2 border-end">
-						<div class="d-flex flex-column align-items-stretch flex-shrink-0 bg-white">
-							<a href="javascript:void(0)" class="d-flex align-items-center flex-shrink-0 p-3 pe-2 link-dark text-decoration-none border-bottom">
-								<span class="fs-5 fw-bold">Arcabouços</span>
-								<button class="btn btn-sm btn-primary ms-auto" type="button" id="table_arcaboucos_adicionar"><i class="fas fa-plus"></i></button>
-							</a>
-							<div class="list-group list-group-flush border-bottom scrollarea" id="table_arcaboucos"></div>
-						</div>
-					</div> -->
 					<div class="col d-flex">
-						<div class="container bg-light p-5 pt-3 rounded">
+						<div class="container-fluid bg-light p-5 pt-3 rounded">
 							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
-								<button class="btn btn-sm btn-primary me-4" type="button" name="arcaboucos"><i class="fas fa-box me-2"></i>Arcabouços</button>
+								<button class="btn btn-sm btn-primary me-4" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-plus me-2"></i>Adicionar Operações</button>
 								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="dashboard_ops"><i class="fas fa-chart-line me-2"></i>Dashboard</button>
 								<button class="btn btn-sm btn-outline-primary" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
+							</div>
+							<div class="row mb-4">
+								<div class="col" id="renda_variavel__instancias"></div>
 							</div>
 							<div class="row">
 								<div class="col" id="renda_variavel__section"></div>
@@ -255,8 +248,11 @@
 														<div class="col-4"><label class="form-label m-1 text-muted fw-bold">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>
 														<div class="col-2"><label class="form-label m-1 text-muted fw-bold">Meta</label><input type="text" name="meta" class="form-control form-control-sm" onclick="this.select()"></div>
 														<div class="col-6"><label class="form-label m-1 text-muted fw-bold">Usuários com Acesso</label><select name="usuarios" multiple></select></div>
-														<div class="col-12">
-															<button type="button" class="btn btn-sm btn-primary w-100 mt-3" id="arcaboucos_modal_enviar">Enviar</button>
+														<div class="col-12 mt-3">
+															<div class="row">
+																<div class="col-8"><button type="button" class="btn btn-sm btn-primary w-100" id="arcaboucos_modal_enviar">Enviar</button></div>
+																<div class="col-4"><button type="button" class="btn btn-sm btn-danger w-100" id="arcaboucos_modal_cancelar">Cancelar</button></div>
+															</div>
 														</div>
 													</form>
 												</div>

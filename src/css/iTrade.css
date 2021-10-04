@@ -139,6 +139,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*----------------------------------- MENU BOTTOM ------------------------------------*/
 /*---------------------------------- RENDA VARIAVEL ----------------------------------*/
 #renda_variavel__section .form-label {font-size: 11px}
+#renda_variavel__instancias span {cursor: pointer}
 /*------------------------------------ Arcabouco -------------------------------------*/
 #arcaboucos_modal_form .form-label {font-size: 12px}
 #table_arcaboucos {font-size: .85em}

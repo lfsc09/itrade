@@ -46,7 +46,7 @@
 					if (empty($params_data)){
 						include_once 'api__usuarios.php';
 						include_once 'api__ativos.php';
-						$status = Usuarios::get_usuarios(null);
+						$status = Usuarios::get_usuarios(null, $_SESSION["id"]);
 						if ($status["status"])
 							$return_data["usuarios"] = $status["data"];
 						$status = Ativos::get_ativos(null, $_SESSION["id"]);
