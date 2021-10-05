@@ -1,5 +1,7 @@
 let Renda_variavel = (function(){
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------------ VARS --------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	//Contem a lista atual de usuarios cadastrados
 	let	_usuarios = [];
 	//Contem a lista atual de arcaboucos cadastrados
@@ -216,8 +218,11 @@ let Renda_variavel = (function(){
 			return newData;
 		}
 	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- FUNCOES ------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------- Section Arcabouço --------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Controla a lista de instancias de arcabouço selecionadas.
 	*/
@@ -242,28 +247,29 @@ let Renda_variavel = (function(){
 		size: function (){
 			return _arcaboucos__instancias.length;
 		},
+		setSelected: function (id_inst, refresh = true){
+			for (let i in _arcaboucos__instancias)
+				_arcaboucos__instancias[i].selected = (_arcaboucos__instancias[i].instancia === id_inst);
+			if (refresh)
+				rebuildCtrl__instanciasHTML();
+		},
 		add: function (inst, refresh = true){
 			if (_arcaboucos__instancias.length !== 0 && _arcaboucos__instancias.length === _arcaboucos__instancias_colors.length)
-				return false;
+				return true;
 			_arcaboucos__instancias.push(inst);
-			if (refresh){
-				let html = ``;
-				for (let i in _arcaboucos__instancias)
-					html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? "ms-2" : "")}" style="background-color: var(${_arcaboucos__instancias[i].color}) !important" instancia="${_arcaboucos__instancias[i].instancia}">${((_arcaboucos__instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : "")}${_arcaboucos__instancias[i].nome}</span>`;
-				$(document.getElementById("renda_variavel__instancias")).empty().append(html);
-			}
+			if (refresh)
+				rebuildCtrl__instanciasHTML();
 		},
-		delete: function (id_inst, refresh = true){
+		remove: function (id_inst, refresh = true){
 			for (let i in _arcaboucos__instancias){
-				if (_arcaboucos__instancias[i].instancia === id_inst)
+				if (_arcaboucos__instancias[i].instancia === id_inst){
+					if (_arcaboucos__instancias[i].selected)
+						return true;
 					_arcaboucos__instancias.splice(i, 1);
+				}
 			}
-			if (refresh){
-				let html = ``;
-				for (let i in _arcaboucos__instancias)
-					html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? "ms-2" : "")}" style="background-color: var(${_arcaboucos__instancias[i].color}) !important" instancia="${_arcaboucos__instancias[i].instancia}">${((_arcaboucos__instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : "")}${_arcaboucos__instancias[i].nome}</span>`;
-				$(document.getElementById("renda_variavel__instancias")).empty().append(html);
-			}
+			if (refresh)
+				rebuildCtrl__instanciasHTML();
 		}
 	}
 	/*
@@ -330,6 +336,15 @@ let Renda_variavel = (function(){
 	function updateAtivos(data){
 		//Atualiza o array
 		_ativos = data;
+	}
+	/*
+		Reconstroi a lista de instacia em 'renda_variavel__instancias'.
+	*/
+	function rebuildCtrl__instanciasHTML(){
+		let html = ``;
+		for (let i in _arcaboucos__instancias)
+			html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? "ms-2" : "")}" style="background-color: var(${_arcaboucos__instancias[i].color}) !important" instancia="${_arcaboucos__instancias[i].instancia}">${((_arcaboucos__instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : "")}${_arcaboucos__instancias[i].nome}</span>`;
+		$(document.getElementById("renda_variavel__instancias")).empty().append(html);
 	}
 	/*
 		Reconstrói a seção de Dashboard estatistico ou a seção de lista de operações do arcabouço selecionado.
@@ -586,7 +601,9 @@ let Renda_variavel = (function(){
 			$(document.getElementById("renda_variavel__section")).empty().append(html);
 		}
 	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Lista Arcabouços --------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Reseta o formulário 'arcaboucos_modal_form'.
 	*/
@@ -665,7 +682,9 @@ let Renda_variavel = (function(){
 			table.DataTable(_arcabouco__table_DT);
 		});
 	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------------- Lista Ops ------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Retorna o html da lista de operacoes. (Head ou Body)
 	*/
@@ -717,7 +736,9 @@ let Renda_variavel = (function(){
 		}
 		return html;
 	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Dashboard Ops ---------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Adiciona ou altera 'filters' passados no localStorage do arcabouço selecionado.
 	*/
@@ -956,7 +977,9 @@ let Renda_variavel = (function(){
 			html += dashboardOps__Table_Stats__byCenario__newLine("Total", stats, section);
 		return html;
 	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Section Cenarios --------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Faz a reordenacao das linhas da tabela com base nas prioridades.
 	*/
@@ -1214,7 +1237,9 @@ let Renda_variavel = (function(){
 		}
 		return data;
 	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------- Section Operações Add ------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Constroi o modal de Cadastro de Operações.
 	*/
@@ -1372,9 +1397,13 @@ let Renda_variavel = (function(){
 		tr_data.tr.find("input[name='alvo']").val(novo_alvo);
 		tr_data.tr.find("input[name='stop']").val(novo_stop);
 	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------- Section Arcabouço --------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Lista Arcabouços --------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Marca os inputs que forem alterados.
 	*/
@@ -1477,7 +1506,9 @@ let Renda_variavel = (function(){
 			});
 		}
 	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------------- Lista Ops ------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Processa o filtro na tabela 'lista_ops__table'.
 	*/
@@ -1563,7 +1594,35 @@ let Renda_variavel = (function(){
 			});
 		}
 	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Dashboard Ops ----------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Processa um clique nas instancias de arcabouço.
+			- Clique normal: Muda a instancia selecionada.
+			- Clique + Ctrl: Remove a instancia da lista.
+	*/
+	$(document.getElementById("renda_variavel__instancias")).on("click", "span.badge", function (e){
+		if (e.ctrlKey)
+			ctrl__instancias.remove(this.getAttribute("instancia"));
+		else{
+			if (ctrl__instancias.getSelected("instancia") !== this.getAttribute("instancia")){
+				ctrl__instancias.setSelected(this.getAttribute("instancia"));
+				Global.connect({
+					data: {module: "renda_variavel", action: "get_arcabouco_data", params: {id_arcabouco: ctrl__instancias.getSelected("id")}},
+					success: function (result){
+						if (result.status){
+							updateCenarios_Arcabouco.create(result.data["cenarios"]);
+							updateOperacoes_Arcabouco(result.data["operacoes"]);
+							rebuildArcaboucoSection();
+						}
+						else
+							Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+					}
+				});
+			}
+		}
+	});
 	/*
 		Processa a mudança em 'filters' do DatePicker.
 	*/
@@ -1632,7 +1691,7 @@ let Renda_variavel = (function(){
 		div_holder.find("button.dropdown-toggle").html(`${placeholder[select_name]}`);
 	});
 	/*
-		Processa no select de observações e premissasa mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
+		Processa no select de observações e premissas, mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__filter div.iSelectKami[name] ul li select.iSelectKami", function (){
 		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
@@ -1657,11 +1716,12 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__simulate input[name]", function (){
 		dashboard__simulations_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
-	});
-	$(document.getElementById("renda_variavel__section")).on("click", "#dashboard_ops__refresh", function (){
+	}).on("click", "#dashboard_ops__refresh", function (){
 		rebuildArcaboucoSection();
 	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Section Cenarios --------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Processa a adição de um novo Cenário.
 	*/
@@ -1910,7 +1970,9 @@ let Renda_variavel = (function(){
 		});
 		return false;
 	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------- Section Operações Add ------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	$(document.getElementById("operacoes_modal")).on("hidden.bs.modal", function (){
 		rebuildArcaboucoSection();
 	});
@@ -2118,7 +2180,9 @@ let Renda_variavel = (function(){
 			});
 		}
 	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Comanda cliques no menu de renda variavel.
 	*/
@@ -2134,12 +2198,16 @@ let Renda_variavel = (function(){
 			rebuildArcaboucoSection();
 		}
 	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	Global.connect({
 		data: {module: "renda_variavel", action: "get_arcabouco_data"},
 		success: function (result){
 			if (result.status){
 				updateUsuarios(result.data["usuarios"]);
+				updateAtivos(result.data["ativos"]);
+				updateArcaboucos.create(result.data["arcaboucos"]);
 				//Seleciona o primeiro arcabouço na ordem que veio
 				if (result.data["arcaboucos"].length){
 					ctrl__instancias.add({
@@ -2150,10 +2218,8 @@ let Renda_variavel = (function(){
 						selected: true
 					});
 				}
-				updateArcaboucos.create(result.data["arcaboucos"]);
-				updateOperacoes_Arcabouco(result.data["operacoes"]);
 				updateCenarios_Arcabouco.create(result.data["cenarios"]);
-				updateAtivos(result.data["ativos"]);
+				updateOperacoes_Arcabouco(result.data["operacoes"]);
 				buildArcaboucosModal('build');
 				rebuildArcaboucoSection();
 			}
