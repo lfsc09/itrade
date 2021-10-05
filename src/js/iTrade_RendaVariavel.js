@@ -227,13 +227,104 @@ let Renda_variavel = (function(){
 		Controla a lista de instancias de arcabouço selecionadas.
 	*/
 	let ctrl__instancias = {
-		get: function (id_inst){
-			for (let i in _arcaboucos__instancias){
-				if (_arcaboucos__instancias[i].instancia === id_inst)
-					return _arcaboucos__instancias[i];
+		/*
+			Inicia a lista de instancias:
+				- Inicia do zero se não haver nada no localStorage.
+					- Pega o primeiro arcabouço e joga na lista.
+					- Inicia o arcabouço section com os cenarios e operações desse arcabouço.
+					- Atualiza os (cenarios + operações) no sessionStorage.
+				- Se houver algo no localStorage pega oque tem la.
+					- Verifica quais instancias devem ser removidas, caso seus arcabouços não existam mais.
+						- Se nao sobrou nenhuma na lista, inicia como se fosse do zero.
+							- E Atualiza os (cenarios + operações) no sessionStorage.
+						- Senão inicia com a instancia selecionada.
+							 - Se os dados trazidos são do arcabouço da instancia, inicia com eles.
+							 	- E Atualiza os (cenarios + operações) no sessionStorage.
+							 - Senão verifica os (cenarios + operações) do arcabouço dessa instancia no sessionStorage.
+							 	- Se existe inicia com eles.
+							 	- Senão dai baixa eles, inicia dai do arcabouço section e atualiza os (cenarios + operações) no sessionStorage.
+		*/
+		start: function (allData){
+			_arcaboucos__instancias = Global.browserStorage__Sync.get('instancias', 'localStorage', 'Array');
+			//Se ha instancias no localStorage
+			if (_arcaboucos__instancias.length){
+				//Verifica quais instancias devem ser removidas
+				for (let i in _arcaboucos__instancias){
+					if (!(_arcaboucos__instancias[i].id) in _arcaboucos)
+						_arcaboucos__instancias.splice(i, 1);
+				}
+				//Se há ainda alguma instancia
+				if (_arcaboucos__instancias.length){
+					//Verifica se há alguma instancia selecionada depois da remoção, se não há seleciona a primeira
+					let instancia_selected_index = null;
+					for (let i in _arcaboucos__instancias){
+						if (_arcaboucos__instancias[i].selected)
+							instancia_selected_index = i;
+					}
+					if (instancia_selected_index === null){
+						_arcaboucos__instancias[0].selected = true;
+						instancia_selected_index = 0;
+					}
+					rebuildCtrl__instanciasHTML();
+					Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+					//Verifica se os dados (cenarios + operacoes) são do arcabouço da instancia selecionada
+					if (_arcaboucos__instancias[instancia_selected_index].id === allData["arcaboucos"][0].id){
+						//Inicia o arcabouço section com os cenarios e operações que vieram.
+						updateCenarios_Arcabouco.create(allData["cenarios"]);
+						updateOperacoes_Arcabouco(allData["operacoes"]);
+						//Atualiza os (cenarios + operações) no sessionStorage
+						//...
+						//Constroi a seção (Filtros + Dashboard)
+						rebuildArcaboucoSection();
+					}
+					else{
+						//Busca os (cenario + operações) no sessionStorage
+						//...
+						//Se não existir faz o conect senao pega de la
+						//...
+						Global.connect({
+							data: {module: "renda_variavel", action: "get_arcabouco_data", params: {id_arcabouco: _arcaboucos__instancias[instancia_selected_index].id}},
+							success: function (result){
+								if (result.status){
+									//Inicia o arcabouço section com os cenarios e operações que vieram.
+									updateCenarios_Arcabouco.create(result.data["cenarios"]);
+									updateOperacoes_Arcabouco(result.data["operacoes"]);
+									//Atualiza os (cenarios + operações) no sessionStorage
+									//...
+									//Constroi a seção (Filtros + Dashboard)
+									rebuildArcaboucoSection();
+								}
+								else
+									Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});
+							}
+						});
+					}
+				}
 			}
-			return null;
+			//Se a lista de instancias ta vazia, inicia do Zero
+			if (_arcaboucos__instancias.length === 0){
+				//Pega o primeiro arcabouço e joga na lista.
+				_arcaboucos__instancias.push({
+					instancia: Global._random.str("i"),
+					id: allData["arcaboucos"][0].id,
+					nome: allData["arcaboucos"][0].nome,
+					color: _arcaboucos__instancias_colors[0],
+					selected: true,
+					filters: {},
+					simulations: {}
+				});
+				rebuildCtrl__instanciasHTML();
+				Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+				//Inicia o arcabouço section com os cenarios e operações desse arcabouço.
+				updateCenarios_Arcabouco.create(allData["cenarios"]);
+				updateOperacoes_Arcabouco(allData["operacoes"]);
+				//Atualiza os (cenarios + operações) no sessionStorage
+				//...
+				//Constroi a seção (Filtros + Dashboard)
+				rebuildArcaboucoSection();
+			}
 		},
+		//Retorna a instancia selecionada ou um atributo da instancia selecionada
 		getSelected: function (key = ''){
 			for (let i in _arcaboucos__instancias){
 				if (_arcaboucos__instancias[i].selected){
@@ -244,32 +335,102 @@ let Renda_variavel = (function(){
 			}
 			return null;
 		},
-		size: function (){
-			return _arcaboucos__instancias.length;
-		},
-		setSelected: function (id_inst, refresh = true){
+		//Muda o estado de uma instancia para selecionado
+		setSelected: function (id_inst){
 			for (let i in _arcaboucos__instancias)
 				_arcaboucos__instancias[i].selected = (_arcaboucos__instancias[i].instancia === id_inst);
-			if (refresh)
-				rebuildCtrl__instanciasHTML();
+			rebuildCtrl__instanciasHTML();
+			Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
 		},
-		add: function (inst, refresh = true){
-			if (_arcaboucos__instancias.length !== 0 && _arcaboucos__instancias.length === _arcaboucos__instancias_colors.length)
+		//Adiciona uma nova instancia na lista
+		add: function (inst){
+			//Não cria mais depois do limite especificado
+			if ((_arcaboucos__instancias.length !== 0 && _arcaboucos__instancias.length === _arcaboucos__instancias_colors.length) || !("id" in inst))
 				return true;
-			_arcaboucos__instancias.push(inst);
-			if (refresh)
-				rebuildCtrl__instanciasHTML();
+			//Nova instancia com os dados passados
+			let new_inst = {
+				instancia: Global._random.str("i"),
+				id: inst.id,
+				nome: inst.nome || '----',
+				color: _arcaboucos__instancias_colors[_arcaboucos__instancias.length],
+				selected: inst.selected || false,
+				filters: {},
+				simulations: {}
+			}
+			//Adiciona na lista em memória
+			_arcaboucos__instancias.push(new_inst);
+			//Reconstroi o HTML
+			rebuildCtrl__instanciasHTML();
+			Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
 		},
-		remove: function (id_inst, refresh = true){
+		//Atualiza os 'filters' da instancia selecionada
+		updateInstancia_Filters: function (key, value){
+			for (let i in _arcaboucos__instancias){
+				if (_arcaboucos__instancias[i].selected){
+					if (value !== "")
+						_arcaboucos__instancias[i]["filters"][key] = value;
+					else
+						delete _arcaboucos__instancias[i]["filters"][key];
+				}
+			}
+			Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+		},
+		//Atualiza os 'simulations' da instancia selecionada
+		updateInstancia_Simulations: function (key, value){
+			for (let i in _arcaboucos__instancias){
+				if (_arcaboucos__instancias[i].selected){
+					if (value !== "")
+						_arcaboucos__instancias[i]["simulations"][key] = value;
+					else
+						delete _arcaboucos__instancias[i]["simulations"][key];
+					break;
+				}
+			}
+			Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+		},
+		//Atualiza todas as instancias de um arcabouço da lista
+		updateArcabouco_Info: function (id_arcabouco){
+			let was_updated = false;
+			for (let i in _arcaboucos__instancias){
+				if (_arcaboucos__instancias[i].id === id_arcabouco){
+					_arcaboucos__instancias[i].nome = _arcaboucos[id_arcabouco].nome;
+					was_updated = true;
+				}
+			}
+			if (was_updated){
+				rebuildCtrl__instanciasHTML();
+				Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+			}
+		},
+		//Remove uma instancia espeficica da lista
+		remove: function (id_inst){
 			for (let i in _arcaboucos__instancias){
 				if (_arcaboucos__instancias[i].instancia === id_inst){
+					//Não remover instancias selecionadas
 					if (_arcaboucos__instancias[i].selected)
 						return true;
 					_arcaboucos__instancias.splice(i, 1);
 				}
 			}
-			if (refresh)
+			rebuildCtrl__instanciasHTML();
+			Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+		},
+		//Remove todas as instancias de um arcabouço da lista (Seleciona a próxima 1° da lista)
+		removeAll_by_idArcabouco: function (id_arcabouco){
+			let was_removed = false;
+			for (let i in _arcaboucos__instancias){
+				if (_arcaboucos__instancias[i].id === id_arcabouco){
+					_arcaboucos__instancias.splice(i, 1);
+					was_removed = true;
+				}
+			}
+			if (was_removed){
+				//Seleciona a nova primeira da lista se houver
+				if (_arcaboucos__instancias.length)
+					_arcaboucos__instancias[0].selected = true;
 				rebuildCtrl__instanciasHTML();
+				Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+			}
 		}
 	}
 	/*
@@ -296,10 +457,13 @@ let Renda_variavel = (function(){
 			//Atualiza o objeto
 			data["usuarios"].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
 			_arcaboucos[data.id] = data;
+			ctrl__instancias.updateArcabouco_Info(data.id);
 		},
 		remove: function (id){
 			//Atualiza o objeto
 			delete _arcaboucos[id];
+			//Atualiza na lista de instancias
+			ctrl__instancias.removeAll_by_idArcabouco(id);
 		}
 	}
 	/*
@@ -379,8 +543,8 @@ let Renda_variavel = (function(){
 				});
 			}
 			else if (_selected_arcabouco_section === 'dashboard_ops'){
-				let dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
-					dashboard_simulations = dashboard__simulations_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
+				let dashboard_filters = ctrl__instancias.getSelected('filters'),
+					dashboard_simulations = ctrl__instancias.getSelected('simulations'),
 					dashboard_data = RV_Statistics.generate(_operacoes_arcabouco, dashboard_filters, dashboard_simulations);
 				console.log(dashboard_data);
 				html += `<div class="row">`+
@@ -512,7 +676,7 @@ let Renda_variavel = (function(){
 					});
 					filters.find("div[name='hora']")[0].noUiSlider.on("change", function (values, handle, unencoded, isTap, positions){
 						let handle_dic = ["hora_inicial", "hora_final"];
-						dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), handle_dic[handle], moment(parseInt(values[handle])).format("HH:mm"));
+						ctrl__instancias.updateInstancia_Filters(handle_dic[handle], moment(parseInt(values[handle])).format("HH:mm"));
 					});
 					//////////////////////////////////
 					//Filtro do Ativo
@@ -527,7 +691,7 @@ let Renda_variavel = (function(){
 						}).on("loaded.bs.select", function (){
 							filters.find("select[name='ativo']").parent().addClass("form-control");
 						}).on("changed.bs.select", function (){
-							dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "ativo", $(this).val());
+							ctrl__instancias.updateInstancia_Filters("ativo", $(this).val());
 						});
 					});
 					//////////////////////////////////
@@ -548,7 +712,7 @@ let Renda_variavel = (function(){
 						}).on("loaded.bs.select", function (){
 							filters.find("select[name='cenario']").parent().addClass("form-control");
 						}).on("changed.bs.select", function (){
-							let dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
+							let dashboard_filters = ctrl__instancias.getSelected('filters'),
 								localStorage_data = {};
 							$(this).find("option:selected").each(function (i, el){
 								localStorage_data[el.innerText] = {
@@ -557,7 +721,7 @@ let Renda_variavel = (function(){
 									observacoes: ("cenario" in dashboard_filters && el.innerText in dashboard_filters["cenario"]) ? dashboard_filters["cenario"][el.innerText]["observacoes"] : {}
 								}
 							});
-							dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "cenario", localStorage_data);
+							ctrl__instancias.updateInstancia_Filters("cenario", localStorage_data);
 							rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='premissas']"), ctrl__instancias.getSelected('id'));
 							rebuildSelect_PremissasOuObservacoes__content(filters.find("div[name='observacoes']"), ctrl__instancias.getSelected('id'));
 						});
@@ -740,124 +904,10 @@ let Renda_variavel = (function(){
 	/*-------------------------------- Dashboard Ops ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
-		Adiciona ou altera 'filters' passados no localStorage do arcabouço selecionado.
-	*/
-	let dashboard__filters_LS = {
-		/*
-			Retorna os 'filters' de todos os arcabouços.
-		*/
-		getAll: function () {
-			let filters = localStorage.getItem("dashboard_filters");
-			if (filters === null)
-				return {};
-			else
-				return JSON.parse(filters);
-		},
-		/*
-			Retorna os 'filters' de um arcabouço.
-		*/
-		getFromArcabouco: function (id_arcabouco) {
-			let filters = localStorage.getItem("dashboard_filters");
-			if (filters === null)
-				return {};
-			else
-				filters = JSON.parse(filters);
-			if (!(id_arcabouco in filters))
-				return {};
-			return filters[id_arcabouco];
-		},
-		/*
-			Cadastra ou atualiza 'filters' de um arcabouço.
-		*/
-		update: function (id_arcabouco, key, value) {
-			let filters = localStorage.getItem("dashboard_filters");
-			//Nao existe nada relacionado a 'filters' no localStorage
-			if (filters === null)
-				filters = {};
-			//Se existe pega e processa
-			else
-				filters = JSON.parse(filters);
-			if (value !== ""){
-				//Se o arcabouco nao tem nenhum filtro ainda iniciado
-				if (!(id_arcabouco in filters))
-					filters[id_arcabouco] = {};
-				//Adiciona ou altera a chave-valor passada
-				filters[id_arcabouco][key] = value;
-				localStorage.setItem("dashboard_filters", JSON.stringify(filters));
-			}
-			//Valores vazios sao removidos
-			else{
-				if (id_arcabouco in filters){
-					if (key in filters[id_arcabouco]){
-						delete filters[id_arcabouco][key];
-						localStorage.setItem("dashboard_filters", JSON.stringify(filters));
-					}
-				}
-			}
-		}
-	}
-	/*
-		Adiciona ou altera 'simulations' passados no localStorage do arcabouço selecionado.
-	*/
-	let dashboard__simulations_LS = {
-		/*
-			Retorna os 'simulations' de todos os arcabouços.
-		*/
-		getAll: function () {
-			let simulations = localStorage.getItem("dashboard_simulations");
-			if (simulations === null)
-				return {};
-			else
-				return JSON.parse(simulations);
-		},
-		/*
-			Retorna os 'simulations' de um arcabouço.
-		*/
-		getFromArcabouco: function (id_arcabouco) {
-			let simulations = localStorage.getItem("dashboard_simulations");
-			if (simulations === null)
-				return {};
-			else
-				simulations = JSON.parse(simulations);
-			if (!(id_arcabouco in simulations))
-				return {};
-			return simulations[id_arcabouco];
-		},
-		/*
-			Cadastra ou atualiza 'simulations' de um arcabouço.
-		*/
-		update: function (id_arcabouco, key, value) {
-			let simulations = localStorage.getItem("dashboard_simulations");
-			//Nao existe nada relacionado a 'simulations' no localStorage
-			if (simulations === null)
-				simulations = {};
-			//Se existe pega e processa
-			else
-				simulations = JSON.parse(simulations);
-			if (value !== ""){
-				//Se o arcabouco nao tem nenhum filtro ainda iniciado
-				if (!(id_arcabouco in simulations))
-					simulations[id_arcabouco] = {};
-				//Adiciona ou altera a chave-valor passada
-				simulations[id_arcabouco][key] = value;
-				localStorage.setItem("dashboard_simulations", JSON.stringify(simulations));
-			}
-			//Valores vazios sao removidos
-			else{
-				if (id_arcabouco in simulations){
-					if (key in simulations[id_arcabouco]){
-						delete simulations[id_arcabouco][key];
-						localStorage.setItem("dashboard_simulations", JSON.stringify(simulations));
-					}
-				}
-			}
-		}
-	}
-	/*
 		Reconstroi a lista de 'premissas' ou 'observações', usada nos selects dos mesmos em 'filters'.
 	*/
 	function rebuildSelect_PremissasOuObservacoes__content(el, id_arcabouco){
-		let dashboard_filters = dashboard__filters_LS.getFromArcabouco(id_arcabouco),
+		let dashboard_filters = ctrl__instancias.getSelected('filters'),
 			el_name = el.attr("name"),
 			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
 			qtd_selected = 0,
@@ -1420,15 +1470,8 @@ let Renda_variavel = (function(){
 			return false;
 		if (e.target.nodeName !== "BUTTON" && e.target.nodeName !== "I"){
 			let id_arcabouco = this.getAttribute("arcabouco");
-			if (e.ctrlKey){
-				ctrl__instancias.add({
-					instancia: Global._random.str("i"),
-					id: id_arcabouco,
-					nome: _arcaboucos[id_arcabouco].nome,
-					color: _arcaboucos__instancias_colors[ctrl__instancias.size()],
-					selected: false
-				});
-			}
+			if (e.ctrlKey)
+				ctrl__instancias.add({id: id_arcabouco, nome: _arcaboucos[id_arcabouco].nome});
 		}
 	});
 	/*
@@ -1614,6 +1657,8 @@ let Renda_variavel = (function(){
 						if (result.status){
 							updateCenarios_Arcabouco.create(result.data["cenarios"]);
 							updateOperacoes_Arcabouco(result.data["operacoes"]);
+							//Atualiza os (cenarios + operações) no sessionStorage
+							//...
 							rebuildArcaboucoSection();
 						}
 						else
@@ -1627,14 +1672,14 @@ let Renda_variavel = (function(){
 		Processa a mudança em 'filters' do DatePicker.
 	*/
 	$(document.getElementById("renda_variavel__section")).on("apply.daterangepicker", "#dashboard_ops__filter input[name='data']", function (ev, picker){
-		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "data_inicial", picker.startDate.format("DD/MM/YYYY"));
-		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "data_final", picker.endDate.format("DD/MM/YYYY"));
+		ctrl__instancias.updateInstancia_Filters("data_inicial", picker.startDate.format("DD/MM/YYYY"));
+		ctrl__instancias.updateInstancia_Filters("data_final", picker.endDate.format("DD/MM/YYYY"));
 	});
 	/*
 		Processa a mudança em 'filters' que usam select cru.
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__filter select[name='ignora_erro']", function (){
-		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
+		ctrl__instancias.updateInstancia_Filters(this.name, picker.startDate.format("DD/MM/YYYY"));
 	});
 	/*
 		Processa as seleções de premissas e observações em 'filters'.
@@ -1645,7 +1690,7 @@ let Renda_variavel = (function(){
 			div_holder = me.parent().parent().parent(),
 			select_name = div_holder.attr("name"),
 			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
-			dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id')),
+			dashboard_filters = ctrl__instancias.getSelected('filters'),
 			selected_values = {},
 			qtd_selected = 0;
 		//Se o target não for um clique no input, processa a seleção da observação
@@ -1667,7 +1712,7 @@ let Renda_variavel = (function(){
 				dashboard_filters["cenario"][cenario_nome][select_name][me.attr("value")] = (me.find("input[name='negar_valor']").prop("checked")) ? 1 : 0;	
 		}
 		//Atualiza no localStorage
-		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "cenario", dashboard_filters["cenario"]);
+		ctrl__instancias.updateInstancia_Filters("cenario", dashboard_filters["cenario"]);
 		//Atualiza o placeholder
 		qtd_selected = div_holder.find("ul button.dropdown-item[selected]").length;
 		div_holder.find("button.dropdown-toggle").html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[select_name]}`)));
@@ -1679,14 +1724,14 @@ let Renda_variavel = (function(){
 		let div_holder = $(this).parent().parent().parent().parent(),
 			select_name = div_holder.attr("name"),
 			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
-			dashboard_filters = dashboard__filters_LS.getFromArcabouco(ctrl__instancias.getSelected('id'));
+			dashboard_filters = ctrl__instancias.getSelected('filters');
 		div_holder.find("ul button.dropdown-item[selected]").each(function (i, el){
 			el.removeAttribute("selected");
 			el.querySelector("input[name='negar_valor']").checked = false;
 		});
 		for (cenario_nome in dashboard_filters["cenario"])
 			dashboard_filters["cenario"][cenario_nome][select_name] = {};
-		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), "cenario", dashboard_filters["cenario"]);
+		ctrl__instancias.updateInstancia_Filters("cenario", dashboard_filters["cenario"]);
 		//Atualiza o placeholder
 		div_holder.find("button.dropdown-toggle").html(`${placeholder[select_name]}`);
 	});
@@ -1694,7 +1739,7 @@ let Renda_variavel = (function(){
 		Processa no select de observações e premissas, mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__filter div.iSelectKami[name] ul li select.iSelectKami", function (){
-		dashboard__filters_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
+		ctrl__instancias.updateInstancia_Filters(this.name, $(this).val());
 	});
 	/*
 		Processa a mudança em 'simulate' que usam select cru.
@@ -1704,18 +1749,18 @@ let Renda_variavel = (function(){
 		if (this.name === "tipo_cts"){
 			if (value === "1" || value === "3"){
 				$(document.getElementById("dashboard_ops__simulate")).find("input[name='cts']").val("").prop("disabled", true);
-				dashboard__simulations_LS.update(ctrl__instancias.getSelected('id'), "cts", "");
+				ctrl__instancias.updateInstancia_Simulations("cts", "");
 			}
 			else
 				$(document.getElementById("dashboard_ops__simulate")).find("input[name='cts']").prop("disabled", false);
 		}
-		dashboard__simulations_LS.update(ctrl__instancias.getSelected('id'), this.name, value);
+		ctrl__instancias.updateInstancia_Simulations(this.name, value);
 	});
 	/*
 		Processa a mudança em 'simulate' que usam input cru.
 	*/
 	$(document.getElementById("renda_variavel__section")).on("change", "#dashboard_ops__simulate input[name]", function (){
-		dashboard__simulations_LS.update(ctrl__instancias.getSelected('id'), this.name, $(this).val());
+		ctrl__instancias.updateInstancia_Simulations(this.name, $(this).val());
 	}).on("click", "#dashboard_ops__refresh", function (){
 		rebuildArcaboucoSection();
 	});
@@ -2205,23 +2250,14 @@ let Renda_variavel = (function(){
 		data: {module: "renda_variavel", action: "get_arcabouco_data"},
 		success: function (result){
 			if (result.status){
+				//Constroi a lista de Usuarios, Ativos e Arcabouços
 				updateUsuarios(result.data["usuarios"]);
 				updateAtivos(result.data["ativos"]);
 				updateArcaboucos.create(result.data["arcaboucos"]);
-				//Seleciona o primeiro arcabouço na ordem que veio
-				if (result.data["arcaboucos"].length){
-					ctrl__instancias.add({
-						instancia: Global._random.str("i"),
-						id: result.data["arcaboucos"][0].id,
-						nome: result.data["arcaboucos"][0].nome,
-						color: _arcaboucos__instancias_colors[ctrl__instancias.size()],
-						selected: true
-					});
-				}
-				updateCenarios_Arcabouco.create(result.data["cenarios"]);
-				updateOperacoes_Arcabouco(result.data["operacoes"]);
+				//Constroi o modal de arcabouços
 				buildArcaboucosModal('build');
-				rebuildArcaboucoSection();
+				//Inicia a lista de instancias (Com uma já salva ou uma nova) e termina de construir o arcabouço Section
+				ctrl__instancias.start(result.data);
 			}
 			else
 				Global.toast.create({location: document.getElementById("master_toasts"), title: "Erro", time: "Now", body: result.error, delay: 4000});

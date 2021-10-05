@@ -29,7 +29,8 @@
 let Global = (function(){
 	/*------------------------------------ VARS --------------------------------------*/
 	let _loading_div = $(document.getElementById("loading_div")),
-		_whiteListPopOvers = bootstrap.Tooltip.Default.allowList;
+		_whiteListPopOvers = bootstrap.Tooltip.Default.allowList,
+		_connectionsOn = 0;
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	let hasClass = function (target, className) {
 		return new RegExp('(\\s|^)'+className+'(\\s|$)').test(target.className);
@@ -67,10 +68,34 @@ let Global = (function(){
 		$.getScript(location.href+filename);
 	}
 	/*
+		Sincroniza dados com o localStorage ou sessionStorage.
+	*/
+	let browserStorage__Sync = {
+		set: function (mKey, mData, method){
+			if (method === 'localStorage')
+				localStorage.setItem(mKey, JSON.stringify(mData));
+			else if (method === 'sessionStorage')
+				sessionStorage.setItem(mKey, JSON.stringify(mData));
+		},
+		get: function (mKey, method, parsedType = 'Object'){
+			let data = null,
+				parsed_data = ((parsedType === 'Array') ? [] : {});
+			if (method === 'localStorage')
+				data = localStorage.getItem(mKey);
+			else if (method === 'sessionStorage')
+				data = sessionStorage.getItem(mKey);
+			if (data !== null)
+				parsed_data = JSON.parse(data);
+			return parsed_data;
+		}
+	}
+	/*
 		Gera conexoes com a interface de webservices.
 	*/
 	let connect = function (options){
-		_loading_div.show();
+		if (_connectionsOn === 0)
+			_loading_div.show();
+		_connectionsOn++;
 		$.ajax({
 			type: "POST",
 			url: "webservices/interface.php",
@@ -78,7 +103,9 @@ let Global = (function(){
 			dataType: "json",
 			success: function (result){
 				options.success(result);
-				_loading_div.hide();
+				_connectionsOn--;
+				if (_connectionsOn === 0)
+					_loading_div.hide();
 			},
 			error: function (jqXHR, textStatus, errorThrown){
 				console.log(`${textStatus}: ${errorThrown}`);
@@ -290,6 +317,7 @@ let Global = (function(){
 		convertDate: convertDate,
 		_random: _random,
 		request: request,
+		browserStorage__Sync: browserStorage__Sync,
 		connect: connect,
 		toast: toast,
 		insertModal: insertModal,
