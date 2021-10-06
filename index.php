@@ -298,7 +298,13 @@
 						<div class="modal-body">
 							<div class="container-fluid">
 								<div class="row"><div class="col"><div id="cenarios_modal_toasts"></div></div></div>
-								<div class="row justify-content-end">
+								<div class="row justify-content-between">
+									<div class="col-5">
+										<div class="input-group">
+											<button type="button" class="btn btn-sm btn-primary" id="cenarios_modal_espelhar"><i class="fas fa-clone me-2"></i>Espelhar de</button>
+											<select class="form-select form-select-sm" id="cenarios_modal_espelhar__arcaboucos"></select>
+										</div>
+									</div>
 									<div class="col-5">
 										<div class="input-group">
 											<select class="form-select form-select-sm" id="cenarios_modal_copiar"></select>
@@ -311,6 +317,7 @@
 								</div>
 							</div>
 						</div>
+						<div class="modal-footer"></div>
 					</div>
 				</div>
 			</div>

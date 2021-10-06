@@ -171,37 +171,23 @@ let RV_Statistics = (function(){
 		return new_list;
 	}
 	/*
-		Gera Saida, Stop e Alvo, baseados na simulação de RR passada.
-			- "1": Gera usando os valores originais da operação.
-	*/
-	let getData_byRR = function (op, simulate){
-		if (simulate.rr === "1"){
-			return {
-				saida: op.saida,
-				stop: op.stop,
-				alvo: op.alvo
-			}
-		}
-	}
-	/*
 		Calcula em 'Pontos', 'Brl' e 'R' o Resultado, Alvo, Stop, MEN e MEP de uma operação, dada as infos de 'simulate'.
 	*/
 	let calculate_op_result = function (op, simulate){
-		let simuData = getData_byRR(op, simulate);
 		//Se for uma compra
 		if (op.op == 1){
 			return {
 				result: {
-					brl: (simuData.saida - op.entrada) * op.ativo_valor_tick * op.cts,
-					pts: simuData.saida - op.entrada
+					brl: (op.saida - op.entrada) * op.ativo_valor_tick * op.cts,
+					pts: op.saida - op.entrada
 				},
 				stop: {
-					brl: (op.entrada - simuData.stop) * op.ativo_valor_tick * op.cts,
-					pts: op.entrada - simuData.stop
+					brl: (op.entrada - op.stop) * op.ativo_valor_tick * op.cts,
+					pts: op.entrada - op.stop
 				},
 				alvo: {
-					brl: (simuData.alvo - op.entrada) * op.ativo_valor_tick * op.cts,
-					pts: simuData.alvo - op.entrada
+					brl: (op.alvo - op.entrada) * op.ativo_valor_tick * op.cts,
+					pts: op.alvo - op.entrada
 				},
 				men: {
 					brl: (op.entrada - op.men) * op.ativo_valor_tick * op.cts,
@@ -217,16 +203,16 @@ let RV_Statistics = (function(){
 		else if (op.op == 2){
 			return {
 				result: {
-					brl: (op.entrada - simuData.saida) * op.ativo_valor_tick * op.cts,
-					pts: op.entrada - simuData.saida
+					brl: (op.entrada - op.saida) * op.ativo_valor_tick * op.cts,
+					pts: op.entrada - op.saida
 				},
 				stop: {
-					brl: (simuData.stop - op.entrada) * op.ativo_valor_tick * op.cts,
-					pts: simuData.stop - op.entrada
+					brl: (op.stop - op.entrada) * op.ativo_valor_tick * op.cts,
+					pts: op.stop - op.entrada
 				},
 				alvo: {
-					brl: (op.entrada - simuData.alvo) * op.ativo_valor_tick * op.cts,
-					pts: op.entrada - simuData.alvo
+					brl: (op.entrada - op.alvo) * op.ativo_valor_tick * op.cts,
+					pts: op.entrada - op.alvo
 				},
 				men: {
 					brl: (op.men - op.entrada) * op.ativo_valor_tick * op.cts,
@@ -270,8 +256,6 @@ let RV_Statistics = (function(){
 		};
 		_simulate = {
 			periodo_calc: ("periodo_calc" in simulate) ? simulate.periodo_calc : "1",
-			rr: ("rr" in simulate) ? simulate.rr : "1",
-			vol: ("vol" in simulate) ? simulate.vol : null,
 			tipo_cts: ("tipo_cts" in simulate) ? simulate.tipo_cts : "1",
 			cts: ("cts" in simulate) ? simulate.cts : null,
 			usa_custo: ("usa_custo" in simulate) ? simulate.usa_custo == 1 : true,

@@ -159,7 +159,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*---------------------------------- Dashboard Ops -----------------------------------*/
 #dashboard_ops__filter .slider-styled.filter-hora {width: 100px; margin-top: 11px}
 #dashboard_ops__filter input[name='data'] {width: 175px}
-#dashboard_ops__filter div[name='ativo'] {width: 160px}
+#dashboard_ops__filter div[name='ativo'] {width: 190px}
 #dashboard_ops__filter div[name='cenario'] {width: 190px}
 #dashboard_ops__filter div[name='premissas'] {width: 190px; font-size: 13px}
 #dashboard_ops__filter div[name='observacoes'] {width: 190px}
