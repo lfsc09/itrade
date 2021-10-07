@@ -1,5 +1,5 @@
 <?php
-	require_once "db_config.php";
+	require_once 'db_config.php';
 	class Login {
 		/*
 			Retorna a lista de ativos do usuario.
@@ -11,7 +11,7 @@
 			if ($mysqli->connect_errno)
 				return [];
 			$stmt = $mysqli->prepare("SELECT u.* FROM usuario u WHERE u.usuario=? AND u.senha=?");
-		 	$stmt->bind_param("ss", $user, $pass);
+		 	$stmt->bind_param('ss', $user, $pass);
 		 	$stmt->execute();
 		 	$result_raw = $stmt->get_result();
 		 	$result = $result_raw->fetch_assoc();

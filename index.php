@@ -95,7 +95,7 @@
 							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
 								<button class="btn btn-sm btn-primary me-4" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
-								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-plus me-2"></i>Adicionar Operações</button>
+								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Adicionar Operações</button>
 								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="dashboard_ops"><i class="fas fa-chart-line me-2"></i>Dashboard</button>
 								<button class="btn btn-sm btn-outline-primary" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
 							</div>
@@ -238,7 +238,7 @@
 						</div>
 						<div class="modal-body">
 							<div class="container-fluid">
-								<div class="row"><div class="col p-0"><div id="arcaboucos_modal_toasts"></div></div></div>
+								<div class="row"><div class="col"><div id="arcaboucos_modal_toasts"></div></div></div>
 								<div class="row">
 									<div class="col">
 										<div class="card rounded-3 shadow-sm">

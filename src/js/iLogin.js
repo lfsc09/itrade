@@ -6,10 +6,10 @@ let iLogin = (function(){
 	/*
 		Processa a troca de abas no Menu.
 	*/
-	$(document.getElementById("signin")).click(function (){
-		let form = $("form");
+	$(document.getElementById('signin')).click(function (){
+		let form = $('form');
 		 if (form[0].checkValidity()){
-        	$.post("webservices/login.php", {user: form.find("input[name='username']").val(), pass: Md5.md5(form.find("input[name='password']").val())}, function(result){
+        	$.post('webservices/login.php', {user: form.find('input[name="username"]').val(), pass: Md5.md5(form.find('input[name="password"]').val())}, function(result){
     			window.location.href = window.location.href;
         	});
         }

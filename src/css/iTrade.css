@@ -29,7 +29,7 @@
 div.iSelectKami ul li button:active {color: #1e2125; background-color: #e9ecef}
 div.iSelectKami ul li button:focus {color: #212529; background-color: transparent;}
 /*----------------------------------- SelectPicker -----------------------------------*/
-.bs-searchbox input[type="search"] {
+.bs-searchbox input[type='search'] {
 	min-height: calc(1.5em + (.5rem + 2px));
 	padding: .25rem .5rem;
 	font-size: .875rem;
@@ -134,6 +134,9 @@ div.stage {
 .pagination-sm>li:last-child>a,.pagination-sm>li:last-child>span{border-bottom-right-radius:0;border-top-right-radius:0}
 div.dataTables_paginate.paging_input ul.pagination div.input{float: left;padding: 3px 8px;}
 div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_input{width: 70px;display: inline}
+.table td.divider {border-left: 1px solid #dee2e6}
+.table thead th.subheader {border-bottom: 1px solid #dee2e6 !important; font-size: 11px}
+.table thead th.mainheader {border-bottom: none !important}
 /*----------------------------------- INSERT MODAL -----------------------------------*/
 #insert_modal_form, #insert_modal_form input {font-size: .9em}
 /*----------------------------------- MENU BOTTOM ------------------------------------*/
