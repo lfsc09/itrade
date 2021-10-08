@@ -11,7 +11,14 @@
 			$mysqli->set_charset('utf8');
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
-			$result_raw = $mysqli->query("SELECT rva.*,DATE(rva.data_criacao) AS data_criacao,DATE(rva.data_atualizacao) AS data_atualizacao,crvo.qtd_ops FROM rv__arcabouco rva INNER JOIN rv__arcabouco__usuario rva_u ON rva.id=rva_u.id_arcabouco LEFT JOIN (SELECT COUNT(_rvo.id) AS qtd_ops,_rvo.id_arcabouco FROM rv__operacoes _rvo GROUP BY _rvo.id_arcabouco) crvo ON rva.id=crvo.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' ORDER BY rva.data_atualizacao DESC, rva.id DESC");
+			if (array_key_exists('id', $params)){
+				$stmt = $mysqli->prepare("SELECT rva.*,DATE(rva.data_criacao) AS data_criacao,crvo.qtd_ops FROM rv__arcabouco rva INNER JOIN rv__arcabouco__usuario rva_u ON rva.id=rva_u.id_arcabouco LEFT JOIN (SELECT COUNT(_rvo.id) AS qtd_ops,_rvo.id_arcabouco FROM rv__operacoes _rvo GROUP BY _rvo.id_arcabouco) crvo ON rva.id=crvo.id_arcabouco WHERE rva.id=? AND rva_u.id_usuario='{$id_usuario}'");
+			 	$stmt->bind_param('i', $params['id']);
+			 	$stmt->execute();
+		 		$result_raw = $stmt->get_result();
+			}
+			else
+				$result_raw = $mysqli->query("SELECT rva.*,DATE(rva.data_criacao) AS data_criacao,crvo.qtd_ops FROM rv__arcabouco rva INNER JOIN rv__arcabouco__usuario rva_u ON rva.id=rva_u.id_arcabouco LEFT JOIN (SELECT COUNT(_rvo.id) AS qtd_ops,_rvo.id_arcabouco FROM rv__operacoes _rvo GROUP BY _rvo.id_arcabouco) crvo ON rva.id=crvo.id_arcabouco WHERE rva_u.id_usuario='{$id_usuario}' ORDER BY rva.data_atualizacao DESC, rva.id DESC");
 			while($row = $result_raw->fetch_assoc()){
 				$result_usuarios = $mysqli->query("SELECT u.id,u.usuario,u.nome FROM rv__arcabouco__usuario rva_u INNER JOIN usuario u ON rva_u.id_usuario=u.id WHERE rva_u.id_arcabouco='{$row['id']}'");
 				$usuarios_arcabouco = [];
@@ -90,7 +97,7 @@
 				else
 					$error = 'Erro ao cadastrar este Arcabouço.';
 		 		$mysqli->close();
-	 			return ['status' => 0, 'error' => $exception->getMessage()];
+	 			return ['status' => 0, 'error' => $error];
 			}
 		}
 		/*
@@ -102,24 +109,34 @@
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
 			$mysqli->begin_transaction();
 			try{
-				$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
-				//Prepara apenas os dados a serem atualizados
-				foreach ($params as $data_name => $new_data_value){
-					//Pula o ID do Arcabouco
-					if ($data_name === 'id')
-						continue;
-					$update_data['wildcards'] .= (($update_data['wildcards'] !== '') ? ',' : '') . "{$data_name}=?";
-					$update_data['bind'] .= ($data_name === 'nome') ? 's' : 'd';
-					$update_data['values'][] = $new_data_value;
-				}
-				$update_data['bind'] .= 'i';
-				$update_data['values'][] = $id_arcabouco;
-				$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=NOW(),{$update_data['wildcards']} WHERE id=? AND id_usuario_criador='{$id_usuario}'");
-				$stmt->bind_param($update_data['bind'], ...$update_data['values']);
-			 	if ($stmt->execute()){
-			 		//Adiciona os usuarios com acesso ao arcabouço (Próprio usuario incluso)
+				//Checa para ver se o usuario tem acesso ao arcabouço
+				$stmt = $mysqli->prepare("SELECT rvau.id_arcabouco FROM rv__arcabouco__usuario rvau WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
+			 	$stmt->bind_param('i', $id_arcabouco);
+			 	$stmt->execute();
+		 		$result_raw = $stmt->get_result();
+		 		if ($result_raw->num_rows > 0){
+					$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
+					//Prepara apenas os dados a serem atualizados
+					foreach ($params as $data_name => $new_data_value){
+						//Pula o ID do Arcabouco e lista de Usuarios com acesso
+						if ($data_name === 'id' || $data_name === 'usuarios')
+							continue;
+						$update_data['wildcards'] .= ",{$data_name}=?";
+						$update_data['bind'] .= ($data_name === 'nome') ? 's' : 'd';
+						$update_data['values'][] = $new_data_value;
+					}
+					$update_data['bind'] .= 'i';
+					$update_data['values'][] = $id_arcabouco;
+					$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR){$update_data['wildcards']} WHERE id=? AND id_usuario_criador='{$id_usuario}'");
+					$stmt->bind_param($update_data['bind'], ...$update_data['values']);
+					$stmt->execute();
+					//Remove todos os usuarios com acesso ao arcabouço
+					$stmt = $mysqli->prepare("DELETE FROM rv__arcabouco__usuario WHERE id_arcabouco=?");
+			 		$stmt->bind_param('i', $id_arcabouco);
+					$stmt->execute();
 					//Coloca por padrão o id do usuario criador
 					$ids_usuarios = [$id_usuario];
+			 		//Atualiza os usuarios com acesso ao arcabouço (Próprio usuario incluso)
 					if (array_key_exists('usuarios', $params)){
 						//Busca os ids dos usuarios pelo login
 						$select_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
@@ -142,19 +159,59 @@
 	    			}));
 					//Me adiciona como usuario do arcabouço
 					$mysqli->query("INSERT INTO rv__arcabouco__usuario (id_arcabouco,id_usuario) VALUES {$insert_data}");
-			 		$mysqli->close();
-			 		return ['status' => 1];
 			 	}
-			}
-			
-		 	else{
-		 		if ($mysqli->errno == 1062){
-		 			$mysqli->close();
-		 			return ['status' => 0, 'error' => 'Esse Arcabouço já existe.'];
-		 		}
+				$mysqli->commit();
 		 		$mysqli->close();
-		 		return ['status' => 0, 'error' => 'Erro ao atualizar esse Arcabouço.'];
-		 	}
+		 		return ['status' => 1, 'data' => ['id' => $id_arcabouco]];
+			}
+			catch (mysqli_sql_exception $exception){
+				$mysqli->rollback();
+				if ($exception->getCode() === 1062)
+					$error = 'Um arcabouço com esse nome já existe.';
+				else
+					$error = 'Erro ao atualizar este Arcabouço.';
+		 		$mysqli->close();
+	 			return ['status' => 0, 'error' => $error];
+			}
+		}
+		/*
+			Remove um arcabouço, seus cenarários e operações cadastradas.
+		*/
+		public static function remove_arcaboucos($params = [], $id_usuario = ''){
+			mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			if ($mysqli->connect_errno)
+				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			$mysqli->begin_transaction();
+			try {
+				//Checa para ver se o usuario tem acesso ao arcabouço
+				$stmt = $mysqli->prepare("SELECT rvau.id_arcabouco FROM rv__arcabouco__usuario rvau WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
+			 	$stmt->bind_param('i', $params['id']);
+			 	$stmt->execute();
+		 		$result_raw = $stmt->get_result();
+		 		if ($result_raw->num_rows > 0){
+					//Remove o arcabouço
+					$stmt = $mysqli->prepare("DELETE rva,rvau FROM rv__arcabouco rva LEFT JOIN rv__arcabouco__usuario rvau ON rva.id=rvau.id_arcabouco WHERE rva.id=?");
+			 		$stmt->bind_param('i', $params['id']);
+					$stmt->execute();
+					//Remove os cenarios
+					$stmt = $mysqli->prepare("DELETE rvc,rvcp,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_premissa rvcp ON rvc.id=rvcp.id_cenario LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id_arcabouco=?");
+			 		$stmt->bind_param('i', $params['id']);
+					$stmt->execute();
+					//Remove as operações
+					$stmt = $mysqli->prepare("DELETE FROM rv__operacoes WHERE id_arcabouco=?");
+			 		$stmt->bind_param('i', $params['id']);
+					$stmt->execute();
+				}
+				$mysqli->commit();
+		 		$mysqli->close();
+		 		return ['status' => 1];
+			}
+			catch (mysqli_sql_exception $exception){
+				$mysqli->rollback();
+		 		$mysqli->close();
+	 			return ['status' => 0, 'error' => 'Erro ao remover este arcabouço.'];
+			}
 		}
 		/*------------------------------------------ CENÁRIOS -------------------------------------------*/
 		/*
@@ -407,16 +464,8 @@
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
 			$mysqli->begin_transaction();
 			try {
-				//Remove o cenario
-				$stmt = $mysqli->prepare("DELETE FROM rv__cenario WHERE id=?");
-		 		$stmt->bind_param('i', $params['id']);
-				$stmt->execute();
-				//Remove as premissas
-				$stmt = $mysqli->prepare("DELETE FROM rv__cenario_premissa WHERE id_cenario=?");
-		 		$stmt->bind_param('i', $params['id']);
-				$stmt->execute();
-				//Remove as observacoes
-				$stmt = $mysqli->prepare("DELETE FROM rv__cenario_obs WHERE id_cenario=?");
+				//Remove o cenario, premissas e observações
+				$stmt = $mysqli->prepare("DELETE rvc,rvcp,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_premissa rvcp ON rvc.id=rvcp.id_cenario LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id=?");
 		 		$stmt->bind_param('i', $params['id']);
 				$stmt->execute();
 				$mysqli->commit();
@@ -547,11 +596,15 @@
 				 		else
 				 			$hold_ops[] = $operacao['sequencia'];
 		 			}
-		 		}
-		 		//Insere caso não tenha fechado o bloco
-		 		if ($block_i > 0){
-		 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,erro,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
-					$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
+			 		//Insere caso não tenha fechado o bloco
+			 		if ($block_i > 0){
+			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,erro,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
+						$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
+						$stmt->execute();
+			 		}
+			 		//Atualiza a data de atualização no arcabouço
+			 		$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR) WHERE id=?");
+					$stmt->bind_param('i', $params['id_arcabouco']);
 					$stmt->execute();
 		 		}
 				$mysqli->commit();
@@ -594,6 +647,10 @@
 					$stmt = $mysqli->prepare("UPDATE rv__operacoes JOIN (SELECT @seq := 0) s SET sequencia=@seq:=@seq+1 WHERE id_arcabouco=? ORDER BY id");
 					$stmt->bind_param('i', $params['id_arcabouco']);
 			 		$stmt->execute();
+			 		//Atualiza a data de atualização no arcabouço
+			 		$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR) WHERE id=?");
+					$stmt->bind_param('i', $params['id_arcabouco']);
+					$stmt->execute();
 					$mysqli->commit();
 			 		$mysqli->close();
 		 			return ['status' => 1];

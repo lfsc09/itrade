@@ -34,6 +34,12 @@
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
+				else if ($action === 'remove_ativos'){
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::remove_ativos($params_data, $_SESSION['id']));
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
 				else
 					die(json_encode(['status' => 0, 'error' => 'Action not found']));
 				break;
@@ -52,7 +58,7 @@
 						$status = Ativos::get_ativos(null, $_SESSION['id']);
 						if ($status['status'])
 							$return_data['ativos'] = $status['data'];
-						$status = RendaVariavel::get_arcaboucos(null, $_SESSION['id']);
+						$status = RendaVariavel::get_arcaboucos([], $_SESSION['id']);
 						if ($status['status']){
 							$return_data['arcaboucos'] = $status['data'];
 							if (!empty($return_data['arcaboucos']))
@@ -73,7 +79,7 @@
 					if (!empty($params_data)){
 						$status = RendaVariavel::insert_arcaboucos($params_data, $_SESSION['id']);
 						if ($status['status'])
-							$status = RendaVariavel::get_arcaboucos(null, $_SESSION['id']);
+							$status = RendaVariavel::get_arcaboucos([], $_SESSION['id']);
 						echo json_encode($status);
 					}
 					else
@@ -83,9 +89,15 @@
 					if (!empty($params_data)){
 						$status = RendaVariavel::update_arcaboucos($params_data, $params_data['id'], $_SESSION['id']);
 						if ($status['status'])
-							$status = RendaVariavel::get_arcaboucos(null, $_SESSION['id']);
+							$status = RendaVariavel::get_arcaboucos($status['data'], $_SESSION['id']);
 						echo json_encode($status);
 					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'remove_arcaboucos'){
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::remove_arcaboucos($params_data, $_SESSION['id']));
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
@@ -152,6 +164,8 @@
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
+				else
+					die(json_encode(['status' => 0, 'error' => 'Action not found']));
 				break;
 			/*------------------------------------ LOGOUT -------------------------------------*/
 			case 'login':

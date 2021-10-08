@@ -238,6 +238,24 @@ let RV_Statistics = (function(){
 		return Math.sqrt(variancia);
 	}
 	/*
+		Gera a média móvel simples da lista de entrada 'i_list', para a lista 'mm_list', usando a quantidade de periodos passada.
+	*/
+	let SMA = function (i_list, mm_list, period = 20, empty_value = null){
+		//Irá percorrer a lista olhando blocos de tamanho 'period'
+		for (let index_I=(0 - (period - 1)), index_F=0; index_F<i_list.length; index_I++, index_F++){
+			if (index_I >= 0){
+				let bloco_sum = 0.0;
+				//Calcula a média de cada bloco
+				for (let subIndex_I=index_I; subIndex_I<=index_F; subIndex_I++)
+					bloco_sum += i_list[subIndex_I];
+				mm_list[index_F] = divide(bloco_sum, period);
+			}
+			else
+				mm_list[index_F] = empty_value;
+		}
+		return mm_list;
+	}
+	/*
 		Gera as estatisticas e dados para Gráficos, para toda a seção de Dashboard em Renda Variável.
 		Input:
 			- ops: Lista de operações. (Seguira a ordem da lista passada)
@@ -333,6 +351,21 @@ let RV_Statistics = (function(){
 			//Valor corrente para chegar à ruína de (X%)
 			stats__ruinaAtual: 0.0
 		}
+		//Variaveis de listas para os gráficos
+		let _dashboard_ops__chart_data = {
+			resultados: {
+				labels: [],
+				data: []
+			},
+			evolucao_patrimonial: {
+				labels: [],
+				data: []
+			},
+			evolucao_patrimonial__mm20: {
+				labels: [],
+				data: []
+			}
+		}
 		//Variaveis temporarias usadas em '_dashboard_ops__table_stats'
 		let _temp__table_stats = {
 			dias__unicos: {},
@@ -346,9 +379,7 @@ let RV_Statistics = (function(){
 		let _temp__table_stats__byCenario = {}
 		//Variaveis de listas usadas
 		let _temp_listas = {
-			resultados: [],
-			resultados_R: [],
-			evolucao_patrimonial: []
+			resultados_R: []
 		}
 		let _ops = groupData_byPeriodo(ops, _filters, _simulate);
 		/*----------------------------- Percorre as operações ----------------------------*/
@@ -378,11 +409,14 @@ let RV_Statistics = (function(){
 			//Calcula o lucro corrente após cada operação
 			_temp__table_stats['lucro_corrente']['brl'] += _ops[o].result_liquido['brl'];
 			_temp__table_stats['lucro_corrente']['pts'] += _ops[o].result_liquido['pts'];
-			_temp_listas['resultados'].push(_ops[o].result_liquido['brl']);
+			_dashboard_ops__chart_data['resultados']['labels'].push(parseInt(o) + 1);
+			_dashboard_ops__chart_data['resultados']['data'].push(_ops[o].result_liquido['brl']);
 			//Para o DP
 			if (_simulate['R'] !== null)
 				_temp_listas['resultados_R'].push(divide(_ops[o].result_liquido['brl'], _simulate['R']));
-			_temp_listas['evolucao_patrimonial'].push(_temp__table_stats['lucro_corrente']['brl']);
+			//Para o gráfico de Evolução Patrimonial
+			_dashboard_ops__chart_data['evolucao_patrimonial']['labels'].push(parseInt(o) + 1);
+			_dashboard_ops__chart_data['evolucao_patrimonial']['data'].push(_temp__table_stats['lucro_corrente']['brl']);
 			//////////////////////////////////
 			//Estatisticas por Cenario
 			//////////////////////////////////
@@ -534,10 +568,16 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats__byCenario[cenario]['trades__erro']           = ((!_filters.ignora_erro) ? _dashboard_ops__table_stats__byCenario[cenario]['trades__erro'] : '--');
 			_dashboard_ops__table_stats__byCenario[cenario]['trades__erro_perc']      = ((!_filters.ignora_erro) ? (divide(_dashboard_ops__table_stats__byCenario[cenario]['trades__erro'], _dashboard_ops__table_stats__byCenario[cenario]['trades__total']) * 100) : '--');
 		}
+		//////////////////////////////////
+		//Gráfico de Evolução Patrimonial
+		//////////////////////////////////
+		//Média móvel simples da evolução patrimonial
+		SMA(_dashboard_ops__chart_data['evolucao_patrimonial']['data'], _dashboard_ops__chart_data['evolucao_patrimonial__mm20']['data'], 20);
 		/*------------------------------- Retorno dos Dados ------------------------------*/
 		return {
 			dashboard_ops__table_stats: _dashboard_ops__table_stats,
-			dashboard_ops__table_stats__byCenario: _dashboard_ops__table_stats__byCenario
+			dashboard_ops__table_stats__byCenario: _dashboard_ops__table_stats__byCenario,
+			dashboard_ops__chart_data: _dashboard_ops__chart_data
 		}
 	}
 	/*--------------------------------------------------------------------------------*/

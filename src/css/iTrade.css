@@ -147,8 +147,8 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #arcaboucos_modal_form .form-label {font-size: 12px}
 #table_arcaboucos {font-size: .85em}
 #table_arcaboucos tbody td{vertical-align: middle}
-#table_arcaboucos tbody td[name='data_criacao'] {width: 10%; font-size: 12px}
-#table_arcaboucos tbody td[name='data_atualizacao'] {width: 10%; font-size: 12px}
+#table_arcaboucos tbody td[name='data_criacao'] {width: 10%; font-size: 11px}
+#table_arcaboucos tbody td[name='data_atualizacao'] {width: 10%; font-size: 11px}
 #table_arcaboucos tbody td[name='qtd_ops'] {width: 8%; font-size: 12px}
 #table_arcaboucos tbody td[name='meta'] {width: 10%}
 #table_arcaboucos tbody td[name='meta'] progress {width: 85px}

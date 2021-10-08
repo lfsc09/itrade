@@ -47,6 +47,18 @@ let Global = (function(){
 		}
 		return `${frag_date[2]}-${frag_date[1]}-${frag_date[0]}`;
 	}
+	let convertDatetime = function(date){
+		//Valida a Data
+		if (!(/^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2} ([0-1]\d|2[0-4])\:[0-5]\d\:[0-5]\d$/.test(date)) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])\-(0[1-9]|1\d|2\d|3[01]) ([0-1]\d|2[0-4])\:[0-5]\d\:[0-5]\d$/.test(date)))
+			return ``;
+		let frag_datetime = date.split(' '),
+			frag_date = frag_datetime[0].split('/');
+		if (frag_date.length === 1){
+			frag_date = frag_datetime[0].split('-');
+			return `${frag_date[2]}/${frag_date[1]}/${frag_date[0]} ${frag_datetime[1]}`;
+		}
+		return `${frag_date[2]}-${frag_date[1]}-${frag_date[0]} ${frag_datetime[1]}`;
+	}
 	let _random = {
 		str: function(prefix){
 		    return Math.random().toString(36).replace('0.',prefix || '');
@@ -310,6 +322,7 @@ let Global = (function(){
 		hasClass: hasClass,
 		isObjectEmpty: isObjectEmpty,
 		convertDate: convertDate,
+		convertDatetime: convertDatetime,
 		_random: _random,
 		request: request,
 		browserStorage__Sync: browserStorage__Sync,
