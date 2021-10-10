@@ -82,6 +82,7 @@
 			<script src="src/js/base/daterangepicker.min.js"></script>
 			<script src="src/js/base/noUiSlider.min.js"></script>
 			<script src="src/js/base/chart.min.js"></script>
+			<script src="src/js/base/chart-plugin-annotation.min.js"></script>
 			<!-- DataTables -->
 			<script src="src/js/base/datatables.min.js"></script>
 			<script src="src/js/base/datatables.pagination.min.js"></script>

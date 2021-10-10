@@ -10,6 +10,17 @@ let Renda_variavel = (function(){
 	let	_arcaboucos__instancias = [];
 	let	_arcaboucos__instancias_colors = ['--bs-blue', '--bs-red', '--bs-green', '--bs-orange', '--bs-indigo'];
 	let _arcaboucos__instancias_colors__Charts = ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2'];
+	//Contem a lista atual de cenarios do arcabouço selecionado
+	let _cenarios_arcabouco = {};
+	//Contem a lista atual de ativos cadastrados
+	let	_ativos = [];
+	//Contem a lista atual de operações por arcabouço
+	let	_operacoes_arcabouco = {};
+	//Informa qual seção do Section Arcabouço está sendo mostrado (dashboard_ops|lista_ops)
+	let	_selected_arcabouco_section = 'dashboard_ops';
+	//////////////////////////////////
+	//Arcabouços
+	//////////////////////////////////
 	//Funcoes usadas em '_arcabouco__table_DT'
 	let _arcabouco__table_DT_ext = {
 		meta_render: function (data, type, row){
@@ -32,17 +43,62 @@ let Renda_variavel = (function(){
 		pageLength: 25,
 		pagingType: 'input'
 	}
-	//Informa qual seção do Section Arcabouço está sendo mostrado (dashboard_ops|lista_ops)
-	let	_selected_arcabouco_section = 'dashboard_ops';
+	//////////////////////////////////
+	//Dashboard Ops
+	//////////////////////////////////
 	let _dashboard_ops__charts = {
-		evolucao_patrimonial: null
-	};
-	//Contem a lista atual de cenarios do arcabouço selecionado
-	let _cenarios_arcabouco = {};
-	//Contem a lista atual de ativos cadastrados
-	let	_ativos = [];
-	//Contem a lista atual de operações por arcabouço
-	let	_operacoes_arcabouco = {};
+		evolucao_patrimonial: null,
+		resultados_normalizado: null,
+		resultados_normalizado_ext: {
+			color: function (){
+				return (ctx) => { return (ctx.parsed.y > 0) ? '#198754' : ((ctx.parsed.y < 0) ? '#dc3545' : '#ced4da'); }
+			}
+		},
+		resultados_por_hora: null,
+	}
+	//Funcoes usadas em '_dashboard_ops__table_trades_DT'
+	let _dashboard_ops__table_trades_DT_ext = {
+		trade__custo: function (data, type, row){
+			return (type === 'display') ? $.fn.dataTable.render.number( '', '.', 2, 'R$ ').display(data) : data;
+		},
+		result__R: function (data, type, row){
+			let rendered_num = $.fn.dataTable.render.number( '', '.', 3, '', 'R').display(data),
+				color = ((data !== '--' && data > 0) ? 'text-success' : ((data !== '--' && data < 0) ? 'text-danger' : ''));
+			return (type === 'display') ? ((data !== '--') ? `<span class="${color}">${rendered_num}</span>` : data) : data;
+		},
+		result__brl: function (data, type, row){
+			let rendered_num = $.fn.dataTable.render.number( '', '.', 2, 'R$ ').display(data),
+				color = ((data > 0) ? 'text-success' : ((data < 0) ? 'text-danger' : ''));
+			return (type === 'display') ? `<span class="${color}">${rendered_num}</span>` : data;
+		},
+		men__porc_render: function (data, type, row){
+			return (type === 'display') ? `<progress class="mx-3" value="${data}" max="100"></progress>` : data;
+		},
+		mep__porc_render: function (data, type, row){
+			return (type === 'display') ? `<progress class="mx-3" value="${data}" max="100"></progress>` : data;
+		}
+	}
+	//Configuração da tabela de operações em 'lista_ops'
+	let _dashboard_ops__table_trades_DT = {
+		columns: [
+			{name: "trade__data", orderable: true, type: 'br-date'},
+			{name: "trade__cenario", orderable: true},
+			{name: "trade__custo", orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
+			{name: "result__brl", orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: "result__R", orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__R},
+			{name: "men__porc", orderable: true, render: _dashboard_ops__table_trades_DT_ext.men__porc_render},
+			{name: "mep__porc", orderable: true, render: _dashboard_ops__table_trades_DT_ext.mep__porc_render}
+		],
+		lengthChange: false,
+		info: false,
+		dom: '<"container-fluid p-0"<"row"<"col-12"<"card rounded-3 shadow-sm"<"card-body py-2 d-flex justify-content-between align-items-center head"fp>>>><"row mt-2"<"col-12"<"card rounded-3 shadow-sm"<"card-body body"t>>>>>',
+		order: [[ 0, 'desc' ]],
+		pageLength: 12,
+		pagingType: 'input'
+	}
+	//////////////////////////////////
+	//Lista Ops
+	//////////////////////////////////
 	//Variavel usada no controle de click, para saber se está pressionado o click ou não
 	let _lista_ops__table_DT_clickState = 0;
 	//Funcoes usadas em '_lista_ops__table_DT'
@@ -593,7 +649,7 @@ let Renda_variavel = (function(){
 				//Info Estatistica (Total + Por Cenário)
 				html += `<div class="row mt-4">`+
 						`<div class="col">`+
-						`<div class="card mb-2 rounded-3 shadow-sm">`+
+						`<div class="card rounded-3 shadow-sm">`+
 						`<div class="card-body">`+
 						`<table class="table m-0" id="dashboard_ops__table_stats__byCenario">`+
 						`<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
@@ -602,19 +658,33 @@ let Renda_variavel = (function(){
 						`</table>`+
 						`</div></div></div>`+
 						`</div>`;
-				//Graficos Horario + Grafico Evolução Patrimonial
-				html += `<div class="row mt-2">`+
-						`<div class="col">`+
+				//Tabela Trades + Grafico Trades Resultados Normalizado
+				html += `<div class="row mt-4">`+
+						`<div class="col-6">`+
+						`<table class="table m-0" id="dashboard_ops__table_trades">`+
+						`<thead>${rebuildDashboardOps__Table_Trades('thead')}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades)}</tbody>`+
+						`</table>`+
+						`</div>`+
+						`<div class="col-6">`+
 						`<div class="card rounded-3 shadow-sm">`+
-						`<div class="card-body" id="dashboard_ops__chart_porHorario"><canvas></canvas>`+
+						`<div class="card-body" id="dashboard_ops__chart_resultadoNormalizado"><canvas style="width:100%; height:100%"></canvas>`+
 						`</div></div></div>`+
-						`<div class="col">`+
+						`</div>`;
+				//Graficos Horario + Graficos Evolução Patrimonial
+				html += `<div class="row mt-3">`+
+						`<div class="col-3">`+
 						`<div class="card rounded-3 shadow-sm">`+
-						`<div class="card-body" id="dashboard_ops__chart_evolucaoPatrimonial"><canvas></canvas>`+
+						`<div class="card-body" id="dashboard_ops__chart_resultadoPorHorario"><canvas style="width:100%; height:100%"></canvas>`+
+						`</div></div></div>`+
+						`<div class="col-9">`+
+						`<div class="card rounded-3 shadow-sm">`+
+						`<div class="card-body" id="dashboard_ops__chart_evolucaoPatrimonial"><canvas style="width:100%; height:100%"></canvas>`+
 						`</div></div></div>`+
 						`</div>`;
 				html += `</div>`;
 				$(document.getElementById('renda_variavel__section')).empty().append(html).promise().then(function (){
+					//////////////////////////////////
 					//Inicia a seção de Filtros
 					let filters = $(document.getElementById('dashboard_ops__filter'));
 					//////////////////////////////////
@@ -747,11 +817,131 @@ let Renda_variavel = (function(){
 							me.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
 					});
 					//////////////////////////////////
-					//Inicia a seção de Gráficos
+					//Inicia a seção de Gráficos e Tabelas
+					//////////////////////////////////
+					//Tabela de Resultados dos Trades
+					//////////////////////////////////
+					$(document.getElementById('dashboard_ops__table_trades')).DataTable(_dashboard_ops__table_trades_DT)
+					//////////////////////////////////
+					//Gráfico de Resultados Normalizados
+					//////////////////////////////////
+					let linha_risco = {};
+					if (dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['risco'] !== null){
+						linha_risco = [{
+							type: 'line',
+							scaleID: 'y',
+							value: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['risco'],
+							borderColor: '#212529',
+							borderWidth: 1,
+							label: {
+								backgroundColor: '#dc3545',
+								content: `R`,
+								enabled: true
+							}
+						}];
+					}
+					_dashboard_ops__charts['resultados_normalizado'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoNormalizado').querySelector('canvas'), {
+						type: 'line',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['labels'],
+							datasets: [
+								{
+									label: 'B. Sup',
+									backgroundColor: '#212529',
+	      							borderColor: '#212529',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_superior']
+								},
+								{
+									label: 'B. Inf',
+									backgroundColor: '#212529',
+	      							borderColor: '#212529',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_inferior']
+								},
+								{
+									label: ctrl__instancias.getSelected('nome'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['data'],
+	      							stack: 'combined',
+	      							type: 'bar'
+								}
+							]
+						},
+						options: {
+							elements: {
+								point: {
+									radius: 0
+								},
+								bar: {
+									backgroundColor: _dashboard_ops__charts['resultados_normalizado_ext'].color(),
+									borderColor: _dashboard_ops__charts['resultados_normalizado_ext'].color()
+								}
+							},
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: 'Resultados + Bandas'
+								},
+								annotation: {
+									annotations: linha_risco
+								}
+							},
+							scales: {
+								y: {
+									stacked: true,
+									beginAtZero: true
+								}
+							}
+						}
+					});
+					//////////////////////////////////
+					//Gráfico de Resultados por Hora
+					//////////////////////////////////
+					_dashboard_ops__charts['resultados_por_hora'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoPorHorario').querySelector('canvas'), {
+						type: 'bar',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
+							datasets: [
+								{
+									label: 'R$',
+									backgroundColor: '#fd7e14',
+	      							borderColor: '#fd7e14',
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result']
+								},
+								{
+									label: 'Qtd',
+									backgroundColor: '#6c757d',
+	      							borderColor: '#6c757d',
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd']
+								}
+							]
+						},
+						options: {
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: 'Resultados por Hora'
+								}
+							},
+							scales: {
+								y: {beginAtZero: true }
+							}
+						}
+					});
 					//////////////////////////////////
 					//Gráfico de Evolução Patrimonial
 					//////////////////////////////////
-					_dashboard_ops__charts['evolucao_patrimonial'] = new Chart($('canvas', document.getElementById('dashboard_ops__chart_evolucaoPatrimonial')), {
+					_dashboard_ops__charts['evolucao_patrimonial'] = new Chart(document.getElementById('dashboard_ops__chart_evolucaoPatrimonial').querySelector('canvas'), {
 						type: 'line',
 						data: {
 							labels: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['labels'],
@@ -1073,6 +1263,36 @@ let Renda_variavel = (function(){
 		}
 		else if (section === 'tfoot')
 			html += dashboardOps__Table_Stats__byCenario__newLine('Total', stats, section);
+		return html;
+	}
+	/*
+		Retorna o html da seção de 'thead' ou 'tbody' da 'dashboard_ops__table_trades'.
+	*/
+	function rebuildDashboardOps__Table_Trades(section = '', trades = {}){
+		let html = ``;
+		if (section === 'thead')
+			html += `<tr>`+
+					`<th>Data</th>`+
+					`<th>Cenário</th>`+
+					`<th>Custo</th>`+
+					`<th>Result. BRL</th>`+
+					`<th>Result. R</th>`+
+					`<th>Stop</th>`+
+					`<th>Alvo</th>`+
+					`</tr>`;
+		else if (section === 'tbody'){
+			for (let o in trades){
+				html += `<tr>`+
+						`<td name="trade__data" class="text-muted fw-bold">${Global.convertDate(trades[o].trade__data)}</td>`+
+						`<td name="trade__cenario" class="fw-bold">${trades[o].trade__cenario}</td>`+
+						`<td name="trade__custo" class="fw-bold text-danger">${trades[o].trade__custo}</td>`+
+						`<td name="result__brl" class="fw-bold">${trades[o].result__brl}</td>`+
+						`<td name="result__R" class="fw-bold">${trades[o].result__R}</td>`+
+						`<td name="men__porc">${trades[o].men__porc}</td>`+
+						`<td name="mep__porc">${trades[o].mep__porc}</td>`+
+						`</tr>`;
+			}
+		}
 		return html;
 	}
 	////////////////////////////////////////////////////////////////////////////////////

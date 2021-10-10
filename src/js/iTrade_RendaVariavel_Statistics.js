@@ -136,26 +136,33 @@ let RV_Statistics = (function(){
 					new_list.push({
 						erro: list[e].erro,
 						data: list[e].data,
+						hora: list[e].hora,
 						cenario: list[e].cenario,
+						custo: custo_operacao,
 						result_liquido: {
 							brl: op_resultBruto['result']['brl'] - custo_operacao,
-							pts: op_resultBruto['result']['pts'] - (custo_operacao * list[e].ativo_pts_tick)
+							pts: op_resultBruto['result']['pts'] - (custo_operacao * list[e].ativo_pts_tick),
+							R: (simulate.R !== null) ? divide((op_resultBruto['result']['brl'] - custo_operacao), simulate.R) : '--'
 						},
 						stop_liquido: {
-							brl: op_resultBruto['stop']['brl'] - custo_operacao,
-							pts: op_resultBruto['stop']['pts'] - (custo_operacao * list[e].ativo_pts_tick)	
+							brl: op_resultBruto['stop']['brl'],
+							pts: op_resultBruto['stop']['pts'],
+							R: (simulate.R !== null) ? divide(op_resultBruto['stop']['brl'], simulate.R) : '--'
 						},
 						alvo_liquido: {
-							brl: op_resultBruto['alvo']['brl'] - custo_operacao,
-							pts: op_resultBruto['alvo']['pts'] - (custo_operacao * list[e].ativo_pts_tick)	
+							brl: op_resultBruto['alvo']['brl'],
+							pts: op_resultBruto['alvo']['pts'],
+							R: (simulate.R !== null) ? divide(op_resultBruto['alvo']['brl'], simulate.R) : '--'
 						},
 						men_liquido: {
-							brl: op_resultBruto['men']['brl'] - custo_operacao,
-							pts: op_resultBruto['men']['pts'] - (custo_operacao * list[e].ativo_pts_tick)	
+							brl: op_resultBruto['men']['brl'],
+							pts: op_resultBruto['men']['pts'],
+							R: (simulate.R !== null) ? divide(op_resultBruto['men']['brl'], simulate.R) : '--'
 						},
 						mep_liquido: {
-							brl: op_resultBruto['mep']['brl'] - custo_operacao,
-							pts: op_resultBruto['mep']['pts'] - (custo_operacao * list[e].ativo_pts_tick)	
+							brl: op_resultBruto['mep']['brl'],
+							pts: op_resultBruto['mep']['pts'],
+							R: (simulate.R !== null) ? divide(op_resultBruto['mep']['brl'], simulate.R) : '--'
 						}
 					});
 					let curr_i = new_list.length-1;
@@ -186,20 +193,20 @@ let RV_Statistics = (function(){
 					pts: op.saida - op.entrada
 				},
 				stop: {
-					brl: (op.entrada - op.stop) * op.ativo_valor_tick * op.cts,
-					pts: op.entrada - op.stop
+					brl: (op.stop != 0) ? (op.entrada - op.stop) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.stop != 0) ? op.entrada - op.stop : 0
 				},
 				alvo: {
-					brl: (op.alvo - op.entrada) * op.ativo_valor_tick * op.cts,
-					pts: op.alvo - op.entrada
+					brl: (op.alvo != 0) ? (op.alvo - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.alvo != 0) ? op.alvo - op.entrada : 0
 				},
 				men: {
-					brl: (op.entrada - op.men) * op.ativo_valor_tick * op.cts,
-					pts: op.entrada - op.men
+					brl: (op.men != 0) ? (op.entrada - op.men) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.men != 0) ? op.entrada - op.men : 0
 				},
 				mep: {
-					brl: (op.mep - op.entrada) * op.ativo_valor_tick * op.cts,
-					pts: op.mep - op.entrada
+					brl: (op.mep != 0) ? (op.mep - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.mep != 0) ? op.mep - op.entrada : 0
 				}
 			}
 		}
@@ -211,20 +218,20 @@ let RV_Statistics = (function(){
 					pts: op.entrada - op.saida
 				},
 				stop: {
-					brl: (op.stop - op.entrada) * op.ativo_valor_tick * op.cts,
-					pts: op.stop - op.entrada
+					brl: (op.stop != 0) ? (op.stop - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.stop != 0) ? op.stop - op.entrada : 0
 				},
 				alvo: {
-					brl: (op.entrada - op.alvo) * op.ativo_valor_tick * op.cts,
-					pts: op.entrada - op.alvo
+					brl: (op.alvo != 0) ? (op.entrada - op.alvo) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.alvo != 0) ? op.entrada - op.alvo : 0
 				},
 				men: {
-					brl: (op.men - op.entrada) * op.ativo_valor_tick * op.cts,
-					pts: op.men - op.entrada
+					brl: (op.men != 0) ? (op.men - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.men != 0) ? op.men - op.entrada : 0
 				},
 				mep: {
-					brl: (op.entrada - op.mep) * op.ativo_valor_tick * op.cts,
-					pts: op.entrada - op.mep
+					brl: (op.mep != 0) ? (op.entrada - op.mep) * op.ativo_valor_tick * op.cts : 0,
+					pts: (op.mep != 0) ? op.entrada - op.mep : 0
 				}
 			}	
 		}
@@ -232,10 +239,14 @@ let RV_Statistics = (function(){
 	/*
 		Função para calculo do Desvio Padrão, a partir de uma lista de numeros.
 	*/
-	let desvpad = function (r_list){
-		let media = r_list.reduce((total, valor) => total + valor / r_list.length, 0);
-		let variancia = r_list.reduce((total, valor) => total + Math.pow(media - valor, 2)/ r_list.length, 0);
-		return Math.sqrt(variancia);
+	let desvpad = function (r_list, type = 'populacao'){
+		let desv_type = ((type === 'populacao') ? 0 : ((type === 'amostra') ? 1 : 0)),
+			media = r_list.reduce((total, valor) => total + (valor / r_list.length), 0),
+			variancia = r_list.reduce((total, valor) => total + (Math.pow(media - valor, 2) / (r_list.length - desv_type)), 0);
+		return {
+			desvpad: Math.sqrt(variancia),
+			media: media
+		};
 	}
 	/*
 		Gera a média móvel simples da lista de entrada 'i_list', para a lista 'mm_list', usando a quantidade de periodos passada.
@@ -254,6 +265,28 @@ let RV_Statistics = (function(){
 				mm_list[index_F] = empty_value;
 		}
 		return mm_list;
+	}
+	/*
+		Gera uma banda de superior e inferior de Desvio Padrao do objeto passado.
+		'Obj' deve ter estes inputs:
+			- data: Lista dos dados a fazer os calculos.
+			- banda_superior: Lista que conterá a banda de 1 desvio acima da media.
+			- banda_inferior: Lista que conterá a banda de 1 desvio abaixo da media.
+	*/
+	let BBollinger = function (obj, min_period = 1, empty_value = null){
+		let desv_list = [];
+		for (let i_data=0; i_data<obj['data'].length; i_data++){
+			desv_list.push(obj['data'][i_data]);
+			if (desv_list.length > min_period){
+				let dp_calc = desvpad(desv_list, 'amostra');
+				obj['banda_superior'].push(dp_calc['media'] + dp_calc['desvpad']);
+				obj['banda_inferior'].push(dp_calc['media'] - dp_calc['desvpad']);
+			}
+			else{
+				obj['banda_superior'].push(empty_value);
+				obj['banda_inferior'].push(empty_value);
+			}
+		}
 	}
 	/*
 		Gera as estatisticas e dados para Gráficos, para toda a seção de Dashboard em Renda Variável.
@@ -351,11 +384,16 @@ let RV_Statistics = (function(){
 			//Valor corrente para chegar à ruína de (X%)
 			stats__ruinaAtual: 0.0
 		}
+		//Variaveis para a tabela de resultados dos trades
+		let _dashboard_ops__table_trades = [];
 		//Variaveis de listas para os gráficos
 		let _dashboard_ops__chart_data = {
-			resultados: {
+			resultados_normalizado: {
 				labels: [],
-				data: []
+				data: [],
+				banda_superior: [],
+				banda_inferior: [],
+				risco: (_simulate.R !== null) ? _simulate.R * (-1) : null
 			},
 			evolucao_patrimonial: {
 				labels: [],
@@ -364,11 +402,17 @@ let RV_Statistics = (function(){
 			evolucao_patrimonial__mm20: {
 				labels: [],
 				data: []
+			},
+			resultado_por_hora: {
+				labels: [],
+				data_result: [],
+				data_qtd: []
 			}
 		}
 		//Variaveis temporarias usadas em '_dashboard_ops__table_stats'
 		let _temp__table_stats = {
 			dias__unicos: {},
+			horas__unicas: {},
 			lucro_corrente: {brl: 0.0, pts: 0.0},
 			mediaGain: 0.0,
 			mediaLoss: 0.0
@@ -385,9 +429,44 @@ let RV_Statistics = (function(){
 		/*----------------------------- Percorre as operações ----------------------------*/
 		for (let o in _ops){
 			//////////////////////////////////
+			//Resultados do Trade
+			//////////////////////////////////
+			_dashboard_ops__table_trades.push({
+				//Data do trade
+				trade__data: _ops[o].data,
+				//Cenario do trade
+				trade__cenario: _ops[o].cenario,
+				//Custo do trade
+				trade__custo: _ops[o].custo,
+				//Resultado do trade em BRL
+				result__brl: _ops[o].result_liquido['brl'],
+				//Resultado do trade em R
+				result__R: _ops[o].result_liquido['R'],
+				//Valor do Stop em BRL
+				stop__brl: _ops[o].stop_liquido['brl'],
+				//Valor do Stop em BRL
+				alvo__brl: _ops[o].alvo_liquido['brl'],
+				//Valor do MEN em BRL
+				men__brl: _ops[o].men_liquido['brl'],
+				//Valor do MEP em BRL
+				mep__brl: _ops[o].mep_liquido['brl'],
+				//Porcetagem de quanto o trade chegou perto do Stop
+				men__porc: (Math.abs(divide(_ops[o].men_liquido['brl'], _ops[o].stop_liquido['brl'])) * 100),
+				//Porcentagem de quanto o trade chegou perto do gain
+				mep__porc: (Math.abs(divide(_ops[o].mep_liquido['brl'], _ops[o].alvo_liquido['brl'])) * 100)
+			});
+			//////////////////////////////////
 			//Estatisticas Gerais
 			//////////////////////////////////
 			_temp__table_stats['dias__unicos'][_ops[o].data] = null;
+			if (_ops[o].hora !== '00:00:00'){
+				let round_time = moment(_ops[o].hora, 'HH:mm:ss').startOf('hour').format('HH:mm');
+				// let round_time = new Date(`2000-01-01 ${_ops[o].hora.split(':')[0]}:00:00`).getTime();
+				if (!(round_time in _temp__table_stats['horas__unicas']))
+					_temp__table_stats['horas__unicas'][round_time] = { result: 0.0, qtd: 0 };
+				_temp__table_stats['horas__unicas'][round_time]['result'] += _ops[o].result_liquido['brl'];
+				_temp__table_stats['horas__unicas'][round_time]['qtd']++;
+			}
 			//Se for uma operação 'Positiva'
 			if (_ops[o].resultado_op === 1){
 				_dashboard_ops__table_stats['trades__positivo']++;
@@ -409,8 +488,8 @@ let RV_Statistics = (function(){
 			//Calcula o lucro corrente após cada operação
 			_temp__table_stats['lucro_corrente']['brl'] += _ops[o].result_liquido['brl'];
 			_temp__table_stats['lucro_corrente']['pts'] += _ops[o].result_liquido['pts'];
-			_dashboard_ops__chart_data['resultados']['labels'].push(parseInt(o) + 1);
-			_dashboard_ops__chart_data['resultados']['data'].push(_ops[o].result_liquido['brl']);
+			_dashboard_ops__chart_data['resultados_normalizado']['labels'].push(parseInt(o) + 1);
+			_dashboard_ops__chart_data['resultados_normalizado']['data'].push(_ops[o].result_liquido['brl']);
 			//Para o DP
 			if (_simulate['R'] !== null)
 				_temp_listas['resultados_R'].push(divide(_ops[o].result_liquido['brl'], _simulate['R']));
@@ -525,7 +604,7 @@ let RV_Statistics = (function(){
 		_dashboard_ops__table_stats['stats__edge']            = _dashboard_ops__table_stats['trades__positivo_perc'] - _dashboard_ops__table_stats['stats__breakeven'];
 		_dashboard_ops__table_stats['stats__fatorLucro']      = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _temp__table_stats['mediaGain']), (_dashboard_ops__table_stats['trades__negativo_perc'] * _temp__table_stats['mediaLoss']));
 		_dashboard_ops__table_stats['stats__expect']          = (_simulate['R'] !== null) ? divide(divide(_temp__table_stats['lucro_corrente']['brl'], _dashboard_ops__table_stats['trades__total']), _simulate['R']) : '--';
-		_dashboard_ops__table_stats['stats__dp']              = (_simulate['R'] !== null) ? desvpad(_temp_listas['resultados_R']) : '--';
+		_dashboard_ops__table_stats['stats__dp']              = (_simulate['R'] !== null) ? desvpad(_temp_listas['resultados_R'])['desvpad'] : '--';
 		_dashboard_ops__table_stats['stats__sqn']             = (_simulate['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect'], _dashboard_ops__table_stats['stats__dp']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 		
 		_dashboard_ops__table_stats['trades__erro']           = ((!_filters.ignora_erro) ? _dashboard_ops__table_stats['trades__erro'] : '--');
@@ -562,7 +641,7 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats__byCenario[cenario]['stats__edge']            = _dashboard_ops__table_stats__byCenario[cenario]['trades__positivo_perc'] - _dashboard_ops__table_stats__byCenario[cenario]['stats__breakeven'];
 			_dashboard_ops__table_stats__byCenario[cenario]['stats__fatorLucro']      = divide((_dashboard_ops__table_stats__byCenario[cenario]['trades__positivo_perc'] * _temp__table_stats__byCenario[cenario]['mediaGain']), (_dashboard_ops__table_stats__byCenario[cenario]['trades__negativo_perc'] * _temp__table_stats__byCenario[cenario]['mediaLoss']));
 			_dashboard_ops__table_stats__byCenario[cenario]['stats__expect']          = (_simulate['R'] !== null) ? divide(divide(_temp__table_stats__byCenario[cenario]['lucro_corrente']['brl'], _dashboard_ops__table_stats__byCenario[cenario]['trades__total']), _simulate['R']) : '--';
-			_dashboard_ops__table_stats__byCenario[cenario]['stats__dp']              = (_simulate['R'] !== null) ? desvpad(_dashboard_ops__table_stats__byCenario[cenario]['lista_resultad_R']) : '--';
+			_dashboard_ops__table_stats__byCenario[cenario]['stats__dp']              = (_simulate['R'] !== null) ? desvpad(_dashboard_ops__table_stats__byCenario[cenario]['lista_resultad_R'])['desvpad'] : '--';
 			_dashboard_ops__table_stats__byCenario[cenario]['stats__sqn']             = (_simulate['R'] !== null) ? (divide(_dashboard_ops__table_stats__byCenario[cenario]['stats__expect'], _dashboard_ops__table_stats__byCenario[cenario]['stats__dp']) * Math.sqrt(_dashboard_ops__table_stats__byCenario[cenario]['trades__total'])) : '--';
 			
 			_dashboard_ops__table_stats__byCenario[cenario]['trades__erro']           = ((!_filters.ignora_erro) ? _dashboard_ops__table_stats__byCenario[cenario]['trades__erro'] : '--');
@@ -573,10 +652,24 @@ let RV_Statistics = (function(){
 		//////////////////////////////////
 		//Média móvel simples da evolução patrimonial
 		SMA(_dashboard_ops__chart_data['evolucao_patrimonial']['data'], _dashboard_ops__chart_data['evolucao_patrimonial__mm20']['data'], 20);
+		//////////////////////////////////
+		//Gráfico de Resultados Normalizados
+		//////////////////////////////////
+		//Gráfico de barras dos resultados + bandas superior e inferior do desvio padrao + linha de risco
+		BBollinger(_dashboard_ops__chart_data['resultados_normalizado']);
+		//////////////////////////////////
+		//Gráfico de Resultados por Hora
+		//////////////////////////////////
+		for (let h in _temp__table_stats['horas__unicas']){
+			_dashboard_ops__chart_data['resultado_por_hora']['labels'].push(h);
+			_dashboard_ops__chart_data['resultado_por_hora']['data_result'].push(_temp__table_stats['horas__unicas'][h]['result']);
+			_dashboard_ops__chart_data['resultado_por_hora']['data_qtd'].push(_temp__table_stats['horas__unicas'][h]['qtd']);
+		}
 		/*------------------------------- Retorno dos Dados ------------------------------*/
 		return {
 			dashboard_ops__table_stats: _dashboard_ops__table_stats,
 			dashboard_ops__table_stats__byCenario: _dashboard_ops__table_stats__byCenario,
+			dashboard_ops__table_trades: _dashboard_ops__table_trades,
 			dashboard_ops__chart_data: _dashboard_ops__chart_data
 		}
 	}
