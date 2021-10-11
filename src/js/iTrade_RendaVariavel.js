@@ -81,6 +81,7 @@ let Renda_variavel = (function(){
 	//Configuração da tabela de operações em 'lista_ops'
 	let _dashboard_ops__table_trades_DT = {
 		columns: [
+			{name: "trade__seq", orderable: true},
 			{name: "trade__data", orderable: true, type: 'br-date'},
 			{name: "trade__cenario", orderable: true},
 			{name: "trade__custo", orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
@@ -831,10 +832,11 @@ let Renda_variavel = (function(){
 							type: 'line',
 							scaleID: 'y',
 							value: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['risco'],
-							borderColor: '#212529',
+							borderColor: '#dc3545',
 							borderWidth: 1,
 							label: {
 								backgroundColor: '#dc3545',
+								font: {size: 10},
 								content: `R`,
 								enabled: true
 							}
@@ -846,7 +848,7 @@ let Renda_variavel = (function(){
 							labels: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['labels'],
 							datasets: [
 								{
-									label: 'B. Sup',
+									label: 'Desvio Padrão (Sup)',
 									backgroundColor: '#212529',
 	      							borderColor: '#212529',
 	      							borderWidth: 1,
@@ -854,7 +856,15 @@ let Renda_variavel = (function(){
 	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_superior']
 								},
 								{
-									label: 'B. Inf',
+									label: 'Média',
+									backgroundColor: '#6610f2',
+	      							borderColor: '#6610f2',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_media']
+								},
+								{
+									label: 'Desvio Padrão (Inf)',
 									backgroundColor: '#212529',
 	      							borderColor: '#212529',
 	      							borderWidth: 1,
@@ -886,17 +896,44 @@ let Renda_variavel = (function(){
 							plugins: {
 								title: {
 									display: true,
-									text: 'Resultados + Bandas'
+									text: 'Resultados por Trade'
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											if (item.text === ctrl__instancias.getSelected('nome'))
+												item.fillStyle = ctrl__instancias.getSelected('chartColor');
+											return (!item.text.includes('Desvio Padrão (Sup)') && !item.text.includes('Desvio Padrão (Inf)'));
+										}
+									},
+									onClick: function (e, legendItem){
+										let dataset_name = legendItem.text,
+											index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (dataset_name === ctrl__instancias.getSelected('nome'))
+											me.hidden = (me.hidden === null) ? true : null;
+										else if (dataset_name === 'Média'){
+											if (me.hidden === null){
+												this.chart.getDatasetMeta(index - 1).hidden = true;
+												me.hidden = true;
+												this.chart.getDatasetMeta(index + 1).hidden = true;
+											}
+											else{
+												this.chart.getDatasetMeta(index - 1).hidden = null;
+												me.hidden = null;
+												this.chart.getDatasetMeta(index + 1).hidden = null;
+											}
+										}
+										this.chart.update();
+									}
 								},
 								annotation: {
 									annotations: linha_risco
 								}
 							},
 							scales: {
-								y: {
-									stacked: true,
-									beginAtZero: true
-								}
+								y: { beginAtZero: true }
 							}
 						}
 					});
@@ -909,16 +946,18 @@ let Renda_variavel = (function(){
 							labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
 							datasets: [
 								{
-									label: 'R$',
-									backgroundColor: '#fd7e14',
-	      							borderColor: '#fd7e14',
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result']
-								},
-								{
-									label: 'Qtd',
+									label: `${ctrl__instancias.getSelected('nome')} Qtd`,
 									backgroundColor: '#6c757d',
 	      							borderColor: '#6c757d',
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd']
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
+	      							stack: ctrl__instancias.getSelected('nome')
+								},
+								{
+									label: `${ctrl__instancias.getSelected('nome')}`,
+									backgroundColor: ctrl__instancias.getSelected('chartColor'),
+	      							borderColor: ctrl__instancias.getSelected('chartColor'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
+	      							stack: ctrl__instancias.getSelected('nome')
 								}
 							]
 						},
@@ -931,10 +970,36 @@ let Renda_variavel = (function(){
 								title: {
 									display: true,
 									text: 'Resultados por Hora'
-								}
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											return item.datasetIndex % 2 === 1;
+										}
+									},
+									onClick: function (e, legendItem){
+										let index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (me.hidden === null){
+											me.hidden = true;
+											this.chart.getDatasetMeta(index - 1).hidden = true;
+										}
+										else{
+											me.hidden = null;
+											this.chart.getDatasetMeta(index - 1).hidden = null;
+										}
+										this.chart.update();
+									}
+								},
 							},
 							scales: {
-								y: {beginAtZero: true }
+								x: {
+									stacked: true
+								},
+								y: {
+									stacked: false
+								}
 							}
 						}
 					});
@@ -975,7 +1040,7 @@ let Renda_variavel = (function(){
 							plugins: {
 								title: {
 									display: true,
-									text: 'Patrimonio'
+									text: 'Evolução Patrimonial'
 								}
 							},
 							scales: {
@@ -1272,6 +1337,7 @@ let Renda_variavel = (function(){
 		let html = ``;
 		if (section === 'thead')
 			html += `<tr>`+
+					`<th>#</th>`+
 					`<th>Data</th>`+
 					`<th>Cenário</th>`+
 					`<th>Custo</th>`+
@@ -1283,6 +1349,7 @@ let Renda_variavel = (function(){
 		else if (section === 'tbody'){
 			for (let o in trades){
 				html += `<tr>`+
+						`<td name="trade__seq" class="text-muted fw-bold">${trades[o].trade__seq}</td>`+
 						`<td name="trade__data" class="text-muted fw-bold">${Global.convertDate(trades[o].trade__data)}</td>`+
 						`<td name="trade__cenario" class="fw-bold">${trades[o].trade__cenario}</td>`+
 						`<td name="trade__custo" class="fw-bold text-danger">${trades[o].trade__custo}</td>`+

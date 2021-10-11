@@ -251,7 +251,7 @@ let RV_Statistics = (function(){
 	/*
 		Gera a média móvel simples da lista de entrada 'i_list', para a lista 'mm_list', usando a quantidade de periodos passada.
 	*/
-	let SMA = function (i_list, mm_list, period = 20, empty_value = null){
+	let SMA = function (i_list, mm_list, period = 20, empty_value = NaN){
 		//Irá percorrer a lista olhando blocos de tamanho 'period'
 		for (let index_I=(0 - (period - 1)), index_F=0; index_F<i_list.length; index_I++, index_F++){
 			if (index_I >= 0){
@@ -273,16 +273,18 @@ let RV_Statistics = (function(){
 			- banda_superior: Lista que conterá a banda de 1 desvio acima da media.
 			- banda_inferior: Lista que conterá a banda de 1 desvio abaixo da media.
 	*/
-	let BBollinger = function (obj, min_period = 1, empty_value = null){
+	let BBollinger = function (obj, min_period = 1, empty_value = NaN){
 		let desv_list = [];
 		for (let i_data=0; i_data<obj['data'].length; i_data++){
 			desv_list.push(obj['data'][i_data]);
 			if (desv_list.length > min_period){
 				let dp_calc = desvpad(desv_list, 'amostra');
+				obj['banda_media'].push(dp_calc['media']);
 				obj['banda_superior'].push(dp_calc['media'] + dp_calc['desvpad']);
 				obj['banda_inferior'].push(dp_calc['media'] - dp_calc['desvpad']);
 			}
 			else{
+				obj['banda_media'].push(empty_value);
 				obj['banda_superior'].push(empty_value);
 				obj['banda_inferior'].push(empty_value);
 			}
@@ -391,6 +393,7 @@ let RV_Statistics = (function(){
 			resultados_normalizado: {
 				labels: [],
 				data: [],
+				banda_media: [],
 				banda_superior: [],
 				banda_inferior: [],
 				risco: (_simulate.R !== null) ? _simulate.R * (-1) : null
@@ -411,6 +414,7 @@ let RV_Statistics = (function(){
 		}
 		//Variaveis temporarias usadas em '_dashboard_ops__table_stats'
 		let _temp__table_stats = {
+			i_seq: 1,
 			dias__unicos: {},
 			horas__unicas: {},
 			lucro_corrente: {brl: 0.0, pts: 0.0},
@@ -432,6 +436,8 @@ let RV_Statistics = (function(){
 			//Resultados do Trade
 			//////////////////////////////////
 			_dashboard_ops__table_trades.push({
+				//Sequencia do trade, na ordem que vem do BD
+				trade__seq: _temp__table_stats['i_seq']++,
 				//Data do trade
 				trade__data: _ops[o].data,
 				//Cenario do trade
