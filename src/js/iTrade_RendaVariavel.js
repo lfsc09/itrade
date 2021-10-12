@@ -18,6 +18,8 @@ let Renda_variavel = (function(){
 	let	_operacoes_arcabouco = {};
 	//Informa qual seção do Section Arcabouço está sendo mostrado (dashboard_ops|lista_ops)
 	let	_selected_arcabouco_section = 'dashboard_ops';
+	//Informa se o 'dashboard_ops' ou 'lista_ops' precisa ser reconstruido
+	let _arcabouco_section__needRebuild = false;
 	//////////////////////////////////
 	//Arcabouços
 	//////////////////////////////////
@@ -395,7 +397,12 @@ let Renda_variavel = (function(){
 		add: function (inst){
 			//Não cria mais depois do limite especificado
 			if ((_arcaboucos__instancias.length !== 0 && _arcaboucos__instancias.length === _arcaboucos__instancias_colors.length) || !('id' in inst))
-				return true;
+				return false;
+			//De-seleciona quem estiver selecionado
+			if (('selected' in inst) && inst.selected){
+				for (let i in _arcaboucos__instancias)
+					_arcaboucos__instancias[i].selected = false;
+			}
 			//Nova instancia com os dados passados
 			let new_inst = {
 				instancia: Global._random.str('i'),
@@ -412,6 +419,7 @@ let Renda_variavel = (function(){
 			//Reconstroi o HTML
 			rebuildCtrl__instanciasHTML();
 			Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+			return true;
 		},
 		//Atualiza os 'filters' da instancia selecionada
 		updateInstancia_Filters: function (key, value){
@@ -483,7 +491,9 @@ let Renda_variavel = (function(){
 					_arcaboucos__instancias[0].selected = true;
 				rebuildCtrl__instanciasHTML();
 				Global.browserStorage__Sync.set('instancias', _arcaboucos__instancias, 'localStorage');
+				return true;
 			}
+			return false;
 		}
 	}
 	/*
@@ -516,7 +526,7 @@ let Renda_variavel = (function(){
 			//Atualiza o objeto
 			delete _arcaboucos[id];
 			//Atualiza na lista de instancias
-			ctrl__instancias.removeAll_by_idArcabouco(id);
+			return ctrl__instancias.removeAll_by_idArcabouco(id);
 		}
 	}
 	/*
@@ -1343,8 +1353,8 @@ let Renda_variavel = (function(){
 					`<th>Custo</th>`+
 					`<th>Result. BRL</th>`+
 					`<th>Result. R</th>`+
-					`<th>Stop</th>`+
-					`<th>Alvo</th>`+
+					`<th>Stop %</th>`+
+					`<th>Alvo %</th>`+
 					`</tr>`;
 		else if (section === 'tbody'){
 			for (let o in trades){
@@ -1811,6 +1821,15 @@ let Renda_variavel = (function(){
 	/*------------------------------ Lista Arcabouços --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
+		Processa o fechamento do modal 'arcaboucos_modal', para reconstrucao do arcabouço section.
+	*/
+	$(document.getElementById('arcaboucos_modal')).on('hidden.bs.modal', function (){
+		if (_arcabouco_section__needRebuild){
+			_arcabouco_section__needRebuild = false;
+			rebuildArcaboucoSection();
+		}
+	});
+	/*
 		Marca os inputs que forem alterados.
 	*/
 	$(document.getElementById('arcaboucos_modal_form')).on('change', 'input[name]', function (){
@@ -1826,8 +1845,25 @@ let Renda_variavel = (function(){
 			return false;
 		if (e.target.nodeName !== 'BUTTON' && e.target.nodeName !== 'I'){
 			let id_arcabouco = this.getAttribute('arcabouco');
-			if (e.ctrlKey)
-				ctrl__instancias.add({id: id_arcabouco, nome: _arcaboucos[id_arcabouco].nome});
+			if (e.ctrlKey){
+				//Se a instancia foi adicionada na lista
+				if (ctrl__instancias.add({id: id_arcabouco, nome: _arcaboucos[id_arcabouco].nome, selected: true})){
+					_arcabouco_section__needRebuild = true;
+					if (!(id_arcabouco in _operacoes_arcabouco)){
+						Global.connect({
+							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: id_arcabouco}},
+							success: function (result){
+								if (result.status){
+									updateCenarios_Arcabouco.create(result.data['cenarios']);
+									updateOperacoes_Arcabouco(result.data['operacoes']);
+								}
+								else
+									Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
+							}
+						});
+					}
+				}
+			}
 		}
 	});
 	/*
@@ -1855,9 +1891,9 @@ let Renda_variavel = (function(){
 			data: {module: 'renda_variavel', action: 'remove_arcaboucos', params: {id: id_arcabouco}},
 			success: function (result){
 				if (result.status){
-					updateArcaboucos.remove(id_arcabouco);
+					if (updateArcaboucos.remove(id_arcabouco))
+						_arcabouco_section__needRebuild = true;
 					buildArcaboucosTable();
-					rebuildArcaboucoSection();
 				}
 				else
 					Global.toast.create({location: document.getElementById('arcaboucos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
@@ -2021,22 +2057,7 @@ let Renda_variavel = (function(){
 		else{
 			if (ctrl__instancias.getSelected('instancia') !== this.getAttribute('instancia')){
 				ctrl__instancias.setSelected(this.getAttribute('instancia'));
-				if (!(ctrl__instancias.getSelected('id') in _operacoes_arcabouco)){
-					Global.connect({
-						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: ctrl__instancias.getSelected('id')}},
-						success: function (result){
-							if (result.status){
-								updateCenarios_Arcabouco.create(result.data['cenarios']);
-								updateOperacoes_Arcabouco(result.data['operacoes']);
-								rebuildArcaboucoSection();
-							}
-							else
-								Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
-						}
-					});
-				}
-				else
-					rebuildArcaboucoSection();
+				rebuildArcaboucoSection();
 			}
 		}
 	});
@@ -2133,12 +2154,25 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('renda_variavel__section')).on('change', '#dashboard_ops__simulate input[name]', function (){
 		ctrl__instancias.updateInstancia_Simulations(this.name, $(this).val());
-	}).on('click', '#dashboard_ops__refresh', function (){
+	});
+	/*
+		Processa a aplicação dos 'filters' e 'simulations'.
+	*/
+	$(document.getElementById('renda_variavel__section')).on('click', '#dashboard_ops__refresh', function (){
 		rebuildArcaboucoSection();
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Section Cenarios --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Processa o fechamento do modal 'cenarios_modal', para reconstrucao do arcabouço section.
+	*/
+	$(document.getElementById('cenarios_modal')).on('hidden.bs.modal', function (){
+		if (_arcabouco_section__needRebuild){
+			_arcabouco_section__needRebuild = false;
+			rebuildArcaboucoSection();
+		}
+	});
 	/*
 		Processa o espelhamento de cenários de u outro arcabouço.
 		Adiciona os cenarios de outro arcabouço, menos os que o nome já existir.
@@ -2224,6 +2258,7 @@ let Renda_variavel = (function(){
 					data: {module: 'renda_variavel', action: 'remove_cenarios', params: remove_data},
 					success: function (result){
 						if (result.status){
+							_arcabouco_section__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Removido.', delay: 4000});
 							updateCenarios_Arcabouco.remove(remove_data.id);
 							rebuildCenarios_modal_copiar();
@@ -2340,6 +2375,7 @@ let Renda_variavel = (function(){
 					data: {module: 'renda_variavel', action: 'insert_cenarios', params: insert_data},
 					success: function (result){
 						if (result.status){
+							_arcabouco_section__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Adicionado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
 							updateCenarios_Arcabouco.update(result.data[0]);
@@ -2360,6 +2396,7 @@ let Renda_variavel = (function(){
 					data: {module: 'renda_variavel', action: 'update_cenarios', params: update_data},
 					success: function (result){
 						if (result.status){
+							_arcabouco_section__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Atualizado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
 							updateCenarios_Arcabouco.update(result.data[0]);
@@ -2417,8 +2454,14 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------- Section Operações Add ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Processa o fechamento do modal 'operacoes_modal', para reconstrucao do arcabouço section.
+	*/
 	$(document.getElementById('operacoes_modal')).on('hidden.bs.modal', function (){
-		rebuildArcaboucoSection();
+		if (_arcabouco_section__needRebuild){
+			_arcabouco_section__needRebuild = false;
+			rebuildArcaboucoSection();
+		}
 	});
 	/*
 		Processa a importação de um arquivo de operações.
@@ -2601,6 +2644,7 @@ let Renda_variavel = (function(){
 				data: {module: 'renda_variavel', action: 'insert_operacoes', params: JSON.stringify(insert_data)},
 				success: function (result){
 					if (result.status){
+						_arcabouco_section__needRebuild = true;
 						updateOperacoes_Arcabouco(result.data);
 						if (result.hold_ops.length === 0){
 							Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
