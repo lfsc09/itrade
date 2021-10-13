@@ -153,13 +153,14 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 .table td.divider {border-left: 1px solid #dee2e6}
 .table thead th.subheader {border-bottom: 1px solid #dee2e6 !important; font-size: 11px}
 .table thead th.mainheader {border-bottom: none !important}
-/*----------------------------------- INSERT MODAL -----------------------------------*/
+/*----------------------------- INSERT MODAL (GENÉRICO) ------------------------------*/
 #insert_modal_form, #insert_modal_form input {font-size: .9em}
-/*----------------------------------- MENU BOTTOM ------------------------------------*/
-/*---------------------------------- RENDA VARIAVEL ----------------------------------*/
+/*------------------------------------------------------------------------------------*/
+/*---------------------------------- RENDA VARIÁVEL ----------------------------------*/
+/*------------------------------------------------------------------------------------*/
 #renda_variavel__section .form-label {font-size: 11px}
 #renda_variavel__instancias span {cursor: pointer}
-/*------------------------------------ Arcabouco -------------------------------------*/
+/*------------------------------------ Arcabouço -------------------------------------*/
 #arcaboucos_modal_form .form-label {font-size: 12px}
 #table_arcaboucos {font-size: .85em}
 #table_arcaboucos tbody td{vertical-align: middle}
@@ -173,19 +174,32 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_arcaboucos tbody td[name='usuarios'] span.badge i {font-size: 8px}
 #table_arcaboucos tbody td[name='editar'] {width: 4%}
 #table_arcaboucos tbody td[name='remover'] {width: 4%}
-/*a.arcabouco-selected {border-left: 3px solid #0d6efd !important;}*/
-/*#table_arcaboucos .arcabouco-badge {font-size: 11px; color: #00000096}*/
+/*------------------------------------- Cenarios -------------------------------------*/
+#table_cenarios div.card {border-left: 3px solid #0d6efd !important;}
+#table_cenarios div.card[new_cenario] {border-left: 3px solid #198754 !important;}
+#table_cenarios a.nav-link span.badge {font-size: .6em;vertical-align: middle;margin-top: -2px;}
+#table_cenarios table tbody td{vertical-align: middle}
+#table_cenarios table tbody tr:last-child td {border: 0}
+#table_cenarios table tbody td[name='ref']{width: 7%}
+#table_cenarios table tbody td[name='obrigatoria']{width: 15%}
+#table_cenarios table tbody td[name='inativo']{width: 15%}
+#table_cenarios table tbody td[name='cor']{width: 10%}
+#table_cenarios .accordion-button-with-input::after {margin-left: 1rem}
+#table_cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
+/*------------------------------ Filters e Simulations -------------------------------*/
+#renda_variavel__search .form-label {font-size: 11px}
+#renda_variavel__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
+#renda_variavel__search input[name='data'] {width: 175px}
+#renda_variavel__search div[name='ativo'] {width: 190px}
+#renda_variavel__search div[name='cenario'] {width: 190px}
+#renda_variavel__search div[name='premissas'] {width: 190px; font-size: 13px}
+#renda_variavel__search div[name='observacoes'] {width: 190px}
+#renda_variavel__search div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
+#renda_variavel__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
+#renda_variavel__search input[name='vol'] {width: 80px}
+#renda_variavel__search select[name='tipo_cts'] {width: 115px}
+#renda_variavel__search select[name='ativo'].init, #renda_variavel__search select[name='cenario'].init {height: 30px}
 /*---------------------------------- Dashboard Ops -----------------------------------*/
-#dashboard_ops__filter .slider-styled.filter-hora {width: 100px; margin-top: 11px}
-#dashboard_ops__filter input[name='data'] {width: 175px}
-#dashboard_ops__filter div[name='ativo'] {width: 190px}
-#dashboard_ops__filter div[name='cenario'] {width: 190px}
-#dashboard_ops__filter div[name='premissas'] {width: 190px; font-size: 13px}
-#dashboard_ops__filter div[name='observacoes'] {width: 190px}
-#dashboard_ops__filter div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
-#dashboard_ops__filter div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
-#dashboard_ops__simulate input[name='vol'] {width: 80px}
-#dashboard_ops__simulate select[name='tipo_cts'] {width: 115px}
 #dashboard_ops__table_stats__byCenario {font-size: 12px}
 #dashboard_ops__table_stats__byCenario span.data-small {font-weight: bold; font-size: 11px}
 #dashboard_ops__table_stats__byCenario span.data-tiny {font-weight: bold; font-size: 9px}
@@ -230,18 +244,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #lista_ops__table tr.selected {background: #cfe2ff}
 #lista_ops__table_wrapper {font-size: 13px}
 #lista_ops__table_wrapper select, #lista_ops__table_wrapper input {font-size: 11px}
-/*------------------------------------- Cenarios -------------------------------------*/
-#table_cenarios div.card {border-left: 3px solid #0d6efd !important;}
-#table_cenarios div.card[new_cenario] {border-left: 3px solid #198754 !important;}
-#table_cenarios a.nav-link span.badge {font-size: .6em;vertical-align: middle;margin-top: -2px;}
-#table_cenarios table tbody td{vertical-align: middle}
-#table_cenarios table tbody tr:last-child td {border: 0}
-#table_cenarios table tbody td[name='ref']{width: 7%}
-#table_cenarios table tbody td[name='obrigatoria']{width: 15%}
-#table_cenarios table tbody td[name='inativo']{width: 15%}
-#table_cenarios table tbody td[name='cor']{width: 10%}
-#table_cenarios .accordion-button-with-input::after {margin-left: 1rem}
-#table_cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
 /*-------------------------------- Adicionar Operações -------------------------------*/
 #operacoes_modal .form-label {font-size: 12px}
 #table_operacoes_add {font-size: 13px}
@@ -266,7 +268,9 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_operacoes_add td[name='premissas'] {width: 9%}
 #table_operacoes_add td[name='observacoes'] {width: 9%}
 #table_operacoes_add td[name='erro'] {width: 2%; text-align: center; vertical-align: middle;}
+/*------------------------------------------------------------------------------------*/
 /*------------------------------------- ATIVOS ---------------------------------------*/
+/*------------------------------------------------------------------------------------*/
 #table_ativos {font-size: .80em}
 #table_ativos tbody td{vertical-align: middle}
 #table_ativos tr td[name='custo'], #table_ativos tr td[name='valor_tick'], #table_ativos tr td[name='pts_tick'], #table_ativos tr td[name='action'] {text-align: center}

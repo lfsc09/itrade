@@ -266,7 +266,7 @@ let Ativos = (function(){
 								$(document.getElementById('insert_modal')).modal('hide');
 								buildTableAtivos(result.data);
 								if (typeof Renda_variavel !== 'undefined')
-									Renda_variavel.updateAtivos(result.data);
+									Renda_variavel.lista__ativos.update(result.data);
 							}
 							else
 								Global.toast.create({location: document.getElementById('insert_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
@@ -355,7 +355,7 @@ let Ativos = (function(){
 						$(document.getElementById('table_ativos')).find('button[popup-editar]').popover('dispose');
 						buildTableAtivos(result.data);
 						if (typeof Renda_variavel !== 'undefined')
-							Renda_variavel.updateAtivos(result.data);
+							Renda_variavel.lista__ativos.update(result.data);
 					}
 					else
 						Global.toast.create({location: document.getElementById('update_popup_toasts'), color: 'danger', body: result.error, delay: 4000});

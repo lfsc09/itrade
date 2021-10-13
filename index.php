@@ -104,6 +104,104 @@
 								<div class="col" id="renda_variavel__instancias"></div>
 							</div>
 							<div class="row">
+								<div class="col" id="renda_variavel__search">
+									<div class="row">
+										<div class="col-1 d-flex pe-0" style="width: 65px">
+											<button class="btn btn-sm btn-primary flex-fill" type="button" id="renda_variavel__refresh"><i class="fas fa-magic"></i></button>
+										</div>
+										<div class="col">
+											<div class="card mb-2 rounded-3 shadow-sm">
+												<div class="card-body p-2">
+													<div class="container-fluid d-flex justify-content-end px-0">
+														<form class="row m-0 flex-fill">
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Filtrar Data</label>
+																<input type="text" name="data" class="form-control form-control-sm" placeholder="Data">
+															</div>
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Filtrar Hora</label>
+																<div class="slider-styled filter-hora" name="hora"></div>
+															</div>
+															<div class="col-auto" name="ativo">
+																<label class="form-label m-0 text-muted fw-bold">Filtrar Ativo</label>
+																<select name="ativo" class="form-control form-control-sm init" multiple></select>
+															</div>
+															<div class="col-auto" name="cenario">
+																<label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label>
+																<select name="cenario" class="form-control form-control-sm init" multiple></select>
+															</div>
+															<div class="col-auto" name="premissas">
+																<label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label>
+																<div class="iSelectKami dropdown bootstrap-select w-100" name="premissas">
+																	<button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Premissas</button>
+																	<ul class="dropdown-menu overflow-auto"></ul>
+																</div>
+															</div>
+															<div class="col-auto" name="observacoes">
+																<label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label>
+																<div class="iSelectKami dropdown bootstrap-select w-100" name="observacoes">
+																	<button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Observações</button>
+																	<ul class="dropdown-menu overflow-auto"></ul>
+																</div>
+															</div>
+														</form>
+													</div>
+												</div>
+											</div>
+											<div class="card rounded-3 shadow-sm">
+												<div class="card-body p-2">
+													<div class="container-fluid d-flex justify-content-end px-0">
+														<form class="row m-0 flex-fill">
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Período</label>
+																<select name="periodo_calc" class="form-select form-select-sm ms-auto">
+																	<option value="1">Por Trade</option>
+																	<option value="2">Por Dia</option>
+																	<option value="3">Por Mes</option>
+																</select>
+															</div>
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Simular Cts</label>
+																<div class="input-group">
+																	<select class="form-select form-select-sm" name="tipo_cts">
+																		<option value="1">Padrão</option>
+																		<option value="2">Quantidade Fixa</option>
+																		<option value="3">Quantidade Máx por R</option>
+																	</select>
+																	<input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" placeholder="Cts" disabled>
+																</div>
+															</div>
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Custos</label>
+																<select name="usa_custo" class="form-select form-select-sm ms-auto">
+																	<option value="1">Incluir</option>
+																	<option value="0">Não Incluir</option>
+																</select>
+															</div>
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Ignorar Erros</label>
+																<select name="ignora_erro" class="form-select form-select-sm ms-auto">
+																	<option value="0">Não</option>
+																	<option value="1">Sim</option>
+																</select>
+															</div>
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Simular Capital</label>
+																<input type="text" name="valor_inicial" class="form-control form-control-sm" onclick="this.select()" placeholder="Capital">
+															</div>
+															<div class="col-auto">
+																<label class="form-label m-0 text-muted fw-bold">Simular R</label>
+																<input type="text" name="R" class="form-control form-control-sm" onclick="this.select()" placeholder="R">
+															</div>
+														</form>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="row mt-4">
 								<div class="col" id="renda_variavel__section"></div>
 							</div>
 						</div>

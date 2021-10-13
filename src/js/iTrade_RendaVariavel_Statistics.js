@@ -88,7 +88,7 @@ let RV_Statistics = (function(){
 	/*
 		Aplica os 'filters' na operacao passada.
 	*/
-	let okToUse_filterOp = function (op, filters){
+	let okToUse_filterOp = function (op, filters, simulate){
 		//Filtra a data com a data inicial
 		if (filters.data_inicial !== null && compareDate_Time(op.data, filters.data_inicial, 'date') === -1)
 			return false;
@@ -114,7 +114,7 @@ let RV_Statistics = (function(){
 		if (!checkPremissas_Observacoes(op.cenario, op.observacoes, filters.cenario, 'observacoes', filters.observacoes_query_union))
 			return false;
 		//Filtra operações com Erro
-		if (filters.ignora_erro && op.erro == 1)
+		if (simulate.ignora_erro && op.erro == 1)
 			return false;
 		return true;
 	}
@@ -128,7 +128,7 @@ let RV_Statistics = (function(){
 		if (simulate.periodo_calc === '1'){
 			for (let e in list){
 				//Roda os 'filters' na operação
-				if (okToUse_filterOp(list[e], filters)){
+				if (okToUse_filterOp(list[e], filters, simulate)){
 					//Calcula o resultado bruto da operação
 					let op_resultBruto = calculate_op_result(list[e], simulate);
 					//Usa o custo da operação a ser aplicada no resultado 'Resultado Líquido'
@@ -308,14 +308,14 @@ let RV_Statistics = (function(){
 			ativo: ('ativo' in filters) ? filters.ativo : [],
 			cenario: ('cenario' in filters) ? filters.cenario : {},
 			premissas_query_union: ('premissas_query_union' in filters) ? filters.premissas_query_union : 'OR',
-			observacoes_query_union: ('observacoes_query_union' in filters) ? filters.observacoes_query_union : 'OR',
-			ignora_erro: ('ignora_erro' in filters) ? filters.ignora_erro == 1 : false
+			observacoes_query_union: ('observacoes_query_union' in filters) ? filters.observacoes_query_union : 'OR'
 		};
 		_simulate = {
 			periodo_calc: ('periodo_calc' in simulate) ? simulate.periodo_calc : '1',
 			tipo_cts: ('tipo_cts' in simulate) ? simulate.tipo_cts : '1',
 			cts: ('cts' in simulate) ? simulate.cts : null,
 			usa_custo: ('usa_custo' in simulate) ? simulate.usa_custo == 1 : true,
+			ignora_erro: ('ignora_erro' in simulate) ? simulate.ignora_erro == 1 : false,
 			valor_inicial: ('valor_inicial' in simulate) ? simulate.valor_inicial : null,
 			R: ('R' in simulate) ? simulate.R : null
 		};
@@ -613,8 +613,8 @@ let RV_Statistics = (function(){
 		_dashboard_ops__table_stats['stats__dp']              = (_simulate['R'] !== null) ? desvpad(_temp_listas['resultados_R'])['desvpad'] : '--';
 		_dashboard_ops__table_stats['stats__sqn']             = (_simulate['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect'], _dashboard_ops__table_stats['stats__dp']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 		
-		_dashboard_ops__table_stats['trades__erro']           = ((!_filters.ignora_erro) ? _dashboard_ops__table_stats['trades__erro'] : '--');
-		_dashboard_ops__table_stats['trades__erro_perc']      = ((!_filters.ignora_erro) ? (divide(_dashboard_ops__table_stats['trades__erro'], _dashboard_ops__table_stats['trades__total']) * 100) : '--');
+		_dashboard_ops__table_stats['trades__erro']           = ((!_simulate.ignora_erro) ? _dashboard_ops__table_stats['trades__erro'] : '--');
+		_dashboard_ops__table_stats['trades__erro_perc']      = ((!_simulate.ignora_erro) ? (divide(_dashboard_ops__table_stats['trades__erro'], _dashboard_ops__table_stats['trades__total']) * 100) : '--');
 		//////////////////////////////////
 		//Estatisticas por Cenario
 		//////////////////////////////////
@@ -650,8 +650,8 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats__byCenario[cenario]['stats__dp']              = (_simulate['R'] !== null) ? desvpad(_dashboard_ops__table_stats__byCenario[cenario]['lista_resultad_R'])['desvpad'] : '--';
 			_dashboard_ops__table_stats__byCenario[cenario]['stats__sqn']             = (_simulate['R'] !== null) ? (divide(_dashboard_ops__table_stats__byCenario[cenario]['stats__expect'], _dashboard_ops__table_stats__byCenario[cenario]['stats__dp']) * Math.sqrt(_dashboard_ops__table_stats__byCenario[cenario]['trades__total'])) : '--';
 			
-			_dashboard_ops__table_stats__byCenario[cenario]['trades__erro']           = ((!_filters.ignora_erro) ? _dashboard_ops__table_stats__byCenario[cenario]['trades__erro'] : '--');
-			_dashboard_ops__table_stats__byCenario[cenario]['trades__erro_perc']      = ((!_filters.ignora_erro) ? (divide(_dashboard_ops__table_stats__byCenario[cenario]['trades__erro'], _dashboard_ops__table_stats__byCenario[cenario]['trades__total']) * 100) : '--');
+			_dashboard_ops__table_stats__byCenario[cenario]['trades__erro']           = ((!_simulate.ignora_erro) ? _dashboard_ops__table_stats__byCenario[cenario]['trades__erro'] : '--');
+			_dashboard_ops__table_stats__byCenario[cenario]['trades__erro_perc']      = ((!_simulate.ignora_erro) ? (divide(_dashboard_ops__table_stats__byCenario[cenario]['trades__erro'], _dashboard_ops__table_stats__byCenario[cenario]['trades__total']) * 100) : '--');
 		}
 		//////////////////////////////////
 		//Gráfico de Evolução Patrimonial
