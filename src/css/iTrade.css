@@ -158,7 +158,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*------------------------------------------------------------------------------------*/
 /*---------------------------------- RENDA VARIÁVEL ----------------------------------*/
 /*------------------------------------------------------------------------------------*/
-#renda_variavel__section .form-label {font-size: 11px}
 #renda_variavel__instancias span {cursor: pointer}
 /*------------------------------------ Arcabouço -------------------------------------*/
 #arcaboucos_modal_form .form-label {font-size: 12px}
@@ -186,20 +185,47 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_cenarios table tbody td[name='cor']{width: 10%}
 #table_cenarios .accordion-button-with-input::after {margin-left: 1rem}
 #table_cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
-/*------------------------------ Filters e Simulations -------------------------------*/
-#renda_variavel__search .form-label {font-size: 11px}
-#renda_variavel__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
-#renda_variavel__search input[name='data'] {width: 175px}
-#renda_variavel__search div[name='ativo'] {width: 190px}
-#renda_variavel__search div[name='cenario'] {width: 190px}
-#renda_variavel__search div[name='premissas'] {width: 190px; font-size: 13px}
-#renda_variavel__search div[name='observacoes'] {width: 190px}
-#renda_variavel__search div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
-#renda_variavel__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
-#renda_variavel__search input[name='vol'] {width: 80px}
-#renda_variavel__search select[name='tipo_cts'] {width: 115px}
-#renda_variavel__search select[name='ativo'].init, #renda_variavel__search select[name='cenario'].init {height: 30px}
+/*-------------------------------- Adicionar Operações -------------------------------*/
+#operacoes_modal .form-label {font-size: 12px}
+#table_operacoes_add {font-size: 13px}
+#table_operacoes_add tr.error {background-color: #f8d7dac4;}
+#table_operacoes_add th.error {color: #842029;}
+#table_operacoes_add td input {text-align: center; font-size: 11px}
+#table_operacoes_add td select {font-size: 11px}
+#table_operacoes_add td[name='sequencia'] {width: 3%}
+#table_operacoes_add td[name='data'] {width: 6%}
+#table_operacoes_add td[name='ativo'] {width: 7%}
+#table_operacoes_add td[name='op'] {width: 6%}
+#table_operacoes_add td[name='rr'] {width: 7%}
+#table_operacoes_add td[name='vol'] {width: 4%}
+#table_operacoes_add td[name='cts'] {width: 3%}
+#table_operacoes_add td[name='hora'] {width: 5%}
+#table_operacoes_add td[name='entrada'] {width: 5%}
+#table_operacoes_add td[name='stop'] {width: 5%}
+#table_operacoes_add td[name='alvo'] {width: 5%}
+#table_operacoes_add td[name='men'] {width: 5%}
+#table_operacoes_add td[name='mep'] {width: 5%}
+#table_operacoes_add td[name='saida'] {width: 5%}
+#table_operacoes_add td[name='premissas'] {width: 9%}
+#table_operacoes_add td[name='observacoes'] {width: 9%}
+#table_operacoes_add td[name='erro'] {width: 2%; text-align: center; vertical-align: middle;}
+/*------------------------------------ Lista Ops -------------------------------------*/
+#lista_ops__table {font-size: 13px}
+#lista_ops__table tr.selected {background: #cfe2ff}
+#lista_ops__table_wrapper {font-size: 13px}
 /*---------------------------------- Dashboard Ops -----------------------------------*/
+#dashboard_ops__search .form-label {font-size: 11px}
+#dashboard_ops__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
+#dashboard_ops__search input[name='data'] {width: 175px}
+#dashboard_ops__search div[name='ativo'] {width: 190px}
+#dashboard_ops__search div[name='cenario'] {width: 190px}
+#dashboard_ops__search div[name='premissas'] {width: 190px; font-size: 13px}
+#dashboard_ops__search div[name='observacoes'] {width: 190px}
+#dashboard_ops__search div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
+#dashboard_ops__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
+#dashboard_ops__search input[name='vol'] {width: 80px}
+#dashboard_ops__search select[name='tipo_cts'] {width: 115px}
+#dashboard_ops__search select[name='ativo'].init, #dashboard_ops__search select[name='cenario'].init {height: 30px}
 #dashboard_ops__table_stats__byCenario {font-size: 12px}
 #dashboard_ops__table_stats__byCenario span.data-small {font-weight: bold; font-size: 11px}
 #dashboard_ops__table_stats__byCenario span.data-tiny {font-weight: bold; font-size: 9px}
@@ -239,35 +265,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_trades tbody td[name='mep__porc'] progress {width: 70px; height: 4px; border-radius: 1em;}
 #dashboard_ops__table_trades tbody td[name='mep__porc'] progress[value]::-webkit-progress-bar {background-color: #efefef !important}
 #dashboard_ops__table_trades tbody td[name='mep__porc'] progress[value]::-webkit-progress-value {background-color: #198754 !important}
-/*------------------------------------ Lista Ops -------------------------------------*/
-#lista_ops__table {font-size: 13px}
-#lista_ops__table tr.selected {background: #cfe2ff}
-#lista_ops__table_wrapper {font-size: 13px}
-#lista_ops__table_wrapper select, #lista_ops__table_wrapper input {font-size: 11px}
-/*-------------------------------- Adicionar Operações -------------------------------*/
-#operacoes_modal .form-label {font-size: 12px}
-#table_operacoes_add {font-size: 13px}
-#table_operacoes_add tr.error {background-color: #f8d7dac4;}
-#table_operacoes_add th.error {color: #842029;}
-#table_operacoes_add td input {text-align: center; font-size: 11px}
-#table_operacoes_add td select {font-size: 11px}
-#table_operacoes_add td[name='sequencia'] {width: 3%}
-#table_operacoes_add td[name='data'] {width: 6%}
-#table_operacoes_add td[name='ativo'] {width: 7%}
-#table_operacoes_add td[name='op'] {width: 6%}
-#table_operacoes_add td[name='rr'] {width: 7%}
-#table_operacoes_add td[name='vol'] {width: 4%}
-#table_operacoes_add td[name='cts'] {width: 3%}
-#table_operacoes_add td[name='hora'] {width: 5%}
-#table_operacoes_add td[name='entrada'] {width: 5%}
-#table_operacoes_add td[name='stop'] {width: 5%}
-#table_operacoes_add td[name='alvo'] {width: 5%}
-#table_operacoes_add td[name='men'] {width: 5%}
-#table_operacoes_add td[name='mep'] {width: 5%}
-#table_operacoes_add td[name='saida'] {width: 5%}
-#table_operacoes_add td[name='premissas'] {width: 9%}
-#table_operacoes_add td[name='observacoes'] {width: 9%}
-#table_operacoes_add td[name='erro'] {width: 2%; text-align: center; vertical-align: middle;}
 /*------------------------------------------------------------------------------------*/
 /*------------------------------------- ATIVOS ---------------------------------------*/
 /*------------------------------------------------------------------------------------*/

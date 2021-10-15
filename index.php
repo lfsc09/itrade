@@ -104,11 +104,8 @@
 								<div class="col" id="renda_variavel__instancias"></div>
 							</div>
 							<div class="row">
-								<div class="col" id="renda_variavel__search">
+								<div class="col" id="dashboard_ops__search">
 									<div class="row">
-										<div class="col-1 d-flex pe-0" style="width: 65px">
-											<button class="btn btn-sm btn-primary flex-fill" type="button" id="renda_variavel__refresh"><i class="fas fa-magic"></i></button>
-										</div>
 										<div class="col">
 											<div class="card mb-2 rounded-3 shadow-sm">
 												<div class="card-body p-2">
@@ -202,7 +199,57 @@
 								</div>
 							</div>
 							<div class="row mt-4">
-								<div class="col" id="renda_variavel__section"></div>
+								<div class="col" id="dashboard_ops__section">
+									<div class="d-none" target="data">
+										<!-- Tabela de dados por Cenário -->
+										<div class="row">
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body" id="dashboard_ops__table_stats__byCenario__place"></div>
+												</div>
+											</div>
+										</div>
+										<div class="row mt-4">
+											<!-- Tabela de Trades -->
+											<div class="col-6" id="dashboard_ops__table_trades__place">
+											</div>
+											<!-- Grafico Trades Resultados Normalizado -->
+											<div class="col-6">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body" id="dashboard_ops__chart_resultadoNormalizado"></div>
+												</div>
+											</div>
+										</div>
+										<div class="row mt-3">
+											<!-- Graficos Horario -->
+											<div class="col-3">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body" id="dashboard_ops__chart_resultadoPorHorario"></div>
+												</div>
+											</div>
+											<!-- Graficos Evolução Patrimonial -->
+											<div class="col-9">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body" id="dashboard_ops__chart_evolucaoPatrimonial"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="" target="empty">
+										<div class="card mb-2 rounded-3 shadow-sm">
+											<div class="card-body">
+												<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</div>
+											</div>
+										</div>
+									</div>
+									<div class="d-none" target="building">
+										<div class="card mb-2 rounded-3 shadow-sm">
+											<div class="card-body">
+												<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cog fa-spin me-2"></i>Construindo..</div>
+											</div>
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
