@@ -494,6 +494,7 @@
 		 	$result_raw = $stmt->get_result();
 			while($row = $result_raw->fetch_assoc()){
 				$result[] = [
+					'id' => $row['id'],
 					'sequencia' => $row['sequencia'],
 					'data' => $row['data'],
 					'ativo' => $row['ativo'],

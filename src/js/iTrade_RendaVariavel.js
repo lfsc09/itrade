@@ -4,8 +4,6 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------- Section Arcabouço --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
-	//Informa se o 'dashboard_ops' ou 'lista_ops' precisa ser reconstruido
-	let _arcabouco_section__needRebuild = false;
 	//////////////////////////////////
 	//Usuários
 	//////////////////////////////////
@@ -319,7 +317,7 @@ let Renda_variavel = (function(){
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------- Lista Arcabouços (Modal)----------------------------*/
+	/*------------------------------ Lista Arcabouços --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	//Funcoes usadas em '_arcabouco__table_DT'
 	let _arcabouco__table_DT_ext = {
@@ -481,22 +479,60 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------------- Lista Ops ------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	//Informa se o 'list_ops' precisa ser reconstruido
+	let _list_ops__needRebuild = false;
 	//Variavel usada no controle de click, para saber se está pressionado o click ou não
 	let _lista_ops__table_DT_clickState = 0;
+	//Possui os filtros usados em 'lista_ops__search'
+	let _lista_ops__search = {
+		filters: {
+			data: null,
+			ativo: null,
+			cenario: null
+		},
+		update: function (){
+			let me = this,
+				dashboard_ops__search = $(document.getElementById('lista_ops__search')),
+				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id');
+			//////////////////////////////////
+			//Filtro da Data
+			//////////////////////////////////
+			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : '',
+				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : '';
+			if (me.filters.data === null){
+				me.filters.data = dashboard_ops__search.find('input[name="data"]');
+				me.filters.data.on('apply.daterangepicker', function (ev, picker){
+					$(document.getElementById("lista_ops__table")).DataTable().column(`${this.name}:name`).search(this.value).draw();
+				});
+				me.filters.data.daterangepicker({
+					showDropdowns: true,
+					minDate: data_inicial,
+					startDate: data_inicial,
+					endDate: data_final,
+					maxDate: data_final,
+					locale: {
+						format: 'DD/MM/YYYY',
+						separator: ' - ',
+						applyLabel: 'Aplicar',
+						cancelLabel: 'Cancelar',
+						fromLabel: 'De',
+						toLabel: 'Até',
+						customRangeLabel: 'Custom',
+						weekLabel: 'S',
+						daysOfWeek: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
+						monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+					}
+				});
+			}
+		}
+	}
 	//Funcoes usadas em '_lista_ops__table_DT'
 	let _lista_ops__table_DT_ext = {
-		preco_render: function (data, type, row){
-			if (data == 0)
-				return '';
-			if (row[3].toLowerCase().includes('win'))
-				return $.fn.dataTable.render.number( '.', '', 0, '').display(data);
-			else if (row[3].toLowerCase().includes('wdo'))
-				return $.fn.dataTable.render.number( '.', ',', 2, '').display(data);
-			else
-				return data;
-		},
 		vol_render: function (data, type, row){
-			return $.fn.dataTable.render.number( '.', '', 0, '').display(data);
+			return (type === 'display') ? ((data == 0) ? '' : $.fn.dataTable.render.number( '.', '', 0, '').display(data)) : data;
+		},
+		error_render: function (data, type, row){
+			return (type === 'display') ? ((data == 1) ? `<i class="fas fa-exclamation-triangle text-warning"></i>` : ``) : data;
 		}
 	}
 	//Configuração da tabela de operações em 'lista_ops'
@@ -506,22 +542,12 @@ let Renda_variavel = (function(){
 			{name: 'data', orderable: true, type: 'br-date'},
 			{name: 'hora', orderable: true},
 			{name: 'ativo', orderable: true},
-			{name: 'op', orderable: true},
+			{name: 'op', orderable: false},
 			{name: 'vol', orderable: true, render: _lista_ops__table_DT_ext.vol_render},
-			{name: 'cts', orderable: true},
-			{name: 'entrada', orderable: false, render: _lista_ops__table_DT_ext.preco_render},
-			{name: 'stop', orderable: false, render: _lista_ops__table_DT_ext.preco_render},
-			{name: 'alvo', orderable: false, render: _lista_ops__table_DT_ext.preco_render},
-			{name: 'men', orderable: false, render: _lista_ops__table_DT_ext.preco_render},
-			{name: 'mep', orderable: false, render: _lista_ops__table_DT_ext.preco_render},
-			{name: 'saida', orderable: false, render: _lista_ops__table_DT_ext.preco_render},
 			{name: 'cenario', orderable: true},
-			{name: 'premissas', orderable: false},
-			{name: 'observacoes', orderable: false},
-			{name: 'erro', orderable: false}
+			{name: 'erro', orderable: true, render: _lista_ops__table_DT_ext.error_render}
 		],
 		lengthChange: false,
-		searching: false,
 		columnDefs: [{
 			targets: [1],
 			orderData: [1, 2]
@@ -533,10 +559,12 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Dashboard Ops ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	//Informa se o 'dashboard_ops' precisa ser reconstruido
+	let _dashboard_ops__needRebuild = false;
+	//Controla qual seção do dashboard_opst mostrar 'data', 'empty' ou 'building'
 	let _dashboard_ops__section = {
 		sections: {'data': 2, 'empty': 0, 'building': 0},
 		show: function (section_target, step = 0){
-			console.log(step, this.sections[section_target]);
 			if (step === this.sections[section_target]){
 				$(document.getElementById('dashboard_ops__section')).find('> div[target]').each(function (){
 					$(this).toggleClass('d-none', this.getAttribute('target') !== section_target);
@@ -925,27 +953,6 @@ let Renda_variavel = (function(){
 	function rebuildArcaboucoSection(rebuildSearch = false){
 		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
 			html = ``;
-		// if (_arcabouco_section__selected === 'lista_ops'){
-		// 	//Submenu acima da Tabela
-		// 	html += `<div class="card mb-2 rounded-3 shadow-sm">`+
-		// 			`<div class="card-body p-2">`+
-		// 			`<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">`+
-		// 			`<button class="btn btn-sm btn-outline-primary me-2 d-none" type="button" name="alterar_sel"><i class="fas fa-edit me-2"></i>Editar</button>`+
-		// 			`<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>`+
-		// 			`<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>`+
-		// 			`</div></div></div>`;
-		// 	//Tabela de operações
-		// 	html += `<div class="card mb-4 rounded-3 shadow-sm">`+
-		// 			`<div class="card-body">`+
-		// 			`<table id="lista_ops__table" class="table table-hover">`+
-		// 			`<thead>${rebuildListaOps__Table('thead')}<thead>`+
-		// 			`<tbody>${rebuildListaOps__Table('tbody')}</tbody>`+
-		// 			`</table>`+
-		// 			`</div></div>`;
-		// 	$(document.getElementById('renda_variavel__section')).empty().append(html).promise().then(function (){
-		// 		$(document.getElementById('lista_ops__table')).DataTable(_lista_ops__table_DT);
-		// 	});
-		// }
 		//////////////////////////////////
 		//Seção de 'filters' e 'simulations'
 		//////////////////////////////////
@@ -1703,6 +1710,193 @@ let Renda_variavel = (function(){
 		return data;
 	}
 	////////////////////////////////////////////////////////////////////////////////////
+	/*--------------------------- Section Operações Add ------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Constroi o modal de Cadastro de Operações.
+	*/
+	function buildOperacoesModal(){
+		let modal = $(document.getElementById('operacoes_modal'));
+		document.getElementById('importa_arquivo_operacoes_modal').value = '';
+		document.getElementById('file_format').selectedIndex = 0;
+		document.getElementById('table_layout').selectedIndex = 0;
+		resetOperacaoAddTable();
+		modal.modal('show');
+	}
+	/*
+		Apaga tudo em 'table_operacoes_add'.
+	*/
+	function resetOperacaoAddTable(){
+		let table = $(document.getElementById('table_operacoes_add'));
+		table.find('thead').empty();
+		table.find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
+	}
+	/*
+		Constroi o html do select de ativos em 'table_operacoes_add'.
+	*/
+	function buildAtivosSelect_OperacaoAddTable(){
+		let html = ``;
+		for (let at in _lista__cenarios.ativos)
+			html += `<option value="${_lista__cenarios.ativos[at].id}" custo="${_lista__cenarios.ativos[at].custo}" valor_tick="${_lista__cenarios.ativos[at].valor_tick}" pts_tick="${_lista__cenarios.ativos[at].pts_tick}">${_lista__cenarios.ativos[at].nome}</option>`;
+		return html;
+	}
+	/*
+		Constroi o html do select de cenarios em 'table_operacoes_add'.
+	*/
+	function buildCenariosSelect_OperacaoAddTable(){
+		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			html = ``;
+		for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
+			html += `<option value="${_lista__cenarios.cenarios[selected_inst_arcabouco][cn].id}">${_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome}</option>`;
+		return html;
+	}
+	/*
+		Inicia os valores dos selects das linhas de 'table_operacoes_add'.
+	*/
+	function setSelectValues_OperacaoAddTable(data){
+		$(document.getElementById('table_operacoes_add')).find('tbody tr').each(function (t, tr){
+			tr = $(tr);
+			if ('ativo' in data[t])
+				tr.find('select[name="ativo"]').val('').find('option').filter((i, el) => data[t].ativo.toLowerCase().includes(el.innerHTML.toLowerCase())).prop('selected', true);
+			if ('op' in data[t])
+				tr.find('select[name="op"]').val(data[t].op);
+			if ('rr' in data[t])
+				tr.find('select[name="rr"]').val(data[t].rr);
+			if ('cenario' in data[t]){
+				tr.find('select[name="cenario"]').val('').find('option').filter((i, el) => data[t].cenario === el.innerHTML).prop('selected', true);
+				if (tr.find('select[name="cenario"]').val() === null)
+					tr.find('input[name="premissas"],input[name="observacoes"]').val('');
+			}
+		});
+	}
+	/*
+		Adiciona uma linha na tabela de adição de operações.
+	*/
+	function buildOperacaoAddTable(data = []){
+		let tbody_html = ``,
+			thead_html = ``,
+			table = $(document.getElementById('table_operacoes_add')),
+			table_layout = $(document.getElementById('table_layout')).val(),
+			select_ativos_html = buildAtivosSelect_OperacaoAddTable(),
+			select_cenarios_html = buildCenariosSelect_OperacaoAddTable();
+		//Constroi o THEAD
+		if (table_layout === 'scalp'){
+			thead_html += `<tr>`+
+						  `<th name="sequencia">#</th>`+
+						  `<th name="data">Data</th>`+
+						  `<th name="ativo">Ativo</th>`+
+						  `<th name="op">Op.</th>`+
+						  `<th name="rr">R:R</th>`+
+						  `<th name="vol">Vol</th>`+
+						  `<th name="cts">Cts</th>`+
+						  `<th name="hora">Hora</th>`+
+						  `<th name="entrada">Entrada</th>`+
+						  `<th name="stop">Stop</th>`+
+						  `<th name="alvo">Alvo</th>`+
+						  `<th name="men">MEN</th>`+
+						  `<th name="mep">MEP</th>`+
+						  `<th name="saida">Saída</th>`+
+						  `<th name="cenario">Cenário</th>`+
+						  `<th name="premissas">Premissas</th>`+
+						  `<th name="observacoes">Observações</th>`+
+						  `<th name="erro">Erro</th>`+
+						  `</tr>`;
+		}
+		//Constroi o TBODY
+		for (let i=0; i<data.length; i++){
+			//Layout de Scalp
+			if (table_layout === 'scalp'){
+				tbody_html += `<tr>`+
+							`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
+							`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
+							`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
+							`<td name="op"><select name="op" class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
+							`<td name="rr"><select name="rr" class="form-select form-select-sm"><option value="">---</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
+							`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
+							`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
+							`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" value="${data[i].hora}"></td>`+
+							`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()" value="${data[i].entrada}"></td>`+
+							`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()" value="${data[i].stop}"></td>`+
+							`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" onclick="this.select()" value="${data[i].alvo}"></td>`+
+							`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()" value="${data[i].men}"></td>`+
+							`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()" value="${data[i].mep}"></td>`+
+							`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()" value="${data[i].saida}"></td>`+
+							`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
+							`<td name="premissas"><input type="text" name="premissas" class="form-control form-control-sm" onclick="this.select()" value="${data[i].premissas.map(s => s.trim()).join(',')}"></td>`+
+							`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm" onclick="this.select()" value="${data[i].observacoes.map(s => s.trim()).join(',')}"></td>`+
+							`<td name="erro"><input type="checkbox" name="erro" class="form-check-input" ${(data[i].erro == 1) ? 'checked' : ''}></td>`+
+							`</tr>`;
+			}
+		}
+		table.find('thead').empty().append(thead_html);
+		table.find('tbody').empty().append(tbody_html).promise().then(function (){
+			setSelectValues_OperacaoAddTable(data);
+		});
+	}
+	/*
+		Recalcula o Stop e Alvo, baseado nos dados preenchidos em um linha da 'table_operacoes_add'.
+	*/
+	function recalcStopeAlvo_OperacoesAddTable(tr_data){
+		let novo_alvo = '',
+			novo_stop = '';
+		if (tr_data.vol == 0 || tr_data.pts_tick == 0 || (tr_data.risco == 0 && tr_data.retorno == 0))
+			return;
+		//Se for compra
+		if (tr_data.op == '1'){
+			if (tr_data.retorno != 0)
+				novo_alvo = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
+			if (tr_data.risco != 0)
+				novo_stop = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.risco);
+		}
+		else if (tr_data.op == '2'){
+			if (tr_data.retorno != 0)
+				novo_alvo = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
+			if (tr_data.risco != 0)
+				novo_stop = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.risco);	
+		}
+		tr_data.tr.find('input[name="alvo"]').val(novo_alvo);
+		tr_data.tr.find('input[name="stop"]').val(novo_stop);
+	}
+	////////////////////////////////////////////////////////////////////////////////////
+	/*--------------------------------- Lista Ops ------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	function buildOperacoesOffcanvas(){
+		if (_list_ops__needRebuild){
+			_list_ops__needRebuild = false;
+			let lista_ops__table = $(document.getElementById('lista_ops__table'));
+			lista_ops__table.DataTable().destroy();
+			lista_ops__table.find('tbody').empty().append(rebuildListaOps__Table()).promise().then(function (){
+				lista_ops__table.DataTable(_lista_ops__table_DT);
+			});
+			_lista_ops__search.update();
+		}
+		$(document.getElementById('lista_ops')).offcanvas('show');
+	}
+	/*
+		Retorna o html da lista de operacoes. (Head ou Body)
+	*/
+	function rebuildListaOps__Table(){
+		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			op_dic = {
+				text: ['', 'C', 'V'],
+				color: ['', 'bg-success', 'bg-danger']
+			},
+			html = ``;
+		for (let o in _lista__operacoes.operacoes[selected_inst_arcabouco]){
+			html += `<tr operacao="${_lista__operacoes.operacoes[selected_inst_arcabouco][o].id}">`+
+					`<td class="fw-bold text-muted" name="sequencia">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].sequencia}</td>`+
+					`<td class="fw-bold text-muted" name="data">${Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][o].data)}</td>`+
+					`<td class="fw-bold text-muted" name="hora">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].hora}</td>`+
+					`<td class="fw-bold text-muted" name="ativo">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].ativo}</td>`+
+					`<td name="op"><span class="badge ${op_dic['color'][_lista__operacoes.operacoes[selected_inst_arcabouco][o].op]}">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].cts}${op_dic['text'][_lista__operacoes.operacoes[selected_inst_arcabouco][o].op]}</span></td>`+
+					`<td class="fw-bold text-muted" name="vol">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].vol}</td>`+
+					`<td class="fw-bold text-muted" name="cenario">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].cenario}</td>`+
+					`<td name="erro">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].erro}</td>`+
+					`</tr>`;
+		}
+		return html;
+	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Dashboard Ops ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -1872,209 +2066,6 @@ let Renda_variavel = (function(){
 		return html;
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------------- Lista Ops ------------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Retorna o html da lista de operacoes. (Head ou Body)
-	*/
-	function rebuildListaOps__Table(section = ''){
-		let html = ``;
-		if (section === 'thead'){
-			html += `<tr>`+
-					`<th>#</th>`+
-					`<th>Data</th>`+
-					`<th>Hora</th>`+
-					`<th>Ativo</th>`+
-					`<th>Op.</th>`+
-					`<th>Vol</th>`+
-					`<th>Cts</th>`+
-					`<th>Entrada</th>`+
-					`<th>Stop</th>`+
-					`<th>Alvo</th>`+
-					`<th>MEN</th>`+
-					`<th>MEP</th>`+
-					`<th>Saída</th>`+
-					`<th>Cenário</th>`+
-					`<th>Premissas</th>`+
-					`<th>Observações</th>`+
-					`<th>Erro</th>`+
-					`</tr>`;
-		}
-		else if (section === 'tbody'){
-			let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id');
-			for (let o in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				html += `<tr operacao="${_lista__operacoes.operacoes[selected_inst_arcabouco][o].id}">`+
-						`<td name="sequencia">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].sequencia}</td>`+
-						`<td name="data">${Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][o].data)}</td>`+
-						`<td name="hora">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].hora}</td>`+
-						`<td name="ativo">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].ativo}</td>`+
-						`<td name="op">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].op}</td>`+
-						`<td name="vol">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].vol}</td>`+
-						`<td name="cts">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].cts}</td>`+
-						`<td name="entrada">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].entrada}</td>`+
-						`<td name="stop">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].stop}</td>`+
-						`<td name="alvo">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].alvo}</td>`+
-						`<td name="men">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].men}</td>`+
-						`<td name="mep">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].mep}</td>`+
-						`<td name="saida">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].saida}</td>`+
-						`<td name="cenario">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].cenario}</td>`+
-						`<td name="premissas">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].premissas}</td>`+
-						`<td name="observacoes">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].observacoes}</td>`+
-						`<td name="erro">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].erro}</td>`+
-						`</tr>`;
-			}
-		}
-		return html;
-	}
-	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------- Section Operações Add ------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Constroi o modal de Cadastro de Operações.
-	*/
-	function buildOperacoesModal(){
-		let modal = $(document.getElementById('operacoes_modal'));
-		document.getElementById('importa_arquivo_operacoes_modal').value = '';
-		document.getElementById('file_format').selectedIndex = 0;
-		document.getElementById('table_layout').selectedIndex = 0;
-		resetOperacaoAddTable();
-		modal.modal('show');
-	}
-	/*
-		Apaga tudo em 'table_operacoes_add'.
-	*/
-	function resetOperacaoAddTable(){
-		let table = $(document.getElementById('table_operacoes_add'));
-		table.find('thead').empty();
-		table.find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
-	}
-	/*
-		Constroi o html do select de ativos em 'table_operacoes_add'.
-	*/
-	function buildAtivosSelect_OperacaoAddTable(){
-		let html = ``;
-		for (let at in _lista__cenarios.ativos)
-			html += `<option value="${_lista__cenarios.ativos[at].id}" custo="${_lista__cenarios.ativos[at].custo}" valor_tick="${_lista__cenarios.ativos[at].valor_tick}" pts_tick="${_lista__cenarios.ativos[at].pts_tick}">${_lista__cenarios.ativos[at].nome}</option>`;
-		return html;
-	}
-	/*
-		Constroi o html do select de cenarios em 'table_operacoes_add'.
-	*/
-	function buildCenariosSelect_OperacaoAddTable(){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			html = ``;
-		for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
-			html += `<option value="${_lista__cenarios.cenarios[selected_inst_arcabouco][cn].id}">${_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome}</option>`;
-		return html;
-	}
-	/*
-		Inicia os valores dos selects das linhas de 'table_operacoes_add'.
-	*/
-	function setSelectValues_OperacaoAddTable(data){
-		$(document.getElementById('table_operacoes_add')).find('tbody tr').each(function (t, tr){
-			tr = $(tr);
-			if ('ativo' in data[t])
-				tr.find('select[name="ativo"]').val('').find('option').filter((i, el) => data[t].ativo.toLowerCase().includes(el.innerHTML.toLowerCase())).prop('selected', true);
-			if ('op' in data[t])
-				tr.find('select[name="op"]').val(data[t].op);
-			if ('rr' in data[t])
-				tr.find('select[name="rr"]').val(data[t].rr);
-			if ('cenario' in data[t]){
-				tr.find('select[name="cenario"]').val('').find('option').filter((i, el) => data[t].cenario === el.innerHTML).prop('selected', true);
-				if (tr.find('select[name="cenario"]').val() === null)
-					tr.find('input[name="premissas"],input[name="observacoes"]').val('');
-			}
-		});
-	}
-	/*
-		Adiciona uma linha na tabela de adição de operações.
-	*/
-	function buildOperacaoAddTable(data = []){
-		let tbody_html = ``,
-			thead_html = ``,
-			table = $(document.getElementById('table_operacoes_add')),
-			table_layout = $(document.getElementById('table_layout')).val(),
-			select_ativos_html = buildAtivosSelect_OperacaoAddTable(),
-			select_cenarios_html = buildCenariosSelect_OperacaoAddTable();
-		//Constroi o THEAD
-		if (table_layout === 'scalp'){
-			thead_html += `<tr>`+
-						  `<th name="sequencia">#</th>`+
-						  `<th name="data">Data</th>`+
-						  `<th name="ativo">Ativo</th>`+
-						  `<th name="op">Op.</th>`+
-						  `<th name="rr">R:R</th>`+
-						  `<th name="vol">Vol</th>`+
-						  `<th name="cts">Cts</th>`+
-						  `<th name="hora">Hora</th>`+
-						  `<th name="entrada">Entrada</th>`+
-						  `<th name="stop">Stop</th>`+
-						  `<th name="alvo">Alvo</th>`+
-						  `<th name="men">MEN</th>`+
-						  `<th name="mep">MEP</th>`+
-						  `<th name="saida">Saída</th>`+
-						  `<th name="cenario">Cenário</th>`+
-						  `<th name="premissas">Premissas</th>`+
-						  `<th name="observacoes">Observações</th>`+
-						  `<th name="erro">Erro</th>`+
-						  `</tr>`;
-		}
-		//Constroi o TBODY
-		for (let i=0; i<data.length; i++){
-			//Layout de Scalp
-			if (table_layout === 'scalp'){
-				tbody_html += `<tr>`+
-							`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
-							`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
-							`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
-							`<td name="op"><select name="op" class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
-							`<td name="rr"><select name="rr" class="form-select form-select-sm"><option value="">---</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
-							`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
-							`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
-							`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" value="${data[i].hora}"></td>`+
-							`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()" value="${data[i].entrada}"></td>`+
-							`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()" value="${data[i].stop}"></td>`+
-							`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" onclick="this.select()" value="${data[i].alvo}"></td>`+
-							`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()" value="${data[i].men}"></td>`+
-							`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()" value="${data[i].mep}"></td>`+
-							`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()" value="${data[i].saida}"></td>`+
-							`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
-							`<td name="premissas"><input type="text" name="premissas" class="form-control form-control-sm" onclick="this.select()" value="${data[i].premissas.map(s => s.trim()).join(',')}"></td>`+
-							`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm" onclick="this.select()" value="${data[i].observacoes.map(s => s.trim()).join(',')}"></td>`+
-							`<td name="erro"><input type="checkbox" name="erro" class="form-check-input" ${(data[i].erro == 1) ? 'checked' : ''}></td>`+
-							`</tr>`;
-			}
-		}
-		table.find('thead').empty().append(thead_html);
-		table.find('tbody').empty().append(tbody_html).promise().then(function (){
-			setSelectValues_OperacaoAddTable(data);
-		});
-	}
-	/*
-		Recalcula o Stop e Alvo, baseado nos dados preenchidos em um linha da 'table_operacoes_add'.
-	*/
-	function recalcStopeAlvo_OperacoesAddTable(tr_data){
-		let novo_alvo = '',
-			novo_stop = '';
-		if (tr_data.vol == 0 || tr_data.pts_tick == 0 || (tr_data.risco == 0 && tr_data.retorno == 0))
-			return;
-		//Se for compra
-		if (tr_data.op == '1'){
-			if (tr_data.retorno != 0)
-				novo_alvo = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
-			if (tr_data.risco != 0)
-				novo_stop = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.risco);
-		}
-		else if (tr_data.op == '2'){
-			if (tr_data.retorno != 0)
-				novo_alvo = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
-			if (tr_data.risco != 0)
-				novo_stop = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.risco);	
-		}
-		tr_data.tr.find('input[name="alvo"]').val(novo_alvo);
-		tr_data.tr.find('input[name="stop"]').val(novo_stop);
-	}
-	////////////////////////////////////////////////////////////////////////////////////
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------- Section Arcabouço --------------------------------*/
@@ -2085,8 +2076,8 @@ let Renda_variavel = (function(){
 		Processa o fechamento do modal 'arcaboucos_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('arcaboucos_modal')).on('hidden.bs.modal', function (){
-		if (_arcabouco_section__needRebuild){
-			_arcabouco_section__needRebuild = false;
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
 			rebuildArcaboucoSection(rebuildSearch = true);
 		}
 	});
@@ -2109,7 +2100,8 @@ let Renda_variavel = (function(){
 			if (e.ctrlKey){
 				//Se a instancia foi adicionada na lista
 				if (_lista__instancias_arcabouco.add({id: id_arcabouco, nome: _lista__arcaboucos.arcaboucos[id_arcabouco].nome, selected: true})){
-					_arcabouco_section__needRebuild = true;
+					_dashboard_ops__needRebuild = true;
+					_list_ops__needRebuild = true;
 					if (!(id_arcabouco in _lista__operacoes.operacoes)){
 						Global.connect({
 							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: id_arcabouco}},
@@ -2152,8 +2144,10 @@ let Renda_variavel = (function(){
 			data: {module: 'renda_variavel', action: 'remove_arcaboucos', params: {id: id_arcabouco}},
 			success: function (result){
 				if (result.status){
-					if (_lista__arcaboucos.remove(id_arcabouco))
-						_arcabouco_section__needRebuild = true;
+					if (_lista__arcaboucos.remove(id_arcabouco)){
+						_dashboard_ops__needRebuild = true;
+						_list_ops__needRebuild = true;
+					}
 					buildArcaboucosTable();
 				}
 				else
@@ -2223,8 +2217,8 @@ let Renda_variavel = (function(){
 		Processa o fechamento do modal 'cenarios_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('cenarios_modal')).on('hidden.bs.modal', function (){
-		if (_arcabouco_section__needRebuild){
-			_arcabouco_section__needRebuild = false;
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
 			rebuildArcaboucoSection(rebuildSearch = true);
 		}
 	});
@@ -2313,7 +2307,8 @@ let Renda_variavel = (function(){
 					data: {module: 'renda_variavel', action: 'remove_cenarios', params: remove_data},
 					success: function (result){
 						if (result.status){
-							_arcabouco_section__needRebuild = true;
+							_dashboard_ops__needRebuild = true;
+							_list_ops__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Removido.', delay: 4000});
 							_lista__cenarios.remove(remove_data.id);
 							rebuildCenarios_modal_copiar();
@@ -2430,7 +2425,8 @@ let Renda_variavel = (function(){
 					data: {module: 'renda_variavel', action: 'insert_cenarios', params: insert_data},
 					success: function (result){
 						if (result.status){
-							_arcabouco_section__needRebuild = true;
+							_dashboard_ops__needRebuild = true;
+							_list_ops__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Adicionado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
 							_lista__cenarios.update(result.data[0]);
@@ -2451,7 +2447,8 @@ let Renda_variavel = (function(){
 					data: {module: 'renda_variavel', action: 'update_cenarios', params: update_data},
 					success: function (result){
 						if (result.status){
-							_arcabouco_section__needRebuild = true;
+							_dashboard_ops__needRebuild = true;
+							_list_ops__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Atualizado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
 							_lista__cenarios.update(result.data[0]);
@@ -2507,195 +2504,14 @@ let Renda_variavel = (function(){
 		return false;
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------------- Dashboard Ops ----------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Processa um clique nas instancias de arcabouço.
-			- Clique normal: Muda a instancia selecionada.
-			- Clique + Ctrl: Remove a instancia da lista.
-	*/
-	$(document.getElementById('renda_variavel__instancias')).on('click', 'span.badge', function (e){
-		if (e.ctrlKey)
-			_lista__instancias_arcabouco.remove(this.getAttribute('instancia'));
-		else{
-			if (_lista__instancias_arcabouco.getSelected('instancia') !== this.getAttribute('instancia')){
-				_lista__instancias_arcabouco.setSelected(this.getAttribute('instancia'));
-				if (!(_lista__instancias_arcabouco.getSelected('id') in _lista__operacoes.operacoes)){
-					Global.connect({
-						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: _lista__instancias_arcabouco.getSelected('id')}},
-						success: function (result){
-							if (result.status){
-								_lista__cenarios.create(result.data['cenarios']);
-								_lista__operacoes.update(result.data['operacoes']);
-								rebuildArcaboucoSection(rebuildSearch = true);
-							}
-							else
-								Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
-						}
-					});
-				}
-				else
-					rebuildArcaboucoSection(rebuildSearch = true);
-			}
-		}
-	});
-	/*
-		Processa as seleções de premissas e observações em 'filters'.
-	*/
-	$(document.getElementById('dashboard_ops__search')).on('click', 'div.iSelectKami[name] ul li button.dropdown-item', function (e){
-		let me = $(this),
-			cenario_nome = me.attr('pertence'),
-			div_holder = me.parent().parent().parent(),
-			select_name = div_holder.attr('name'),
-			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
-			dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-			selected_values = {},
-			qtd_selected = 0;
-		//Se o target não for um clique no input, processa a seleção da observação
-		if (e.target.nodeName !== 'INPUT'){
-			if (this.hasAttribute('selected')){
-				me.removeAttr('selected').find('input[name="negar_valor"]').prop('checked', false);
-				delete dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')];
-			}
-			else{
-				me.attr('selected', '');
-				dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')] = (me.find('input[name="negar_valor"]').prop('checked')) ? 1 : 0;
-			}
-		}
-		//Se for no input, caso não esteja selecionado, des-checa o input
-		else{
-			if (!this.hasAttribute('selected'))
-				me.find('input[name="negar_valor"]').prop('checked', false);
-			else
-				dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')] = (me.find('input[name="negar_valor"]').prop('checked')) ? 1 : 0;	
-		}
-		//Atualiza no localStorage
-		_lista__instancias_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
-		//Atualiza o placeholder
-		qtd_selected = div_holder.find('ul button.dropdown-item[selected]').length;
-		div_holder.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[select_name]}`)));
-	});
-	/*
-		Processa a de-seleção de todos os valores no select de observações ou premissas.
-	*/
-	$(document.getElementById('dashboard_ops__search')).on('click', 'div.iSelectKami[name] ul li button[name="tira_tudo"]', function (){
-		let div_holder = $(this).parent().parent().parent().parent(),
-			select_name = div_holder.attr('name'),
-			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
-			dashboard_filters = _lista__instancias_arcabouco.getSelected('filters');
-		div_holder.find('ul button.dropdown-item[selected]').each(function (i, el){
-			el.removeAttribute('selected');
-			el.querySelector('input[name="negar_valor"]').checked = false;
-		});
-		for (cenario_nome in dashboard_filters['cenario'])
-			dashboard_filters['cenario'][cenario_nome][select_name] = {};
-		_lista__instancias_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
-		//Atualiza o placeholder
-		div_holder.find('button.dropdown-toggle').html(`${placeholder[select_name]}`);
-	});
-	/*
-		Processa no select de observações e premissas, mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
-	*/
-	$(document.getElementById('dashboard_ops__search')).on('change', 'div.iSelectKami[name] ul li select.iSelectKami', function (){
-		_lista__instancias_arcabouco.updateInstancia_Filters(this.name, $(this).val());
-	});
-	/*
-		Processa a aplicação dos 'filters' e 'simulations'.
-	*/
-	$(document.getElementById('renda_variavel__refresh')).click(function (){
-		rebuildArcaboucoSection(rebuildSearch = false);
-	});
-	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------------- Lista Ops ------------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Processa os cliques na tabela de operações de um arcabouço.
-		Click:
-			- (Ctrl): Selecionar 1 row.
-	*/
-	$(document.getElementById('renda_variavel__section')).on('mousedown', '#lista_ops__table tbody tr', function (e){
-		//Ativa a seleção de linhas (Ctrl pressionado)
-		if (e.ctrlKey){
-			e.preventDefault();
-			//Se ja ta selecionado, desmarca
-			if (Global.hasClass(this, 'selected'))
-				$(this).removeClass('selected');
-			else{
-				_lista_ops__table_DT_clickState = 1;
-				$(this).addClass('selected');
-			}
-			let action_submenu = $(document.getElementById('lista_ops__actions'));
-			if ($(document.getElementById('lista_ops__table')).find('tbody tr.selected').length === 0){
-				action_submenu.find('button[name="alterar_sel"]').addClass('d-none');
-				action_submenu.find('button[name="remove_sel"]').addClass('d-none');
-			}
-			else if ($(document.getElementById('lista_ops__table')).find('tbody tr.selected').length === 1){
-				action_submenu.find('button[name="alterar_sel"]').removeClass('d-none');
-				action_submenu.find('button[name="remove_sel"]').removeClass('d-none');
-			}
-			else
-				action_submenu.find('button[name="alterar_sel"]').addClass('d-none');
-		}
-		//Deseleciona tudo
-		else{
-			$(document.getElementById('lista_ops__table')).find('tbody tr.selected').removeClass('selected');
-			$(document.getElementById('lista_ops__actions')).find('button[name="alterar_sel"], button[name="remove_sel"]').addClass('d-none');
-		}
-	}).on('mouseenter', '#lista_ops__table tbody tr', function (e){
-		//Seleciona linhas caso esteje segurando (Ctrl e Click)
-		if (_lista_ops__table_DT_clickState && e.ctrlKey){
-			e.preventDefault();
-			$(this).addClass('selected');
-			let action_submenu = $(document.getElementById('lista_ops__actions'));
-			if ($(document.getElementById('lista_ops__table')).find('tbody tr.selected').length > 1)
-				action_submenu.find('button[name="alterar_sel"]').addClass('d-none');
-		}
-	}).on('mouseup', '#lista_ops__table tbody tr', function (e){
-		if (e.ctrlKey)
-			_lista_ops__table_DT_clickState = 0;
-	});
-	/*
-		Processa a remocao de tudo ou das operações selecionadas com double click.
-	*/
-	$(document.getElementById('renda_variavel__section')).on('dblclick', '#lista_ops__actions button[name]', function (){
-		let remove_data = {};
-		//Remove todas as operações do arcabouço
-		if (this.name === 'remove_all')
-			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
-		else if (this.name === 'remove_sel'){
-			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
-			$(document.getElementById('lista_ops__table')).find('tbody tr.selected').each(function (i, tr){
-				remove_data['operacoes'].push(tr.getAttribute('operacao'));
-			});
-			if (remove_data['operacoes'].length === 0){
-				Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: 'Nenhuma operação selecionada.', delay: 4000});
-				return false;
-			}
-		}
-		if (!Global.isObjectEmpty(remove_data)){
-			Global.connect({
-				data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
-				success: function (result){
-					if (result.status){
-						Global.toast.create({location: document.getElementById('master_toasts'), title: 'Sucesso', time: 'Now', body: 'Operações Apagadas.', delay: 4000});
-						_lista__operacoes.update(result.data);
-						rebuildArcaboucoSection(rebuildSearch = false);
-					}
-					else
-						Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
-				}
-			});
-		}
-	});
-	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------- Section Operações Add ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Processa o fechamento do modal 'operacoes_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('operacoes_modal')).on('hidden.bs.modal', function (){
-		if (_arcabouco_section__needRebuild){
-			_arcabouco_section__needRebuild = false;
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
 			rebuildArcaboucoSection(rebuildSearch = false);
 		}
 	});
@@ -2880,7 +2696,8 @@ let Renda_variavel = (function(){
 				data: {module: 'renda_variavel', action: 'insert_operacoes', params: JSON.stringify(insert_data)},
 				success: function (result){
 					if (result.status){
-						_arcabouco_section__needRebuild = true;
+						_dashboard_ops__needRebuild = true;
+						_list_ops__needRebuild = true;
 						_lista__operacoes.update(result.data);
 						if (result.hold_ops.length === 0){
 							Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
@@ -2905,6 +2722,184 @@ let Renda_variavel = (function(){
 		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
+	/*--------------------------------- Lista Ops ------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Corrige bug no bootstrap que não mostra o offcanvas na 1 vez que abre.	
+	*/
+	$(document.getElementById('lista_ops')).on('shown.bs.offcanvas', function (){
+		$(this).show();
+	});
+	/*
+		Processa os cliques na tabela de operações de um arcabouço.
+		Click:
+			- (Ctrl): Selecionar 1 row.
+	*/
+	$(document.getElementById('lista_ops__table')).on('mousedown', 'tbody tr', function (e){
+		//Ativa a seleção de linhas (Ctrl pressionado)
+		if (e.ctrlKey){
+			e.preventDefault();
+			//Se ja ta selecionado, desmarca
+			if (Global.hasClass(this, 'selected'))
+				$(this).removeClass('selected');
+			else{
+				_lista_ops__table_DT_clickState = 1;
+				$(this).addClass('selected');
+			}
+			let action_submenu = $(document.getElementById('lista_ops__actions'));
+			if ($(document.getElementById('lista_ops__table')).find('tbody tr.selected').length === 0)
+				action_submenu.find('button[name="remove_sel"]').addClass('d-none');
+			else
+				action_submenu.find('button[name="remove_sel"]').removeClass('d-none');
+		}
+		//Deseleciona tudo
+		else{
+			$(document.getElementById('lista_ops__table')).find('tbody tr.selected').removeClass('selected');
+			$(document.getElementById('lista_ops__actions')).find('button[name="remove_sel"]').addClass('d-none');
+		}
+	}).on('mouseenter', 'tbody tr', function (e){
+		//Seleciona linhas caso esteje segurando (Ctrl e Click)
+		if (_lista_ops__table_DT_clickState && e.ctrlKey){
+			e.preventDefault();
+			$(this).addClass('selected');
+		}
+	}).on('mouseup', 'tbody tr', function (e){
+		if (e.ctrlKey)
+			_lista_ops__table_DT_clickState = 0;
+	});
+	/*
+		Processa a remocao de tudo ou das operações selecionadas com double click.
+	*/
+	$(document.getElementById('lista_ops__actions')).on('dblclick', 'button[name]', function (){
+		let remove_data = {};
+		//Remove todas as operações do arcabouço
+		if (this.name === 'remove_all')
+			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
+		else if (this.name === 'remove_sel'){
+			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
+			$(document.getElementById('lista_ops__table')).find('tbody tr.selected').each(function (i, tr){
+				remove_data['operacoes'].push(tr.getAttribute('operacao'));
+			});
+			if (remove_data['operacoes'].length === 0){
+				Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: 'Nenhuma operação selecionada.', delay: 4000});
+				return false;
+			}
+		}
+		if (!Global.isObjectEmpty(remove_data)){
+			Global.connect({
+				data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
+				success: function (result){
+					if (result.status){
+						Global.toast.create({location: document.getElementById('master_toasts'), title: 'Sucesso', time: 'Now', body: 'Operações Apagadas.', delay: 4000});
+						_lista__operacoes.update(result.data);
+						rebuildArcaboucoSection(rebuildSearch = false);
+					}
+					else
+						Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
+				}
+			});
+		}
+	});
+	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------- Dashboard Ops ----------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Processa um clique nas instancias de arcabouço.
+			- Clique normal: Muda a instancia selecionada.
+			- Clique + Ctrl: Remove a instancia da lista.
+	*/
+	$(document.getElementById('renda_variavel__instancias')).on('click', 'span.badge', function (e){
+		if (e.ctrlKey)
+			_lista__instancias_arcabouco.remove(this.getAttribute('instancia'));
+		else{
+			if (_lista__instancias_arcabouco.getSelected('instancia') !== this.getAttribute('instancia')){
+				_lista__instancias_arcabouco.setSelected(this.getAttribute('instancia'));
+				if (!(_lista__instancias_arcabouco.getSelected('id') in _lista__operacoes.operacoes)){
+					Global.connect({
+						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: _lista__instancias_arcabouco.getSelected('id')}},
+						success: function (result){
+							if (result.status){
+								_lista__cenarios.create(result.data['cenarios']);
+								_lista__operacoes.update(result.data['operacoes']);
+								rebuildArcaboucoSection(rebuildSearch = true);
+							}
+							else
+								Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
+						}
+					});
+				}
+				else
+					rebuildArcaboucoSection(rebuildSearch = true);
+			}
+		}
+	});
+	/*
+		Processa as seleções de premissas e observações em 'filters'.
+	*/
+	$(document.getElementById('dashboard_ops__search')).on('click', 'div.iSelectKami[name] ul li button.dropdown-item', function (e){
+		let me = $(this),
+			cenario_nome = me.attr('pertence'),
+			div_holder = me.parent().parent().parent(),
+			select_name = div_holder.attr('name'),
+			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
+			dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
+			selected_values = {},
+			qtd_selected = 0;
+		//Se o target não for um clique no input, processa a seleção da observação
+		if (e.target.nodeName !== 'INPUT'){
+			if (this.hasAttribute('selected')){
+				me.removeAttr('selected').find('input[name="negar_valor"]').prop('checked', false);
+				delete dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')];
+			}
+			else{
+				me.attr('selected', '');
+				dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')] = (me.find('input[name="negar_valor"]').prop('checked')) ? 1 : 0;
+			}
+		}
+		//Se for no input, caso não esteja selecionado, des-checa o input
+		else{
+			if (!this.hasAttribute('selected'))
+				me.find('input[name="negar_valor"]').prop('checked', false);
+			else
+				dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')] = (me.find('input[name="negar_valor"]').prop('checked')) ? 1 : 0;	
+		}
+		//Atualiza no localStorage
+		_lista__instancias_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
+		//Atualiza o placeholder
+		qtd_selected = div_holder.find('ul button.dropdown-item[selected]').length;
+		div_holder.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[select_name]}`)));
+	});
+	/*
+		Processa a de-seleção de todos os valores no select de observações ou premissas.
+	*/
+	$(document.getElementById('dashboard_ops__search')).on('click', 'div.iSelectKami[name] ul li button[name="tira_tudo"]', function (){
+		let div_holder = $(this).parent().parent().parent().parent(),
+			select_name = div_holder.attr('name'),
+			placeholder = {'premissas': 'Premissas', 'observacoes': 'Observações'},
+			dashboard_filters = _lista__instancias_arcabouco.getSelected('filters');
+		div_holder.find('ul button.dropdown-item[selected]').each(function (i, el){
+			el.removeAttribute('selected');
+			el.querySelector('input[name="negar_valor"]').checked = false;
+		});
+		for (cenario_nome in dashboard_filters['cenario'])
+			dashboard_filters['cenario'][cenario_nome][select_name] = {};
+		_lista__instancias_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
+		//Atualiza o placeholder
+		div_holder.find('button.dropdown-toggle').html(`${placeholder[select_name]}`);
+	});
+	/*
+		Processa no select de observações e premissas, mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
+	*/
+	$(document.getElementById('dashboard_ops__search')).on('change', 'div.iSelectKami[name] ul li select.iSelectKami', function (){
+		_lista__instancias_arcabouco.updateInstancia_Filters(this.name, $(this).val());
+	});
+	/*
+		Processa a aplicação dos 'filters' e 'simulations'.
+	*/
+	$(document.getElementById('renda_variavel__refresh')).click(function (){
+		rebuildArcaboucoSection(rebuildSearch = false);
+	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -2917,9 +2912,8 @@ let Renda_variavel = (function(){
 			buildCenariosModal();
 		else if (this.name === 'adicionar_operacoes')
 			buildOperacoesModal();
-		else if (this.name === 'dashboard_ops' || this.name === 'lista_ops'){
-			rebuildArcaboucoSection(rebuildSearch = false);
-		}
+		else if (this.name === 'lista_ops')
+			buildOperacoesOffcanvas();
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
@@ -2936,6 +2930,7 @@ let Renda_variavel = (function(){
 				buildArcaboucosModal('build');
 				//Inicia a lista de instancias (Com uma já salva ou uma nova) e termina de construir o arcabouço Section
 				_lista__instancias_arcabouco.start(result.data);
+				_list_ops__needRebuild = true;
 			}
 			else
 				Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});

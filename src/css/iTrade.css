@@ -210,9 +210,22 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_operacoes_add td[name='observacoes'] {width: 9%}
 #table_operacoes_add td[name='erro'] {width: 2%; text-align: center; vertical-align: middle;}
 /*------------------------------------ Lista Ops -------------------------------------*/
-#lista_ops__table {font-size: 13px}
+#lista_ops {width: 800px}
+#lista_ops__search .form-label {font-size: 11px}
+#lista_ops__search select[name='ativo'].init, #lista_ops__search select[name='cenario'].init {height: 30px}
+#lista_ops__table {font-size: 11px}
+#lista_ops__table tbody td{vertical-align: middle}
 #lista_ops__table tr.selected {background: #cfe2ff}
+#lista_ops__table tbody td[name='sequencia'] {width: 8%}
+#lista_ops__table tbody td[name='data'] {width: 12%}
+#lista_ops__table tbody td[name='hora'] {width: 12%}
+#lista_ops__table tbody td[name='ativo'] {width: 10%}
+#lista_ops__table tbody td[name='op'] {width: 10%; text-align: center}
+#lista_ops__table tbody td[name='vol'] {width: 8%}
+#lista_ops__table tbody td[name='erro'] {width: 5%; text-align: center}
 #lista_ops__table_wrapper {font-size: 13px}
+#lista_ops__table_wrapper input {font-size: 11px}
+#lista_ops__table_filter {display: none}
 /*---------------------------------- Dashboard Ops -----------------------------------*/
 #dashboard_ops__search .form-label {font-size: 11px}
 #dashboard_ops__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}

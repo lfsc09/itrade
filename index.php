@@ -97,8 +97,7 @@
 								<button class="btn btn-sm btn-primary me-4" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Adicionar Operações</button>
-								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="dashboard_ops"><i class="fas fa-chart-line me-2"></i>Dashboard</button>
-								<button class="btn btn-sm btn-outline-primary" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
+								<button class="btn btn-sm btn-outline-primary ms-auto" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
 							</div>
 							<div class="row mb-4">
 								<div class="col" id="renda_variavel__instancias"></div>
@@ -516,6 +515,57 @@
 						<div class="modal-footer d-flex">
 							<button type="button" class="btn btn-secondary btn-sm col-1" data-bs-dismiss="modal">Fechar</button>
 							<button type="button" class="btn btn-success btn-sm col-1 ms-auto" id="operacoes_modal_enviar">Salvar</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="offcanvas offcanvas-end" tabindex="-1" id="lista_ops">
+				<div class="offcanvas-body">
+					<div class="card mb-2 rounded-3 shadow-sm">
+						<div class="card-body p-2">
+							<div class="container-fluid d-flex justify-content-end px-0">
+								<form class="row m-0 flex-fill" id="lista_ops__search">
+									<div class="col-auto">
+										<label class="form-label m-0 text-muted fw-bold">Data</label>
+										<input type="text" name="data" class="form-control form-control-sm" placeholder="Data">
+									</div>
+									<div class="col-auto" name="ativo">
+										<label class="form-label m-0 text-muted fw-bold">Ativo</label>
+										<select name="ativo" class="form-control form-control-sm init" multiple></select>
+									</div>
+									<div class="col-auto" name="cenario">
+										<label class="form-label m-0 text-muted fw-bold">Cenário</label>
+										<select name="cenario" class="form-control form-control-sm init" multiple></select>
+									</div>
+								</form>
+							</div>
+						</div>
+					</div>
+					<div class="card mb-2 rounded-3 shadow-sm">
+						<div class="card-body p-2">
+							<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">
+								<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>
+								<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>
+							</div>
+						</div>
+					</div>
+					<div class="card rounded-3 shadow-sm">
+						<div class="card-body">
+							<table id="lista_ops__table" class="table table-hover w-100">
+								<thead>
+									<tr>
+										<th>#</th>
+										<th>Data</th>
+										<th>Hora</th>
+										<th>Ativo</th>
+										<th class="text-center">Op.</th>
+										<th>Vol</th>
+										<th>Cenário</th>
+										<th>Erro</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
 						</div>
 					</div>
 				</div>

@@ -285,6 +285,24 @@ let Global = (function(){
 	    	return parseInt(_a);
 	    }
 	});
+ 	$.fn.dataTable.ext.search.push(
+ 		function(settings, searchData, index, rowData){
+ 			if (settings.nTable.id !== 'lista_ops__table')
+            	return true;
+ 			console.log(searchData, rowData);
+ 			// var age = parseFloat( data[3] ) || 0;
+
+ 			// if ( ( isNaN( min ) && isNaN( max ) ) ||
+ 			// 	( isNaN( min ) && age <= max ) ||
+ 			// 	( min <= age   && isNaN( max ) ) ||
+ 			// 	( min <= age   && age <= max ) )
+ 			// {
+ 			// 	return true;
+ 			// }
+ 			// return false;
+ 			return true;
+ 		}
+ 	);
 	/*
 		Evento para no fechamento do modal de update, fazer a limpeza necessaria nele.
 	*/
