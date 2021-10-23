@@ -492,7 +492,7 @@ let Renda_variavel = (function(){
 		},
 		update: function (){
 			let me = this,
-				dashboard_ops__search = $(document.getElementById('lista_ops__search')),
+				lista_ops__search = $(document.getElementById('lista_ops__search')),
 				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id');
 			//////////////////////////////////
 			//Filtro da Data
@@ -500,9 +500,9 @@ let Renda_variavel = (function(){
 			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : '',
 				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : '';
 			if (me.filters.data === null){
-				me.filters.data = dashboard_ops__search.find('input[name="data"]');
+				me.filters.data = lista_ops__search.find('input[name="data"]');
 				me.filters.data.on('apply.daterangepicker', function (ev, picker){
-					$(document.getElementById("lista_ops__table")).DataTable().column(`${this.name}:name`).search(this.value).draw();
+					$(document.getElementById("lista_ops__table")).DataTable().draw();
 				});
 				me.filters.data.daterangepicker({
 					showDropdowns: true,
@@ -522,6 +522,75 @@ let Renda_variavel = (function(){
 						daysOfWeek: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
 						monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 					}
+				});
+			}
+			else{
+				console.log(me.filters.data.data('daterangepicker'));
+				me.filters.data.data('daterangepicker').minDate = data_inicial;
+				me.filters.data.data('daterangepicker').maxDate = data_final;
+				me.filters.data.data('daterangepicker').setStartDate(data_inicial);
+				me.filters.data.data('daterangepicker').setEndDate(data_final);
+			}
+			//////////////////////////////////
+			//Filtro do Ativo
+			//////////////////////////////////
+			let ativos_in_operacoes = {},
+				select_options_html = '';
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco])
+				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
+			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
+			if (me.filters.ativo === null){
+				me.filters.ativo = lista_ops__search.find('select[name="ativo"]');
+				me.filters.ativo.append(select_options_html).promise().then(function (){
+					me.filters.ativo.selectpicker({
+						title: 'Ativo',
+						selectedTextFormat: 'count > 1',
+						actionsBox: true,
+						deselectAllText: 'Nenhum',
+						selectAllText: 'Todos',
+						liveSearch: true,
+						liveSearchNormalize: true,
+						style: '',
+						styleBase: 'form-control form-control-sm'
+					}).on('loaded.bs.select', function (){
+						me.filters.ativo.parent().addClass('form-control');
+					}).on('changed.bs.select', function (){
+						$(document.getElementById("lista_ops__table")).DataTable().draw();
+					});
+				});
+			}
+			else{
+				me.filters.ativo.empty().append(select_options_html).promise().then(function (){
+					me.filters.ativo.selectpicker('refresh');
+				});
+			}
+			//////////////////////////////////
+			//Filtro de Cenario
+			//////////////////////////////////
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => (p.nome ? `<option value="${p.nome}">${p.nome}</option>` : p) + `<option value="${c.nome}">${c.nome}</option>` );
+			if (me.filters.cenario === null){
+				me.filters.cenario = lista_ops__search.find('select[name="cenario"]');
+				me.filters.cenario.append(select_options_html).promise().then(function (){
+					me.filters.cenario.selectpicker({
+						title: 'Cenários',
+						selectedTextFormat: 'count > 2',
+						actionsBox: true,
+						deselectAllText: 'Nenhum',
+						selectAllText: 'Todos',
+						liveSearch: true,
+						liveSearchNormalize: true,
+						style: '',
+						styleBase: 'form-control form-control-sm'
+					}).on('loaded.bs.select', function (){
+						me.filters.cenario.parent().addClass('form-control');
+					}).on('changed.bs.select', function (){
+						$(document.getElementById("lista_ops__table")).DataTable().draw();
+					});
+				});
+			}
+			else{
+				me.filters.cenario.empty().append(select_options_html).promise().then(function (){
+					me.filters.cenario.selectpicker('refresh');
 				});
 			}
 		}
@@ -1866,9 +1935,9 @@ let Renda_variavel = (function(){
 			let lista_ops__table = $(document.getElementById('lista_ops__table'));
 			lista_ops__table.DataTable().destroy();
 			lista_ops__table.find('tbody').empty().append(rebuildListaOps__Table()).promise().then(function (){
+				_lista_ops__search.update();
 				lista_ops__table.DataTable(_lista_ops__table_DT);
 			});
-			_lista_ops__search.update();
 		}
 		$(document.getElementById('lista_ops')).offcanvas('show');
 	}
@@ -2777,8 +2846,9 @@ let Renda_variavel = (function(){
 			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
 		else if (this.name === 'remove_sel'){
 			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
-			$(document.getElementById('lista_ops__table')).find('tbody tr.selected').each(function (i, tr){
-				remove_data['operacoes'].push(tr.getAttribute('operacao'));
+			$(document.getElementById('lista_ops__table')).DataTable().rows({search: 'applied'}).nodes().each(function (tr){
+				if (Global.hasClass(tr, 'selected'))
+					remove_data['operacoes'].push(tr.getAttribute('operacao'));
 			});
 			if (remove_data['operacoes'].length === 0){
 				Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: 'Nenhuma operação selecionada.', delay: 4000});
@@ -2814,6 +2884,7 @@ let Renda_variavel = (function(){
 		else{
 			if (_lista__instancias_arcabouco.getSelected('instancia') !== this.getAttribute('instancia')){
 				_lista__instancias_arcabouco.setSelected(this.getAttribute('instancia'));
+				_list_ops__needRebuild = true;
 				if (!(_lista__instancias_arcabouco.getSelected('id') in _lista__operacoes.operacoes)){
 					Global.connect({
 						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: _lista__instancias_arcabouco.getSelected('id')}},

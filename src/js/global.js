@@ -287,19 +287,32 @@ let Global = (function(){
 	});
  	$.fn.dataTable.ext.search.push(
  		function(settings, searchData, index, rowData){
- 			if (settings.nTable.id !== 'lista_ops__table')
-            	return true;
- 			console.log(searchData, rowData);
- 			// var age = parseFloat( data[3] ) || 0;
-
- 			// if ( ( isNaN( min ) && isNaN( max ) ) ||
- 			// 	( isNaN( min ) && age <= max ) ||
- 			// 	( min <= age   && isNaN( max ) ) ||
- 			// 	( min <= age   && age <= max ) )
- 			// {
- 			// 	return true;
- 			// }
- 			// return false;
+ 			//Se for a tabela 'lista_ops__table'
+ 			if (settings.nTable.id === 'lista_ops__table'){
+ 				//Verifica os filtros
+ 				let filters = $(document.getElementById('lista_ops__search')),
+ 					data_filter = filters.find('input[name="data"]').val().split(' - '),
+ 					ativo_filter = filters.find('select[name="ativo"]').val(),
+ 					cenario_filter = filters.find('select[name="cenario"]').val();
+ 				//Verifica filtro de Data
+ 				if (data_filter.length === 2){
+ 					let fI = data_filter[0].split('/'),
+ 						fE = data_filter[1].split('/'),
+ 						dT = searchData[1].split('/');
+ 					fI = new Date(fI[2], fI[1], fI[0]);
+ 					fE = new Date(fE[2], fE[1], fE[0]);
+ 					dT = new Date(dT[2], dT[1], dT[0]);
+ 					if (dT < fI || dT > fE)
+ 						return false;
+ 				}
+ 				//Verifica filtro de Ativo
+ 				if (ativo_filter.length && !ativo_filter.includes(searchData[3]))
+ 					return false;
+ 				//Verifica filtro de Cenario
+ 				if (cenario_filter.length && !cenario_filter.includes(searchData[6]))
+ 					return false;
+ 				return true;
+ 			}
  			return true;
  		}
  	);
