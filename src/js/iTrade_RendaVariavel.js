@@ -525,9 +525,8 @@ let Renda_variavel = (function(){
 				});
 			}
 			else{
-				console.log(me.filters.data.data('daterangepicker'));
-				me.filters.data.data('daterangepicker').minDate = data_inicial;
-				me.filters.data.data('daterangepicker').maxDate = data_final;
+				me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
+				me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
 				me.filters.data.data('daterangepicker').setStartDate(data_inicial);
 				me.filters.data.data('daterangepicker').setEndDate(data_final);
 			}
@@ -868,6 +867,8 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			let	data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : ''),
 				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : '');
+			me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
+			me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
 			me.filters.data.data('daterangepicker').setStartDate(data_inicial);
 			me.filters.data.data('daterangepicker').setEndDate(data_final);
 			//////////////////////////////////
