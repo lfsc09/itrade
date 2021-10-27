@@ -321,28 +321,53 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	//Funcoes usadas em '_arcabouco__table_DT'
 	let _arcabouco__table_DT_ext = {
-		meta_render: function (data, type, row){
-			return (type === 'display') ? `<progress class="mx-3" value="${data}" max="100"></progress>` : data;
+		situacao_render: function (data, type, row){
+			let iData = ``;
+			//Fechado
+			if (data == 1)
+				iData = `<i class="fas fa-circle fechado"></i>`;
+			//Pendente
+			else if (data == 2)
+				iData = `<i class="fas fa-circle pendente"></i>`;
+			//Fazendo
+			else if (data == 3)
+				iData = `<i class="fas fa-circle fazendo"></i>`;
+			return (type === 'display') ? iData : data;
+		},
+		tipo_render: function (data, type, row){
+			let iData = ``;
+			//Live
+			if (data == 1)
+				iData = `<i class="fas fa-microphone"></i>`;
+			//Replay
+			else if (data == 2)
+				iData = `<i class="fas fa-video"></i>`;
+			//Paper Trade
+			else if (data == 3)
+				iData = `<i class="fas fa-sticky-note"></i>`;
+			return (type === 'display') ? iData : data;
 		}
 	}
 	//Configuração da tabela de arcabouços em 'arcabouco_modal'
 	let _arcabouco__table_DT = {
 		columns: [
+			{name: 'situacao', orderable: false, render: _arcabouco__table_DT_ext.situacao_render},
+			{name: 'tipo', orderable: false, render: _arcabouco__table_DT_ext.tipo_render},
 			{name: 'nome', orderable: true},
 			{name: 'data_criacao', orderable: true, type: 'br-date'},
 			{name: 'data_atualizacao', orderable: true, type: 'br-date'},
 			{name: 'qtd_ops', orderable: true},
-			{name: 'meta', orderable: true, render: _arcabouco__table_DT_ext.meta_render},
 			{name: 'usuarios', orderable: false},
 			{name: 'editar', orderable: false},
 			{name: 'remover', orderable: false}
 		],
+		lengthChange: false,
 		order: [[ 2, 'desc' ]],
 		pageLength: 25,
 		pagingType: 'input'
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------- Section Operações Add ------------------------------*/
+	/*-------------------------- Section Operações Upload ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Realiza a abertura e leitura do arquivo csv. (Importar operações)
@@ -420,6 +445,7 @@ let Renda_variavel = (function(){
 							newData.push({
 								ativo: obj[line][dataMap.indexOf('Ativo')],
 								op: ((operacao === 'C') ? 1 : 2),
+								rr: '',
 								vol: '',
 								//Profit mostra Qtd Compra e Qtd Venda. Em uma Compra eu quero saber quando eu vendi (qtd. de saída). Em uma Venda o contrário.
 								cts: ((operacao === 'C') ? obj[line][dataMap.indexOf('Qtd Venda')] : obj[line][dataMap.indexOf('Qtd Compra')]),
@@ -454,6 +480,7 @@ let Renda_variavel = (function(){
 							newData.push({
 								ativo: obj[line][dataMap.indexOf('Papel')],
 								op: ((operacao === 'C') ? 1 : 2),
+								rr: '',
 								vol: '',
 								cts: obj[line][dataMap.indexOf('Qtd')],
 								cenario: '',
@@ -497,8 +524,8 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
-			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : '',
-				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : '';
+			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
+				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial;
 			if (me.filters.data === null){
 				me.filters.data = lista_ops__search.find('input[name="data"]');
 				me.filters.data.on('apply.daterangepicker', function (ev, picker){
@@ -566,7 +593,7 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro de Cenario
 			//////////////////////////////////
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => (p.nome ? `<option value="${p.nome}">${p.nome}</option>` : p) + `<option value="${c.nome}">${c.nome}</option>` );
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + `<option value="${c.nome}">${c.nome}</option>`, '');
 			if (me.filters.cenario === null){
 				me.filters.cenario = lista_ops__search.find('select[name="cenario"]');
 				me.filters.cenario.append(select_options_html).promise().then(function (){
@@ -668,8 +695,8 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
-			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : '',
-				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : '';
+			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
+				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial;
 			me.filters.data = dashboard_ops__search.find('input[name="data"]');
 			me.filters.data.on('apply.daterangepicker', function (ev, picker){
 				_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', picker.startDate.format('DD/MM/YYYY'));
@@ -746,7 +773,7 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro de Cenario
 			//////////////////////////////////
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => (p.nome ? `<option value="${p.id}" ${(('cenario' in dashboard_filters && p.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${p.nome}</option>` : p) + `<option value="${c.id}" ${(('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${c.nome}</option>` );
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + `<option value="${c.id}" ${(('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${c.nome}</option>`, '');
 			me.filters.cenario = dashboard_ops__search.find('select[name="cenario"]');
 			me.filters.cenario.append(select_options_html).promise().then(function (){
 				me.filters.cenario.selectpicker({
@@ -865,8 +892,8 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
-			let	data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : ''),
-				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : '');
+			let	data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY')),
+				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial);
 			me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
 			me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
 			me.filters.data.data('daterangepicker').setStartDate(data_inicial);
@@ -891,7 +918,7 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro de Cenario
 			//////////////////////////////////
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => (p.nome ? `<option value="${p.id}" ${(('cenario' in dashboard_filters && p.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${p.nome}</option>` : p) + `<option value="${c.id}" ${(('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${c.nome}</option>` );
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + `<option value="${c.id}" ${(('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${c.nome}</option>`, '');
 			me.filters.cenario.empty().append(select_options_html).promise().then(function (){
 				me.filters.cenario.selectpicker('refresh');
 			});
@@ -1417,14 +1444,16 @@ let Renda_variavel = (function(){
 		let form = $(document.getElementById('arcaboucos_modal_form'));
 		form.removeAttr('id_arcabouco');
 		form.find('input[name]').val('').removeAttr('changed');
+		form.find('textarea[name]').val('').removeAttr('changed');
+		form.find('select[name!="usuarios"]').prop('selectedIndex', 0).removeAttr('changed');
 		form.find('select[name="usuarios"]').selectpicker('deselectAll');
 	}
 	/*
 		Constroi o modal de gerenciamento de arcabouços.
 	*/
-	function buildArcaboucosModal(method = ''){
-		let form = $(document.getElementById('arcaboucos_modal_form'));
-		if (method === 'build'){
+	function buildArcaboucosModal(firstBuild = false, forceRebuild = false, show = false){
+		if (firstBuild){
+			let form = $(document.getElementById('arcaboucos_modal_form'));
 			//Inicia o select de usuarios
 			select_options_html = '';
 			for (let usu in _lista__usuarios.usuarios){
@@ -1446,15 +1475,13 @@ let Renda_variavel = (function(){
 					form.find('select[name="usuarios"]').parent().addClass('form-control');
 				});
 			});
-			//Inicia a mascara da meta
-			form.find('input[name="meta"]').inputmask({alias: 'numeric', digitsOptional: false, digits: 0, rightAlign: false, placeholder: '0'});
-			buildArcaboucosTable();
 		}
-		else{
-			let modal = $(document.getElementById('arcaboucos_modal'));
-			form.find('input[name]').val('');
-			form.find('select[name="usuarios"]').selectpicker('deselectAll');
-			modal.modal('show');
+		if (forceRebuild)
+			buildArcaboucosTable();
+		if (show){
+			//Reseta o formulario de cadastro e edição
+			resetFormArcaboucoModal();
+			$(document.getElementById('arcaboucos_modal')).modal('show');
 		}
 	}
 	/*
@@ -1467,16 +1494,16 @@ let Renda_variavel = (function(){
 		table.DataTable().destroy();
 		//Constroi tabela de informacoes dos arcabouços
 		for (let ar in _lista__arcaboucos.arcaboucos){
-			let meta = (_lista__arcaboucos.arcaboucos[ar].meta !== 0) ? ((_lista__arcaboucos.arcaboucos[ar].qtd_ops / _lista__arcaboucos.arcaboucos[ar].meta) * 100).toFixed(2) : 0,
-				usuarios_html = ``;
+			let usuarios_html = ``;
 			for (let usu in _lista__arcaboucos.arcaboucos[ar]['usuarios'])
 				usuarios_html += `<span class="badge ${((_lista__arcaboucos.arcaboucos[ar]['usuarios'][usu].criador == 1) ? 'bg-primary' : 'bg-secondary')} ${((usu !== 0) ? 'ms-1' : '')} my-1">${_lista__arcaboucos.arcaboucos[ar]['usuarios'][usu].usuario}</span>`;
 			html += `<tr arcabouco="${_lista__arcaboucos.arcaboucos[ar].id}" ${((_lista__arcaboucos.arcaboucos[ar].id == _lista__instancias_arcabouco.getSelected('id')) ? 'selected' : '')}>`+
+					`<td name="situacao" class="fw-bold">${_lista__arcaboucos.arcaboucos[ar].situacao}</td>`+
+					`<td name="tipo" class="fw-bold">${_lista__arcaboucos.arcaboucos[ar].tipo}</td>`+
 					`<td name="nome" class="fw-bold">${_lista__arcaboucos.arcaboucos[ar].nome}</td>`+
 					`<td name="data_criacao" class="fw-bold text-muted">${Global.convertDate(_lista__arcaboucos.arcaboucos[ar].data_criacao)}</td>`+
 					`<td name="data_atualizacao" class="fw-bold text-muted">${((_lista__arcaboucos.arcaboucos[ar].data_atualizacao !== '0000-00-00 00:00:00') ? Global.convertDatetime(_lista__arcaboucos.arcaboucos[ar].data_atualizacao) : '')}</td>`+
 					`<td name="qtd_ops" class="fw-bold text-center">${_lista__arcaboucos.arcaboucos[ar].qtd_ops}</td>`+
-					`<td name="meta">${meta}</td>`+
 					`<td name="usuarios">${usuarios_html}</td>`+
 					((_lista__arcaboucos.arcaboucos[ar].sou_criador == 1) ? `<td name="editar" class="text-center"><button class="btn btn-sm btn-light" type="button" name="editar"><i class="fas fa-edit"></i></button></td>` : `<td></td>`)+
 					((_lista__arcaboucos.arcaboucos[ar].sou_criador == 1) ? `<td name="remover" class="text-center"><button class="btn btn-sm btn-light" type="button" name="remover"><i class="fas fa-trash text-danger"></i></button></td>` : `<td></td>`)+
@@ -1780,75 +1807,50 @@ let Renda_variavel = (function(){
 		return data;
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------- Section Operações Add ------------------------------*/
+	/*-------------------------- Section Operações Upload ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
-		Constroi o modal de Cadastro de Operações.
+		Constroi o modal de Upload de Operações.
 	*/
-	function buildOperacoesModal(){
-		let modal = $(document.getElementById('operacoes_modal'));
-		document.getElementById('importa_arquivo_operacoes_modal').value = '';
+	function buildUploadOperacoesModal(){
+		let modal = $(document.getElementById('upload_operacoes_modal'));
+		document.getElementById('upload_operacoes_modal_file').value = '';
 		document.getElementById('file_format').selectedIndex = 0;
 		document.getElementById('table_layout').selectedIndex = 0;
-		resetOperacaoAddTable();
+		resetUploadOperacaoTable();
 		modal.modal('show');
 	}
 	/*
-		Apaga tudo em 'table_operacoes_add'.
+		Apaga tudo em 'table_upload_operacoes'.
 	*/
-	function resetOperacaoAddTable(){
-		let table = $(document.getElementById('table_operacoes_add'));
+	function resetUploadOperacaoTable(){
+		let table = $(document.getElementById('table_upload_operacoes'));
 		table.find('thead').empty();
 		table.find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
 	}
 	/*
-		Constroi o html do select de ativos em 'table_operacoes_add'.
+		Adiciona uma linha na tabela de upload de operações.
 	*/
-	function buildAtivosSelect_OperacaoAddTable(){
-		let html = ``;
-		for (let at in _lista__cenarios.ativos)
-			html += `<option value="${_lista__cenarios.ativos[at].id}" custo="${_lista__cenarios.ativos[at].custo}" valor_tick="${_lista__cenarios.ativos[at].valor_tick}" pts_tick="${_lista__cenarios.ativos[at].pts_tick}">${_lista__cenarios.ativos[at].nome}</option>`;
-		return html;
-	}
-	/*
-		Constroi o html do select de cenarios em 'table_operacoes_add'.
-	*/
-	function buildCenariosSelect_OperacaoAddTable(){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			html = ``;
-		for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
-			html += `<option value="${_lista__cenarios.cenarios[selected_inst_arcabouco][cn].id}">${_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome}</option>`;
-		return html;
-	}
-	/*
-		Inicia os valores dos selects das linhas de 'table_operacoes_add'.
-	*/
-	function setSelectValues_OperacaoAddTable(data){
-		$(document.getElementById('table_operacoes_add')).find('tbody tr').each(function (t, tr){
-			tr = $(tr);
-			if ('ativo' in data[t])
-				tr.find('select[name="ativo"]').val('').find('option').filter((i, el) => data[t].ativo.toLowerCase().includes(el.innerHTML.toLowerCase())).prop('selected', true);
-			if ('op' in data[t])
-				tr.find('select[name="op"]').val(data[t].op);
-			if ('rr' in data[t])
-				tr.find('select[name="rr"]').val(data[t].rr);
-			if ('cenario' in data[t]){
-				tr.find('select[name="cenario"]').val('').find('option').filter((i, el) => data[t].cenario === el.innerHTML).prop('selected', true);
-				if (tr.find('select[name="cenario"]').val() === null)
-					tr.find('input[name="premissas"],input[name="observacoes"]').val('');
-			}
-		});
-	}
-	/*
-		Adiciona uma linha na tabela de adição de operações.
-	*/
-	function buildOperacaoAddTable(data = []){
+	function buildUploadOperacaoTable(data = []){
 		let tbody_html = ``,
 			thead_html = ``,
-			table = $(document.getElementById('table_operacoes_add')),
+			table = $(document.getElementById('table_upload_operacoes')),
 			table_layout = $(document.getElementById('table_layout')).val(),
-			select_ativos_html = buildAtivosSelect_OperacaoAddTable(),
-			select_cenarios_html = buildCenariosSelect_OperacaoAddTable();
+			selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			op_dic = ['', 'C', 'V'],
+			cenarios_dic = [],
+			ativos_dic = {'': {nome: '', custo: '', valor_tick: '', pts_tick: ''}},
+			error = false;
+		for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
+			cenarios_dic.push(_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome);
+		for (let at in _lista__ativos.ativos){
+			ativos_dic[_lista__ativos.ativos[at].nome] = {
+				nome: _lista__ativos.ativos[at].nome,
+				custo: _lista__ativos.ativos[at].custo,
+				valor_tick: _lista__ativos.ativos[at].valor_tick,
+				pts_tick: _lista__ativos.ativos[at].pts_tick
+			}
+		}
 		//Constroi o THEAD
 		if (table_layout === 'scalp'){
 			thead_html += `<tr>`+
@@ -1876,62 +1878,87 @@ let Renda_variavel = (function(){
 		for (let i=0; i<data.length; i++){
 			//Layout de Scalp
 			if (table_layout === 'scalp'){
-				tbody_html += `<tr>`+
-							`<td name="sequencia"><input type="text" name="sequencia" class="form-control form-control-sm" value="${i+1}" readonly></td>`+
-							`<td name="data"><input type="text" name="data" class="form-control form-control-sm" onclick="this.select()" value="${data[i].data}"></td>`+
-							`<td name="ativo"><select class="form-select form-select-sm" name="ativo">${select_ativos_html}</select></td>`+
-							`<td name="op"><select name="op" class="form-select form-select-sm"><option value="1">Compra</option><option value="2">Venda</option></select></td>`+
-							`<td name="rr"><select name="rr" class="form-select form-select-sm"><option value="">---</option><optgroup label="R:R Negativo"><option value="2:1">2:1</option><option value="3:1">3:1</option></optgroup></select></td>`+
-							`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm" onclick="this.select()" value="${data[i].vol}"></td>`+
-							`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm" onclick="this.select()" value="${data[i].cts}"></td>`+
-							`<td name="hora"><input type="text" name="hora" class="form-control form-control-sm" onclick="this.select()" value="${data[i].hora}"></td>`+
-							`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm" onclick="this.select()" value="${data[i].entrada}"></td>`+
-							`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm" onclick="this.select()" value="${data[i].stop}"></td>`+
-							`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm" onclick="this.select()" value="${data[i].alvo}"></td>`+
-							`<td name="men"><input type="text" name="men" class="form-control form-control-sm" onclick="this.select()" value="${data[i].men}"></td>`+
-							`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm" onclick="this.select()" value="${data[i].mep}"></td>`+
-							`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm" onclick="this.select()" value="${data[i].saida}"></td>`+
-							`<td name="cenario"><select class="form-select form-select-sm" name="cenario">${select_cenarios_html}</select></td>`+
-							`<td name="premissas"><input type="text" name="premissas" class="form-control form-control-sm" onclick="this.select()" value="${data[i].premissas.map(s => s.trim()).join(',')}"></td>`+
-							`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm" onclick="this.select()" value="${data[i].observacoes.map(s => s.trim()).join(',')}"></td>`+
-							`<td name="erro"><input type="checkbox" name="erro" class="form-check-input" ${(data[i].erro == 1) ? 'checked' : ''}></td>`+
+				let error_line = [],
+					op_ativo_index = (data[i].ativo in ativos_dic) ? data[i].ativo : '',
+					op_cenario = (cenarios_dic.includes(data[i].cenario)) ? data[i].cenario : '',
+					op_premissas = (op_cenario !== '') ? data[i].premissas.map(s => s.trim()).join(',') : '',
+					op_observacoes = (op_cenario !== '') ? data[i].observacoes.map(s => s.trim()).join(',') : '';
+				if (data[i].data === '' || op_ativo_index === '' || data[i].op === '' || data[i].cts === '' || data[i].entrada === '' || data[i].saida === ''){
+					if (data[i].data === '')
+						error_line.push('data');
+					if (op_ativo_index === '')
+						error_line.push('ativo');
+					if (data[i].op === '')
+						error_line.push('op');
+					if (data[i].cts === '')
+						error_line.push('cts');
+					if (data[i].entrada === '')
+						error_line.push('entrada');
+					if (data[i].saida === '')
+						error_line.push('saida');
+					error = true;
+				}
+				tbody_html += `<tr ${((error_line) ? `class="error"` : ``)}>`+
+							`<td name="sequencia" value="${i+1}">${i+1}</td>`+
+							`<td name="data" value="${Global.convertDate(data[i].data)}" ${((error_line.includes('data')) ? `class="error"` : ``)}>${data[i].data}</td>`+
+							`<td name="ativo" value="${ativos_dic[op_ativo_index].nome}" custo="${ativos_dic[op_ativo_index].custo}" valor_tick="${ativos_dic[op_ativo_index].valor_tick}" pts_tick="${ativos_dic[op_ativo_index].pts_tick}" ${((error_line.includes('ativo')) ? `class="error"` : ``)}>${ativos_dic[op_ativo_index].nome}</td>`+
+							`<td name="op" value="${data[i].op}" ${((error_line.includes('op')) ? `class="error"` : ``)}>${op_dic[data[i].op]}</td>`+
+							`<td name="rr" value="${data[i].rr}">${data[i].rr}</td>`+
+							`<td name="vol" value="${data[i].vol}">${data[i].vol}</td>`+
+							`<td name="cts" value="${data[i].cts}" ${((error_line.includes('cts')) ? `class="error"` : ``)}>${data[i].cts}</td>`+
+							`<td name="hora" value="${data[i].hora}">${data[i].hora}</td>`+
+							`<td name="entrada" value="${data[i].entrada}" ${((error_line.includes('entrada')) ? `class="error"` : ``)}>${data[i].entrada}</td>`+
+							`<td name="stop" value="${data[i].stop}">${data[i].stop}</td>`+
+							`<td name="alvo" value="${data[i].alvo}">${data[i].alvo}</td>`+
+							`<td name="men" value="${data[i].men}">${data[i].men}</td>`+
+							`<td name="mep" value="${data[i].mep}">${data[i].mep}</td>`+
+							`<td name="saida" value="${data[i].saida}" ${((error_line.includes('saida')) ? `class="error"` : ``)}>${data[i].saida}</td>`+
+							`<td name="cenario" value="${op_cenario}">${op_cenario}</td>`+
+							`<td name="premissas" value="${op_premissas}">${op_premissas}</td>`+
+							`<td name="observacoes" value="${op_observacoes}">${op_observacoes}</td>`+
+							`<td name="erro" value="${data[i].erro}">${(data[i].erro == 1) ? `<i class="fas fa-check"></i>` : ''}</td>`+
 							`</tr>`;
 			}
 		}
 		table.find('thead').empty().append(thead_html);
 		table.find('tbody').empty().append(tbody_html).promise().then(function (){
-			setSelectValues_OperacaoAddTable(data);
+			if (error){
+				Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Alguns campos devem serem preenchidos.', delay: 4000});
+				$(document.getElementById('upload_operacoes_modal_enviar')).prop('disabled', true);
+			}
+			else
+				$(document.getElementById('upload_operacoes_modal_enviar')).prop('disabled', false);
 		});
 	}
 	/*
-		Recalcula o Stop e Alvo, baseado nos dados preenchidos em um linha da 'table_operacoes_add'.
+		Recalcula o Stop e Alvo, baseado nos dados preenchidos em um linha da 'table_upload_operacoes'.
 	*/
-	function recalcStopeAlvo_OperacoesAddTable(tr_data){
-		let novo_alvo = '',
-			novo_stop = '';
-		if (tr_data.vol == 0 || tr_data.pts_tick == 0 || (tr_data.risco == 0 && tr_data.retorno == 0))
-			return;
-		//Se for compra
-		if (tr_data.op == '1'){
-			if (tr_data.retorno != 0)
-				novo_alvo = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
-			if (tr_data.risco != 0)
-				novo_stop = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.risco);
-		}
-		else if (tr_data.op == '2'){
-			if (tr_data.retorno != 0)
-				novo_alvo = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
-			if (tr_data.risco != 0)
-				novo_stop = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.risco);	
-		}
-		tr_data.tr.find('input[name="alvo"]').val(novo_alvo);
-		tr_data.tr.find('input[name="stop"]').val(novo_stop);
-	}
+	// function recalcStopeAlvo_OperacoesAddTable(tr_data){
+	// 	let novo_alvo = '',
+	// 		novo_stop = '';
+	// 	if (tr_data.vol == 0 || tr_data.pts_tick == 0 || (tr_data.risco == 0 && tr_data.retorno == 0))
+	// 		return;
+	// 	//Se for compra
+	// 	if (tr_data.op == '1'){
+	// 		if (tr_data.retorno != 0)
+	// 			novo_alvo = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
+	// 		if (tr_data.risco != 0)
+	// 			novo_stop = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.risco);
+	// 	}
+	// 	else if (tr_data.op == '2'){
+	// 		if (tr_data.retorno != 0)
+	// 			novo_alvo = tr_data.entrada - (tr_data.pts_tick * tr_data.vol * tr_data.retorno);
+	// 		if (tr_data.risco != 0)
+	// 			novo_stop = tr_data.entrada + (tr_data.pts_tick * tr_data.vol * tr_data.risco);	
+	// 	}
+	// 	tr_data.tr.find('input[name="alvo"]').val(novo_alvo);
+	// 	tr_data.tr.find('input[name="stop"]').val(novo_stop);
+	// }
 	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------------- Lista Ops ------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
-	function buildOperacoesOffcanvas(){
-		if (_list_ops__needRebuild){
+	function buildOperacoesOffcanvas(forceRebuild = false){
+		if (_list_ops__needRebuild || forceRebuild){
 			_list_ops__needRebuild = false;
 			let lista_ops__table = $(document.getElementById('lista_ops__table'));
 			lista_ops__table.DataTable().destroy();
@@ -1940,7 +1967,8 @@ let Renda_variavel = (function(){
 				lista_ops__table.DataTable(_lista_ops__table_DT);
 			});
 		}
-		$(document.getElementById('lista_ops')).offcanvas('show');
+		if (!forceRebuild)
+			$(document.getElementById('lista_ops')).offcanvas('show');
 	}
 	/*
 		Retorna o html da lista de operacoes. (Head ou Body)
@@ -2152,9 +2180,15 @@ let Renda_variavel = (function(){
 		}
 	});
 	/*
+		Processa a filtragem de dados em 'table_arcaboucos'.
+	*/
+	$(document.getElementById('arcaboucos_modal__search')).find('input[name],select[name]').on('change', function (){
+		$(document.getElementById('table_arcaboucos')).DataTable().column(`${this.name}:name`).search(this.value).draw();
+	});
+	/*
 		Marca os inputs que forem alterados.
 	*/
-	$(document.getElementById('arcaboucos_modal_form')).on('change', 'input[name]', function (){
+	$(document.getElementById('arcaboucos_modal_form')).on('change', 'input[name],select[name!="usuarios"]', function (){
 		this.setAttribute('changed', '');
 	});
 	/*
@@ -2199,7 +2233,9 @@ let Renda_variavel = (function(){
 			form = $(document.getElementById('arcaboucos_modal_form'));
 		for (let u in _lista__arcaboucos.arcaboucos[id_arcabouco].usuarios)
 			usuarios_select.push(_lista__arcaboucos.arcaboucos[id_arcabouco]['usuarios'][u].usuario);
-		form.find('input[name="meta"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].meta).removeAttr('changed');
+		form.find('select[name="situacao"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].situacao).removeAttr('changed');
+		form.find('select[name="tipo"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].tipo).removeAttr('changed');
+		form.find('textarea[name="observacao"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].observacao).removeAttr('changed');
 		form.find('input[name="nome"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].nome).removeAttr('changed');
 		form.find('select[name="usuarios"]').selectpicker('val', usuarios_select);
 		form.attr('id_arcabouco', id_arcabouco);
@@ -2238,7 +2274,7 @@ let Renda_variavel = (function(){
 		let form = $(document.getElementById('arcaboucos_modal_form'));
 			id_arcabouco = form.attr('id_arcabouco'),
 			data = {};
-		form.find('input[name][changed],select[name]').each(function (){
+		form.find('input[name][changed],select[name!="usuarios"][changed],select[name="usuarios"]').each(function (){
 			data[this.name] = $(this).val();
 		});
 		//Se for edição
@@ -2574,21 +2610,22 @@ let Renda_variavel = (function(){
 		return false;
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------- Section Operações Add ------------------------------*/
+	/*-------------------------- Section Operações Upload ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
-		Processa o fechamento do modal 'operacoes_modal', para reconstrucao do arcabouço section.
+		Processa o fechamento do modal 'upload_operacoes_modal', para reconstrucao do arcabouço section.
 	*/
-	$(document.getElementById('operacoes_modal')).on('hidden.bs.modal', function (){
+	$(document.getElementById('upload_operacoes_modal')).on('hidden.bs.modal', function (){
 		if (_dashboard_ops__needRebuild){
 			_dashboard_ops__needRebuild = false;
-			rebuildArcaboucoSection(rebuildSearch = false);
+			rebuildArcaboucoSection(rebuildSearch = true);
+			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
 		}
 	});
 	/*
 		Processa a importação de um arquivo de operações.
 	*/
-	$(document.getElementById('importa_arquivo_operacoes_modal')).change(function (){
+	$(document.getElementById('upload_operacoes_modal_file')).change(function (){
 		let file_import = this;
 		_csv_reader.reader.onload = function fileReadCompleted(){
 			let file_format = $(document.getElementById('file_format')).val(),
@@ -2598,12 +2635,12 @@ let Renda_variavel = (function(){
 			if (data_lines.length){
 				csvData = _csv_reader.cleanData(data_lines, {file_format: file_format, table_layout: table_layout});
 				if (csvData.length)
-					buildOperacaoAddTable(csvData);
+					buildUploadOperacaoTable(csvData);
 				else
-					Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Número de colunas muda em certas linhas)', delay: 4000});
+					Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Número de colunas muda em certas linhas)', delay: 4000});
 			}
 			else
-				Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Arquivo Vazio)', delay: 4000});
+				Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Arquivo Vazio)', delay: 4000});
 			file_import.value = '';
 		};
 		_csv_reader.reader.readAsText(this.files[0], 'ISO-8859-2');
@@ -2611,182 +2648,155 @@ let Renda_variavel = (function(){
 	/*
 		Processa alteracoes no select de R:R, Vol, Entrada, Op e Ativo, para alterar o Stop e Alvo. (Caso o Vol e R:R esteja preenchido)
 	*/
-	$(document.getElementById('table_operacoes_add')).on('change', 'select[name="rr"]', function (){
-		let tr = $(this).parentsUntil('tbody').last(),
-			op = tr.find('select[name="op"]').val(),
-			pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
-			rr = $(this).val().split(':'),
-			risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
-			retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
-			vol = tr.find('input[name="vol"]').val(),
-			entrada = tr.find('input[name="entrada"]').val();
-		vol = ((vol !== '') ? parseFloat(vol) : 0.0);
-		pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
-		entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
-		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
-	});
-	$(document.getElementById('table_operacoes_add')).on('change', 'input[name="vol"]', function (){
-		let tr = $(this).parentsUntil('tbody').last(),
-			op = tr.find('select[name="op"]').val(),
-			pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
-			rr = tr.find('select[name="rr"]').val().split(':'),
-			risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
-			retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
-			vol = $(this).val(),
-			entrada = tr.find('input[name="entrada"]').val();
-		vol = ((vol !== '') ? parseFloat(vol) : 0.0);
-		pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
-		entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
-		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
-	});
-	$(document.getElementById('table_operacoes_add')).on('change', 'input[name="entrada"]', function (){
-		let tr = $(this).parentsUntil('tbody').last(),
-			op = tr.find('select[name="op"]').val(),
-			pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
-			rr = tr.find('select[name="rr"]').val().split(':'),
-			risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
-			retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
-			vol = tr.find('input[name="vol"]').val(),
-			entrada = $(this).val();
-		vol = ((vol !== '') ? parseFloat(vol) : 0.0);
-		pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
-		entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
-		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
-	});
-	$(document.getElementById('table_operacoes_add')).on('change', 'select[name="ativo"]', function (){
-		let tr = $(this).parentsUntil('tbody').last(),
-			op = tr.find('select[name="op"]').val(),
-			pts_tick = $(this).find('option:selected').attr('pts_tick'),
-			rr = tr.find('select[name="rr"]').val().split(':'),
-			risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
-			retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
-			vol = tr.find('input[name="vol"]').val(),
-			entrada = tr.find('input[name="entrada"]').val();
-		vol = ((vol !== '') ? parseFloat(vol) : 0.0);
-		pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
-		entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
-		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
-	});
-	$(document.getElementById('table_operacoes_add')).on('change', 'select[name="op"]', function (){
-		let tr = $(this).parentsUntil('tbody').last(),
-			op = $(this).val(),
-			pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
-			rr = tr.find('select[name="rr"]').val().split(':'),
-			risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
-			retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
-			vol = tr.find('input[name="vol"]').val(),
-			entrada = tr.find('input[name="entrada"]').val();
-		vol = ((vol !== '') ? parseFloat(vol) : 0.0);
-		pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
-		entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
-		recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
-	});
-	/*
-		Reconstroi a select de premissas e observacoes ao mudar o cenario.
-	*/
-	$(document.getElementById('table_operacoes_add')).on('change', 'select[name="cenario"]', function (){
-		$(this).parentsUntil('tbody').last().find('input[name="premissas"],input[name="observacoes"]').val('');
-	});
+	// $(document.getElementById('table_upload_operacoes')).on('change', 'select[name="rr"]', function (){
+	// 	let tr = $(this).parentsUntil('tbody').last(),
+	// 		op = tr.find('select[name="op"]').val(),
+	// 		pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
+	// 		rr = $(this).val().split(':'),
+	// 		risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
+	// 		retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
+	// 		vol = tr.find('input[name="vol"]').val(),
+	// 		entrada = tr.find('input[name="entrada"]').val();
+	// 	vol = ((vol !== '') ? parseFloat(vol) : 0.0);
+	// 	pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
+	// 	entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
+	// 	recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	// });
+	// $(document.getElementById('table_upload_operacoes')).on('change', 'input[name="vol"]', function (){
+	// 	let tr = $(this).parentsUntil('tbody').last(),
+	// 		op = tr.find('select[name="op"]').val(),
+	// 		pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
+	// 		rr = tr.find('select[name="rr"]').val().split(':'),
+	// 		risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
+	// 		retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
+	// 		vol = $(this).val(),
+	// 		entrada = tr.find('input[name="entrada"]').val();
+	// 	vol = ((vol !== '') ? parseFloat(vol) : 0.0);
+	// 	pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
+	// 	entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
+	// 	recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	// });
+	// $(document.getElementById('table_upload_operacoes')).on('change', 'input[name="entrada"]', function (){
+	// 	let tr = $(this).parentsUntil('tbody').last(),
+	// 		op = tr.find('select[name="op"]').val(),
+	// 		pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
+	// 		rr = tr.find('select[name="rr"]').val().split(':'),
+	// 		risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
+	// 		retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
+	// 		vol = tr.find('input[name="vol"]').val(),
+	// 		entrada = $(this).val();
+	// 	vol = ((vol !== '') ? parseFloat(vol) : 0.0);
+	// 	pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
+	// 	entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
+	// 	recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	// });
+	// $(document.getElementById('table_upload_operacoes')).on('change', 'select[name="ativo"]', function (){
+	// 	let tr = $(this).parentsUntil('tbody').last(),
+	// 		op = tr.find('select[name="op"]').val(),
+	// 		pts_tick = $(this).find('option:selected').attr('pts_tick'),
+	// 		rr = tr.find('select[name="rr"]').val().split(':'),
+	// 		risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
+	// 		retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
+	// 		vol = tr.find('input[name="vol"]').val(),
+	// 		entrada = tr.find('input[name="entrada"]').val();
+	// 	vol = ((vol !== '') ? parseFloat(vol) : 0.0);
+	// 	pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
+	// 	entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
+	// 	recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	// });
+	// $(document.getElementById('table_upload_operacoes')).on('change', 'select[name="op"]', function (){
+	// 	let tr = $(this).parentsUntil('tbody').last(),
+	// 		op = $(this).val(),
+	// 		pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick'),
+	// 		rr = tr.find('select[name="rr"]').val().split(':'),
+	// 		risco = ((rr.length === 2) ? parseInt(rr[0]) : 0),
+	// 		retorno = ((rr.length === 2) ? parseInt(rr[1]) : 0),
+	// 		vol = tr.find('input[name="vol"]').val(),
+	// 		entrada = tr.find('input[name="entrada"]').val();
+	// 	vol = ((vol !== '') ? parseFloat(vol) : 0.0);
+	// 	pts_tick = ((pts_tick) ? parseFloat(pts_tick) : 0.0);
+	// 	entrada = ((entrada !== '') ? parseFloat(entrada) : 0.0);
+	// 	recalcStopeAlvo_OperacoesAddTable({op: op, pts_tick: pts_tick, risco: risco, retorno: retorno, vol: vol, entrada: entrada, tr: tr});
+	// });
 	/*
 		Envia as operações para serem registradas no BD.
 	*/
-	$(document.getElementById('operacoes_modal_enviar')).click(function (){
-		let table = $(document.getElementById('table_operacoes_add')),
-			insert_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []},
-			error = false;
-		$(document.getElementById('table_operacoes_add')).find('tbody tr').each(function (t, tr){
+	$(document.getElementById('upload_operacoes_modal_enviar')).click(function (){
+		let table = $(document.getElementById('table_upload_operacoes')),
+			insert_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
+		$(document.getElementById('table_upload_operacoes')).find('tbody tr').each(function (t, tr){
 			tr = $(tr);
-			let sequencia = tr.find('input[name="sequencia"]').val(),
-				data = Global.convertDate(tr.find('input[name="data"]').val()),
-				ativo = tr.find('select[name="ativo"] option:selected').text(),
-				op = tr.find('select[name="op"]').val(),
-				vol = tr.find('input[name="vol"]').val(),
-				cts = tr.find('input[name="cts"]').val(),
-				hora = tr.find('input[name="hora"]').val(),
-				erro = ((tr.find('input[name="erro"]').is(':checked')) ? 1 : 0),
-				entrada = tr.find('input[name="entrada"]').val(),
-				stop = tr.find('input[name="stop"]').val(),
-				alvo = tr.find('input[name="alvo"]').val(),
-				men = tr.find('input[name="men"]').val(),
-				mep = tr.find('input[name="mep"]').val(),
-				saida = tr.find('input[name="saida"]').val(),
-				cenario = tr.find('select[name="cenario"] option:selected').text(),
-				premissas = tr.find('input[name="premissas"]').val(),
-				observacoes = tr.find('input[name="observacoes"]').val(),
-				ativo_custo = tr.find('select[name="ativo"] option:selected').attr('custo'),
-				ativo_valor_tick = tr.find('select[name="ativo"] option:selected').attr('valor_tick'),
-				ativo_pts_tick = tr.find('select[name="ativo"] option:selected').attr('pts_tick');
-			if (data === '' || ativo === '' || op === '' || cts === '' || entrada === '' || saida === ''){
-				if (data === '')
-					table.find('thead th[name="data"]').addClass('error');
-				if (ativo === '')
-					table.find('thead th[name="ativo"]').addClass('error');
-				if (op === '')
-					table.find('thead th[name="op"]').addClass('error');
-				if (cts === '')
-					table.find('thead th[name="cts"]').addClass('error');
-				if (entrada === '')
-					table.find('thead th[name="entrada"]').addClass('error');
-				if (saida === '')
-					table.find('thead th[name="saida"]').addClass('error');
-				tr.addClass('error');
-				error = true;
-			}
-			else{
-				tr.removeClass('error');
-				insert_data['operacoes'].push({
-					sequencia: sequencia,
-					data: data,
-					ativo: ativo,
-					op: op,
-					vol: vol,
-					cts: cts,
-					hora: hora,
-					erro: erro,
-					entrada: entrada,
-					stop: stop,
-					alvo: alvo,
-					men: men,
-					mep: mep,
-					saida: saida,
-					cenario: cenario,
-					premissas: premissas,
-					observacoes: observacoes,
-					ativo_custo: ativo_custo,
-					ativo_valor_tick: ativo_valor_tick,
-					ativo_pts_tick: ativo_pts_tick
-				});
-			}
+			let sequencia = tr.find('td[name="sequencia"]').attr('value'),
+				data = tr.find('td[name="data"]').attr('value'),
+				ativo = tr.find('td[name="ativo"]').attr('value'),
+				op = tr.find('td[name="op"]').attr('value'),
+				vol = tr.find('td[name="vol"]').attr('value'),
+				cts = tr.find('td[name="cts"]').attr('value'),
+				hora = tr.find('td[name="hora"]').attr('value'),
+				erro = tr.find('td[name="erro"]').attr('value'),
+				entrada = tr.find('td[name="entrada"]').attr('value'),
+				stop = tr.find('td[name="stop"]').attr('value'),
+				alvo = tr.find('td[name="alvo"]').attr('value'),
+				men = tr.find('td[name="men"]').attr('value'),
+				mep = tr.find('td[name="mep"]').attr('value'),
+				saida = tr.find('td[name="saida"]').attr('value'),
+				cenario = tr.find('td[name="cenario"]').attr('value'),
+				premissas = tr.find('td[name="premissas"]').attr('value'),
+				observacoes = tr.find('td[name="observacoes"]').attr('value'),
+				ativo_custo = tr.find('td[name="ativo"]').attr('custo'),
+				ativo_valor_tick = tr.find('td[name="ativo"]').attr('valor_tick'),
+				ativo_pts_tick = tr.find('td[name="ativo"]').attr('pts_tick');
+			insert_data['operacoes'].push({
+				sequencia: sequencia,
+				data: data,
+				ativo: ativo,
+				op: op,
+				vol: vol,
+				cts: cts,
+				hora: hora,
+				erro: erro,
+				entrada: entrada,
+				stop: stop,
+				alvo: alvo,
+				men: men,
+				mep: mep,
+				saida: saida,
+				cenario: cenario,
+				premissas: premissas,
+				observacoes: observacoes,
+				ativo_custo: ativo_custo,
+				ativo_valor_tick: ativo_valor_tick,
+				ativo_pts_tick: ativo_pts_tick
+			});
 		});
-		if (error)
-			Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'danger', body: 'Alguns campos devem serem preenchidos.', delay: 4000});
-		else{
-			table.find('thead th.error').removeClass('error');
+		if (insert_data['operacoes'].length){
 			Global.connect({
 				data: {module: 'renda_variavel', action: 'insert_operacoes', params: JSON.stringify(insert_data)},
 				success: function (result){
 					if (result.status){
 						_dashboard_ops__needRebuild = true;
 						_list_ops__needRebuild = true;
-						_lista__operacoes.update(result.data);
+						_lista__operacoes.update(result['data']['operacoes']);
+						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
 						if (result.hold_ops.length === 0){
-							Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
-							document.getElementById('importa_arquivo_operacoes_modal').value = '';
+							Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
+							document.getElementById('upload_operacoes_modal_file').value = '';
 							document.getElementById('file_format').selectedIndex = 0;
 							document.getElementById('table_layout').selectedIndex = 0;
-							resetOperacaoAddTable();
+							resetUploadOperacaoTable();
 						}
 						else{
-							Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'warning', body: 'Essas operações já foram adicionadas.', delay: 4000});
-							$(document.getElementById('table_operacoes_add')).find('tbody tr').each(function (t, tr){
-								let seq = $(tr).find('input[name="sequencia"]').val();
+							Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'warning', body: 'Essas operações já foram adicionadas.', delay: 4000});
+							$(document.getElementById('table_upload_operacoes')).find('tbody tr').each(function (t, tr){
+								tr = $(tr);
+								let seq = tr.find('td[name="sequencia"]').attr('value');
 								if (!result.hold_ops.includes(seq))
-									$(tr).remove();
+									tr.remove();
 							});
 						}
 					}
 					else
-						Global.toast.create({location: document.getElementById('operacoes_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+						Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
 				}
 			});
 		}
@@ -2852,7 +2862,7 @@ let Renda_variavel = (function(){
 					remove_data['operacoes'].push(tr.getAttribute('operacao'));
 			});
 			if (remove_data['operacoes'].length === 0){
-				Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: 'Nenhuma operação selecionada.', delay: 4000});
+				Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'danger', body: 'Nenhuma operação selecionada.', delay: 4000});
 				return false;
 			}
 		}
@@ -2861,12 +2871,15 @@ let Renda_variavel = (function(){
 				data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
 				success: function (result){
 					if (result.status){
-						Global.toast.create({location: document.getElementById('master_toasts'), title: 'Sucesso', time: 'Now', body: 'Operações Apagadas.', delay: 4000});
-						_lista__operacoes.update(result.data);
-						rebuildArcaboucoSection(rebuildSearch = false);
+						Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'success', body: 'Operações Apagadas.', delay: 4000});
+						_lista__operacoes.update(result['data']['operacoes']);
+						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
+						buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+						buildOperacoesOffcanvas(forceRebuild = true);
+						rebuildArcaboucoSection(rebuildSearch = true);
 					}
 					else
-						Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
+						Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'danger', body: result.error, delay: 4000});
 				}
 			});
 		}
@@ -2965,12 +2978,6 @@ let Renda_variavel = (function(){
 	$(document.getElementById('dashboard_ops__search')).on('change', 'div.iSelectKami[name] ul li select.iSelectKami', function (){
 		_lista__instancias_arcabouco.updateInstancia_Filters(this.name, $(this).val());
 	});
-	/*
-		Processa a aplicação dos 'filters' e 'simulations'.
-	*/
-	$(document.getElementById('renda_variavel__refresh')).click(function (){
-		rebuildArcaboucoSection(rebuildSearch = false);
-	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -2979,13 +2986,13 @@ let Renda_variavel = (function(){
 	*/
 	$('button', document.getElementById('renda_variavel__menu')).click(function (){
 		if (this.name === 'arcaboucos')
-			buildArcaboucosModal();
+			buildArcaboucosModal(firstBuild = false, forceRebuild = false, show = true);
 		else if (this.name === 'cenarios')
 			buildCenariosModal();
-		else if (this.name === 'adicionar_operacoes')
-			buildOperacoesModal();
+		else if (this.name === 'upload_operacoes')
+			buildUploadOperacoesModal();
 		else if (this.name === 'lista_ops')
-			buildOperacoesOffcanvas();
+			buildOperacoesOffcanvas(forceRebuild = false);
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
@@ -2998,8 +3005,8 @@ let Renda_variavel = (function(){
 				_lista__usuarios.update(result.data['usuarios']);
 				_lista__ativos.update(result.data['ativos']);
 				_lista__arcaboucos.create(result.data['arcaboucos']);
-				//Constroi o modal de arcabouços
-				buildArcaboucosModal('build');
+				//Inicia o modal de arcabouços
+				buildArcaboucosModal(firstBuild = true, forceRebuild = true, show = false);
 				//Inicia a lista de instancias (Com uma já salva ou uma nova) e termina de construir o arcabouço Section
 				_lista__instancias_arcabouco.start(result.data);
 				_list_ops__needRebuild = true;

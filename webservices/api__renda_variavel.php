@@ -36,7 +36,8 @@
 					'nome' => $row['nome'],
 					'data_criacao' => $row['data_criacao'],
 					'data_atualizacao' => $row['data_atualizacao'],
-					'meta' => (int) $row['meta'],
+					'situacao' => (int) $row['situacao'],
+					'tipo' => (int) $row['tipo'],
 					'usuarios' => $usuarios_arcabouco,
 					'qtd_ops' => !is_null($row['qtd_ops']) ? (int) $row['qtd_ops'] : 0
 				];
@@ -55,10 +56,10 @@
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
 			$mysqli->begin_transaction();
 			try {
-				$params['meta'] = (array_key_exists('meta', $params) ? $params['meta'] : 0);
+				$params['observacao'] = (array_key_exists('observacao', $params) ? $params['observacao'] : '');
 				//Cria o arcabouço
-				$stmt = $mysqli->prepare("INSERT INTO rv__arcabouco (id_usuario_criador,nome,meta) VALUES (?,?,?)");
-			 	$stmt->bind_param('isi', $id_usuario, $params['nome'], $params['meta']);
+				$stmt = $mysqli->prepare("INSERT INTO rv__arcabouco (id_usuario_criador,nome,situacao,tipo,observacao) VALUES (?,?,?,?,?)");
+			 	$stmt->bind_param('isiis', $id_usuario, $params['nome'], $params['situacao'], $params['tipo'], $params['observacao']);
 				$stmt->execute();
 				$id_arcabouco = $mysqli->insert_id;
 				//Adiciona os usuarios com acesso ao arcabouço (Próprio usuario incluso)
@@ -122,7 +123,7 @@
 						if ($data_name === 'id' || $data_name === 'usuarios')
 							continue;
 						$update_data['wildcards'] .= ",{$data_name}=?";
-						$update_data['bind'] .= ($data_name === 'nome') ? 's' : 'd';
+						$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'observacao') ? 's' : 'd';
 						$update_data['values'][] = $new_data_value;
 					}
 					$update_data['bind'] .= 'i';
@@ -541,12 +542,12 @@
 		 			$ult_seq = $result_raw->fetch_assoc()['ult_seq'];
 		 			$operacoes_ja_cadastradas = [];
 		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, entrada, saida, cenario, premissas, observacoes)
-	 				$stmt = $mysqli->prepare("SELECT data,ativo,op,DATE_FORMAT(hora, \"%H:%i\") AS hora,entrada,saida,cenario,premissas,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
+	 				$stmt = $mysqli->prepare("SELECT data,ativo,op,hora,entrada,saida,cenario,premissas,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
 			 		$stmt->bind_param('i', $params['id_arcabouco']);
 			 		$stmt->execute();
 	 				$result_raw = $stmt->get_result();
 	 				while($row = $result_raw->fetch_assoc()){
-	 					$key = "{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . floatval($row['entrada']) . floatval($row['saida']) . "{$row['cenario']}{$row['premissas']}{$row['observacoes']}";
+	 					$key = "{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . rtrim((strpos($row['entrada'], '.') !== false ? rtrim($row['entrada'], '0') : $row['entrada']), '.') . rtrim((strpos($row['saida'], '.') !== false ? rtrim($row['saida'], '0') : $row['saida']), '.') . "{$row['cenario']}{$row['premissas']}{$row['observacoes']}";
 						$operacoes_ja_cadastradas[$key] = NULL;
 					}
 					$block_size = 50;
@@ -563,7 +564,7 @@
 							$block_i = 0;
 							$insert_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
 		 				}
-		 				$find_by_key = "{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . floatval($operacao['entrada']) . floatval($operacao['saida']) . "{$operacao['cenario']}{$operacao['premissas']}{$operacao['observacoes']}";
+		 				$find_by_key = "{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['entrada'], '.') !== false ? rtrim($operacao['entrada'], '0') : $operacao['entrada']), '.') . rtrim((strpos($operacao['saida'], '.') !== false ? rtrim($operacao['saida'], '0') : $operacao['saida']), '.') . "{$operacao['cenario']}{$operacao['premissas']}{$operacao['observacoes']}";
 				 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
 				 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
 					 		$insert_data['bind'] .= 'iiissisisissssssssssss';

@@ -68,7 +68,6 @@
 			<link rel="stylesheet" href="src/css/bootstrap.min.css">
 			<link rel="stylesheet" href="src/css/bootstrap-select.min.css">
 			<link rel="stylesheet" href="src/css/datatables.min.css">
-			<link rel="stylesheet" href="src/css/loadings.min.css">
 			<link rel="stylesheet" href="src/css/daterangepicker.min.css">
 			<link rel="stylesheet" href="src/css/noUiSlider.min.css">
 			<link rel="stylesheet" href="src/css/iTrade.css">
@@ -94,10 +93,12 @@
 					<div class="col d-flex">
 						<div class="container-fluid bg-light p-5 pt-3 rounded">
 							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
-								<button class="btn btn-sm btn-primary me-4" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
-								<button class="btn btn-sm btn-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
-								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Adicionar Operações</button>
-								<button class="btn btn-sm btn-outline-primary ms-auto" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
+								<button class="btn btn-sm btn-primary me-2" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
+								<button class="btn btn-sm btn-primary me-5" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
+								<button class="btn btn-sm btn-primary me-2" type="button" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</button>
+								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fab fa-buffer me-2"></i>Adicionar Operações</button>
+								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="info_arcabouco"><i class="fas fa-info-circle me-2"></i>Info</button>
+								<button class="btn btn-sm btn-outline-primary" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
 							</div>
 							<div class="row mb-4">
 								<div class="col" id="renda_variavel__instancias"></div>
@@ -390,9 +391,35 @@
 											<div class="card-body">
 												<div class="container-fluid d-flex px-0">
 													<form class="row m-0 flex-fill" id="arcaboucos_modal_form">
-														<div class="col-4"><label class="form-label m-1 text-muted fw-bold">Nome</label><input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()"></div>
-														<div class="col-2"><label class="form-label m-1 text-muted fw-bold">Meta</label><input type="text" name="meta" class="form-control form-control-sm" onclick="this.select()"></div>
-														<div class="col-6"><label class="form-label m-1 text-muted fw-bold">Usuários com Acesso</label><select name="usuarios" multiple></select></div>
+														<div class="col-3">
+															<label class="form-label m-1 text-muted fw-bold">Nome</label>
+															<input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()">
+														</div>
+														<div class="col-2">
+															<label class="form-label m-1 text-muted fw-bold">Situação</label>
+															<select name="situacao" class="form-select form-select-sm">
+																<option value="2">Pendente</option>
+																<option value="3">Fazendo</option>
+																<option value="1">Fechado</option>
+															</select>
+														</div>
+														<div class="col-2">
+															<label class="form-label m-1 text-muted fw-bold">Tipo</label>
+															<select name="situacao" class="form-select form-select-sm">
+																<option value="1">Live</option>
+																<option value="2">Replay</option>
+																<option value="3">Paper Trade</option>
+																<option value="4">Misto</option>
+															</select>
+														</div>
+														<div class="col-5">
+															<label class="form-label m-1 text-muted fw-bold">Usuários com Acesso</label>
+															<select name="usuarios" multiple></select>
+														</div>
+														<div class="col-12 mt-2">
+															<label class="form-label m-1 text-muted fw-bold">Observações</label>
+															<textarea name="observacao" class="form-control form-control-sm"></textarea>
+														</div>
 														<div class="col-12 mt-3">
 															<div class="row">
 																<div class="col-8"><button type="button" class="btn btn-sm btn-primary w-100" id="arcaboucos_modal_enviar">Enviar</button></div>
@@ -408,15 +435,51 @@
 								<div class="row mt-2">
 									<div class="col">
 										<div class="card rounded-3 shadow-sm">
+											<div class="card-body p-2">
+												<div class="container-fluid d-flex justify-content-end px-0">
+													<form class="row m-0 flex-fill" id="arcaboucos_modal__search">
+														<div class="col-auto">
+															<label class="form-label m-0 text-muted fw-bold">Nome</label>
+															<input type="text" name="nome" class="form-control form-control-sm" placeholder="Nome">
+														</div>
+														<div class="col-auto">
+															<label class="form-label m-0 text-muted fw-bold">Situação</label>
+															<select name="situacao" class="form-select form-select-sm">
+																<option value="">Todos</option>
+																<option value="2">Pendente</option>
+																<option value="3">Fazendo</option>
+																<option value="1">Fechado</option>
+															</select>
+														</div>
+														<div class="col-auto">
+															<label class="form-label m-0 text-muted fw-bold">Tipo</label>
+															<select name="situacao" class="form-select form-select-sm">
+																<option value="">Todos</option>
+																<option value="1">Live</option>
+																<option value="2">Replay</option>
+																<option value="3">Paper Trade</option>
+																<option value="4">Misto</option>
+															</select>
+														</div>
+													</form>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row mt-2">
+									<div class="col">
+										<div class="card rounded-3 shadow-sm">
 											<div class="card-body">
 												<table class="table" id="table_arcaboucos">
 													<thead>
 														<tr>
+															<th></th>
+															<th></th>
 															<th>Nome</th>
 															<th>Criado Em</th>
 															<th>Atualizado</th>
 															<th>Trades</th>
-															<th>Meta</th>
 															<th>Usuários</th>
 															<th></th>
 															<th></th>
@@ -467,24 +530,24 @@
 					</div>
 				</div>
 			</div>
-			<div class="modal fade" id="operacoes_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
-				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxxl">
+			<div class="modal fade" id="upload_operacoes_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 					<div class="modal-content">
 						<div class="modal-header">
-							<h5 class="modal-title">Cadastro de Operações</h5>
+							<h5 class="modal-title">Upload de Operações</h5>
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
 							<div class="container-fluid">
-								<div class="row"><div class="col p-0"><div id="operacoes_modal_toasts"></div></div></div>
+								<div class="row"><div class="col p-0"><div id="upload_operacoes_modal_toasts"></div></div></div>
 								<div class="row">
 									<div class="col bg-light p-3">
 										<div class="row">
 											<div class="col-2">
 												<label class="form-label m-1 text-muted fw-bold">Fonte do Arquivo</label>
-												<select id="file_format" class="form-select form-select-sm">
+												<select id="file_format" class="form-select form-select-sm" disabled>
 													<option value="excel">Excel</option>
-													<option value="profit">Profit</option>
+													<!-- <option value="profit">Profit</option> -->
 													<!-- <option value="tryd">Tryd</option> -->
 												</select>
 											</div>
@@ -497,14 +560,14 @@
 											</div>
 											<div class="col-8">
 												<label class="form-label m-1 text-muted fw-bold">Arquivo</label>
-												<input class="form-control form-control-sm col" type="file" id="importa_arquivo_operacoes_modal">
+												<input class="form-control form-control-sm col" type="file" id="upload_operacoes_modal_file">
 											</div>
 										</div>
 									</div>
 								</div>
 								<div class="row mt-3">
 									<div class="col bg-light p-3">
-										<table id="table_operacoes_add" class="table m-0">
+										<table id="table_upload_operacoes" class="table m-0">
 											<thead></thead>
 											<tbody></tbody>
 										</table>
@@ -514,63 +577,70 @@
 						</div>
 						<div class="modal-footer d-flex">
 							<button type="button" class="btn btn-secondary btn-sm col-1" data-bs-dismiss="modal">Fechar</button>
-							<button type="button" class="btn btn-success btn-sm col-1 ms-auto" id="operacoes_modal_enviar">Salvar</button>
+							<button type="button" class="btn btn-success btn-sm col-1 ms-auto" id="upload_operacoes_modal_enviar">Salvar</button>
 						</div>
 					</div>
 				</div>
 			</div>
 			<div class="offcanvas offcanvas-end" tabindex="-1" id="lista_ops">
 				<div class="offcanvas-body">
-					<div class="card mb-2 rounded-3 shadow-sm">
-						<div class="card-body p-2">
-							<div class="container-fluid d-flex justify-content-end px-0">
-								<form class="row m-0 flex-fill" id="lista_ops__search">
-									<div class="col-auto">
-										<label class="form-label m-0 text-muted fw-bold">Data</label>
-										<input type="text" name="data" class="form-control form-control-sm" placeholder="Data">
+					<div class="container-fluid">
+						<div class="row"><div class="col p-0"><div id="lista_ops_toasts"></div></div></div>
+						<div class="row">
+							<div class="col p-0">
+								<div class="card mb-2 rounded-3 shadow-sm">
+									<div class="card-body p-2">
+										<div class="container-fluid d-flex justify-content-end px-0">
+											<form class="row m-0 flex-fill" id="lista_ops__search">
+												<div class="col-auto">
+													<label class="form-label m-0 text-muted fw-bold">Data</label>
+													<input type="text" name="data" class="form-control form-control-sm" placeholder="Data">
+												</div>
+												<div class="col-auto" name="ativo">
+													<label class="form-label m-0 text-muted fw-bold">Ativo</label>
+													<select name="ativo" class="form-control form-control-sm init" multiple></select>
+												</div>
+												<div class="col-auto" name="cenario">
+													<label class="form-label m-0 text-muted fw-bold">Cenário</label>
+													<select name="cenario" class="form-control form-control-sm init" multiple></select>
+												</div>
+											</form>
+										</div>
 									</div>
-									<div class="col-auto" name="ativo">
-										<label class="form-label m-0 text-muted fw-bold">Ativo</label>
-										<select name="ativo" class="form-control form-control-sm init" multiple></select>
+								</div>
+								<div class="card mb-2 rounded-3 shadow-sm">
+									<div class="card-body p-2">
+										<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">
+											<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>
+											<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>
+										</div>
 									</div>
-									<div class="col-auto" name="cenario">
-										<label class="form-label m-0 text-muted fw-bold">Cenário</label>
-										<select name="cenario" class="form-control form-control-sm init" multiple></select>
+								</div>
+								<div class="card rounded-3 shadow-sm">
+									<div class="card-body">
+										<table id="lista_ops__table" class="table table-hover w-100">
+											<thead>
+												<tr>
+													<th>#</th>
+													<th>Data</th>
+													<th>Hora</th>
+													<th>Ativo</th>
+													<th class="text-center">Op.</th>
+													<th>Vol</th>
+													<th>Cenário</th>
+													<th>Erro</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
 									</div>
-								</form>
+								</div>
 							</div>
-						</div>
-					</div>
-					<div class="card mb-2 rounded-3 shadow-sm">
-						<div class="card-body p-2">
-							<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">
-								<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>
-								<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>
-							</div>
-						</div>
-					</div>
-					<div class="card rounded-3 shadow-sm">
-						<div class="card-body">
-							<table id="lista_ops__table" class="table table-hover w-100">
-								<thead>
-									<tr>
-										<th>#</th>
-										<th>Data</th>
-										<th>Hora</th>
-										<th>Ativo</th>
-										<th class="text-center">Op.</th>
-										<th>Vol</th>
-										<th>Cenário</th>
-										<th>Erro</th>
-									</tr>
-								</thead>
-								<tbody></tbody>
-							</table>
 						</div>
 					</div>
 				</div>
 			</div>
-			<div id="loading_div" style="display: none"><div class="dot-revolution"></div></div>
+			<div id="loading_div" style="display: none"><div class="loading-spinner"></div></div>
 		</body>
 		<script src="src/js/global.js"></script>
 		<script src="src/js/iTrade.js"></script>

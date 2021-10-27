@@ -143,8 +143,11 @@
 						$status = RendaVariavel::insert_operacoes($unserial_params_data, $_SESSION['id']);
 						if ($status['status']){
 							$operacoes_data = RendaVariavel::get_operacoes(['id_arcabouco' => $unserial_params_data['id_arcabouco']], $_SESSION['id']);
+							$arcabouco_data = RendaVariavel::get_arcaboucos(['id' => $unserial_params_data['id_arcabouco']], $_SESSION['id']);
 							if ($operacoes_data['status'])
-								$status['data'] = $operacoes_data['data'];
+								$status['data']['operacoes'] = $operacoes_data['data'];
+							if ($arcabouco_data['status'])
+								$status['data']['arcabouco'] = $arcabouco_data['data'];
 						}
 						echo json_encode($status);
 					}
@@ -156,8 +159,11 @@
 						$status = RendaVariavel::remove_operacoes($params_data, $_SESSION['id']);
 						if ($status['status']){
 							$operacoes_data = RendaVariavel::get_operacoes(['id_arcabouco' => $params_data['id_arcabouco']], $_SESSION['id']);
+							$arcabouco_data = RendaVariavel::get_arcaboucos(['id' => $params_data['id_arcabouco']], $_SESSION['id']);
 							if ($operacoes_data['status'])
-								$status['data'] = $operacoes_data['data'];
+								$status['data']['operacoes'] = $operacoes_data['data'];
+							if ($arcabouco_data['status'])
+								$status['data']['arcabouco'] = $arcabouco_data['data'];
 						}
 						echo json_encode($status);
 					}
