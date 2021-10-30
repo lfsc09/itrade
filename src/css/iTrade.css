@@ -155,6 +155,8 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 .table td.divider {border-left: 1px solid #dee2e6}
 .table thead th.subheader {border-bottom: 1px solid #dee2e6 !important; font-size: 11px}
 .table thead th.mainheader {border-bottom: none !important}
+/*------------------------------------- BOOTSTRAP ------------------------------------*/
+.btn:focus {box-shadow: none}
 /*----------------------------- INSERT MODAL (GENÉRICO) ------------------------------*/
 #insert_modal_form, #insert_modal_form input {font-size: .9em}
 /*------------------------------------------------------------------------------------*/
@@ -195,6 +197,10 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_arcaboucos tbody td[name='remover'] {width: 4%}
 #table_arcaboucos_filter {display: none}
 #table_arcaboucos_info {font-size: 13px}
+/*---------------------------------- Gerenciamento -----------------------------------*/
+#gerenciamentos_modal_form .form-label {font-size: 12px}
+#table_gerenciamentos {font-size: .85em}
+#table_gerenciamentos tbody td{vertical-align: middle}
 /*------------------------------------- Cenarios -------------------------------------*/
 #table_cenarios div.card {border-left: 3px solid #0d6efd !important;}
 #table_cenarios div.card[new_cenario] {border-left: 3px solid #198754 !important;}
@@ -207,32 +213,54 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_cenarios table tbody td[name='cor']{width: 10%}
 #table_cenarios .accordion-button-with-input::after {margin-left: 1rem}
 #table_cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
-/*-------------------------------- Adicionar Operações -------------------------------*/
+/*--------------------------------- Upload Operações ---------------------------------*/
 #upload_operacoes_modal .form-label {font-size: 12px}
 #table_upload_operacoes {font-size: 12px}
-#table_upload_operacoes tbody {font-size: 11px}
 #table_upload_operacoes tbody td{vertical-align: middle}
-#table_upload_operacoes td.error {background-color: #f8d7dac4;}
+#table_upload_operacoes td.error {background-color: #f8d7dac4}
 #table_upload_operacoes th.error {color: #842029;}
 #table_upload_operacoes td[name='sequencia'] {width: 3%}
 #table_upload_operacoes td[name='data'] {width: 6%}
 #table_upload_operacoes td[name='ativo'] {width: 6%; text-align: center}
-#table_upload_operacoes td[name='op'] {width: 4%; text-align: center;}
-#table_upload_operacoes td[name='rr'] {width: 5%}
-#table_upload_operacoes td[name='vol'] {width: 4%}
-#table_upload_operacoes td[name='cts'] {width: 3%}
+#table_upload_operacoes td[name='op'] {width: 4%; text-align: center}
+#table_upload_operacoes td[name='gerenciamento'] {width: 10%; text-align: center}
+#table_upload_operacoes td[name='vol'] {width: 4%; text-align: center}
+#table_upload_operacoes td[name='cts'] {width: 4%; text-align: center}
 #table_upload_operacoes td[name='hora'] {width: 5%}
-#table_upload_operacoes td[name='entrada'] {width: 5%}
-#table_upload_operacoes td[name='stop'] {width: 5%}
-#table_upload_operacoes td[name='alvo'] {width: 5%}
-#table_upload_operacoes td[name='men'] {width: 5%}
-#table_upload_operacoes td[name='mep'] {width: 5%}
-#table_upload_operacoes td[name='saida'] {width: 5%}
-#table_upload_operacoes td[name='premissas'] {width: 9%}
-#table_upload_operacoes td[name='observacoes'] {width: 9%}
+#table_upload_operacoes td[name='resultado'] {width: 7%; text-align: center}
+#table_upload_operacoes td[name='premissas'] {width: 15%}
+#table_upload_operacoes td[name='observacoes'] {width: 15%}
 #table_upload_operacoes td[name='erro'] {width: 2%; text-align: center}
+/*-------------------------------- Adicionar Operações -------------------------------*/
+#adicionar_operacoes_offcanvas {width: 1600px}
+#adicionar_operacoes_offcanvas__form_default .form-label {font-size: 11px}
+#adicionar_operacoes_offcanvas__form_default select[name='hoje'].init, #adicionar_operacoes_offcanvas__form_default select[name='gerenciamento'].init {height: 30px}
+#adicionar_operacoes_offcanvas__form_default div[name='hoje'] {width: 135px}
+#adicionar_operacoes_offcanvas__form_default div[name='gerenciamento'] {width: 190px}
+#table_adicionar_operacoes {font-size: 13px}
+#table_adicionar_operacoes tbody tr.risk_block.hide {visibility: hidden}
+#table_adicionar_operacoes input {font-size: 12px}
+#table_adicionar_operacoes tbody td{vertical-align: middle}
+#table_adicionar_operacoes tbody td[name='bloco'] {width: 4%}
+#table_adicionar_operacoes tbody td[name='data'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='ativo'] {width: 5%}
+#table_adicionar_operacoes tbody td[name='gerenciamento'] {width: 10%}
+#table_adicionar_operacoes tbody td[name='gerenciamento'] button {border: 0; background: #ced4da}
+#table_adicionar_operacoes tbody td[name='op'] {width: 3%}
+#table_adicionar_operacoes tbody td[name='barra'] {width: 4%}
+#table_adicionar_operacoes tbody td[name='vol'] {width: 4%}
+#table_adicionar_operacoes tbody td[name='cts'] {width: 4%}
+#table_adicionar_operacoes tbody td[name='entrada'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='stop'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='alvo'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='men'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='mep'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='saida'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='cenario'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='observacoes'] {width: 10%}
+#table_adicionar_operacoes tbody td[name='erro'] {width: 4%}
 /*------------------------------------ Lista Ops -------------------------------------*/
-#lista_ops {width: 800px}
+#lista_ops {width: 850px}
 #lista_ops__search .form-label {font-size: 11px}
 #lista_ops__search select[name='ativo'].init, #lista_ops__search select[name='cenario'].init {height: 30px}
 #lista_ops__search div[name='ativo'] {width: 190px}
@@ -244,6 +272,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #lista_ops__table tbody td[name='data'] {width: 12%}
 #lista_ops__table tbody td[name='hora'] {width: 12%}
 #lista_ops__table tbody td[name='ativo'] {width: 10%}
+#lista_ops__table tbody td[name='gerenciamento'] {width: 10%; text-align: center}
 #lista_ops__table tbody td[name='op'] {width: 10%; text-align: center}
 #lista_ops__table tbody td[name='vol'] {width: 8%}
 #lista_ops__table tbody td[name='erro'] {width: 5%; text-align: center}

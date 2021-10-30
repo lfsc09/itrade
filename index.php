@@ -94,11 +94,13 @@
 						<div class="container-fluid bg-light p-5 pt-3 rounded">
 							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
 								<button class="btn btn-sm btn-primary me-2" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
-								<button class="btn btn-sm btn-primary me-5" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
-								<button class="btn btn-sm btn-primary me-2" type="button" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</button>
-								<button class="btn btn-sm btn-primary me-2" type="button" name="adicionar_operacoes"><i class="fab fa-buffer me-2"></i>Adicionar Operações</button>
+								<button class="btn btn-sm btn-primary me-2" type="button" name="ativos"><i class="fas fa-euro-sign me-2"></i>Ativos</button>
+								<button class="btn btn-sm btn-primary" type="button" name="gerenciamentos"><i class="fas fa-coins me-2"></i>Gerenciamentos</button>
 								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="info_arcabouco"><i class="fas fa-info-circle me-2"></i>Info</button>
-								<button class="btn btn-sm btn-outline-primary" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
+								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
+								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
+								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</button>
+								<button class="btn btn-sm btn-outline-primary" type="button" name="adicionar_operacoes"><i class="fab fa-buffer me-2"></i>Adicionar Operações</button>
 							</div>
 							<div class="row mb-4">
 								<div class="col" id="renda_variavel__instancias"></div>
@@ -497,6 +499,78 @@
 					</div>
 				</div>
 			</div>
+			<div class="modal fade" id="gerenciamentos_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Gerenciamentos</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="container-fluid">
+								<div class="row"><div class="col"><div id="gerenciamentos_modal_toasts"></div></div></div>
+								<div class="row">
+									<div class="col-5">
+										<div class="card rounded-3 shadow-sm">
+											<div class="card-body">
+												<div class="container-fluid d-flex px-0">
+													<form class="row m-0 flex-fill" id="gerenciamentos_modal_form">
+														<div class="col-12 mb-2">
+															<label class="form-label m-1 text-muted fw-bold">Nome</label>
+															<input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()">
+														</div>
+														<div class="col-6">
+															<label class="form-label m-1 text-muted fw-bold">Scalps de Gain</label>
+															<div class="input-group">
+																<input type="text" name="s_gain" class="form-control form-control-sm" onclick="this.select()">
+																<button class="btn btn-outline-secondary" type="button" name="s_gain"><i class="fas fa-plus"></i></button>
+															</div>
+														</div>
+														<div class="col-6">
+															<label class="form-label m-1 text-muted fw-bold">Scalps de Loss</label>
+															<div class="input-group">
+																<input type="text" name="s_loss" class="form-control form-control-sm" onclick="this.select()">
+																<button class="btn btn-outline-secondary" type="button" name="s_loss"><i class="fas fa-plus"></i></button>
+															</div>
+														</div>
+														<div class="col-12 mt-3">
+															<div class="input-group d-flex" id="gerenciamentos_modal_form__acoes"></div>
+														</div>
+														<div class="col-12 mt-3">
+															<div class="row">
+																<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="gerenciamentos_modal_enviar">Enviar</button></div>
+																<div class="col"><button type="button" class="btn btn-sm btn-danger w-100" id="gerenciamentos_modal_cancelar">Cancelar</button></div>
+															</div>
+														</div>
+													</form>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col-7">
+										<div class="card rounded-3 shadow-sm">
+											<div class="card-body">
+												<table class="table" id="table_gerenciamentos">
+													<thead>
+														<tr>
+															<th>Nome</th>
+															<th>Ações</th>
+															<th></th>
+															<th></th>
+														</tr>
+													</thead>
+													<tbody></tbody>
+												</table>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer"></div>
+					</div>
+				</div>
+			</div>
 			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 					<div class="modal-content">
@@ -527,6 +601,65 @@
 							</div>
 						</div>
 						<div class="modal-footer"></div>
+					</div>
+				</div>
+			</div>
+			<div class="offcanvas offcanvas-end" id="lista_ops">
+				<div class="offcanvas-body">
+					<div class="container-fluid">
+						<div class="row"><div class="col p-0"><div id="lista_ops_toasts"></div></div></div>
+						<div class="row">
+							<div class="col p-0">
+								<div class="card mb-2 rounded-3 shadow-sm">
+									<div class="card-body p-2">
+										<div class="container-fluid d-flex justify-content-end px-0">
+											<form class="row m-0 flex-fill" id="lista_ops__search">
+												<div class="col-auto">
+													<label class="form-label m-0 text-muted fw-bold">Data</label>
+													<input type="text" name="data" class="form-control form-control-sm" placeholder="Data">
+												</div>
+												<div class="col-auto" name="ativo">
+													<label class="form-label m-0 text-muted fw-bold">Ativo</label>
+													<select name="ativo" class="form-control form-control-sm init" multiple></select>
+												</div>
+												<div class="col-auto" name="cenario">
+													<label class="form-label m-0 text-muted fw-bold">Cenário</label>
+													<select name="cenario" class="form-control form-control-sm init" multiple></select>
+												</div>
+											</form>
+										</div>
+									</div>
+								</div>
+								<div class="card mb-2 rounded-3 shadow-sm">
+									<div class="card-body p-2">
+										<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">
+											<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>
+											<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>
+										</div>
+									</div>
+								</div>
+								<div class="card rounded-3 shadow-sm">
+									<div class="card-body">
+										<table id="lista_ops__table" class="table table-hover w-100">
+											<thead>
+												<tr>
+													<th>#</th>
+													<th>Data</th>
+													<th>Hora</th>
+													<th>Ativo</th>
+													<th>Gerenciamento</th>
+													<th class="text-center">Op.</th>
+													<th>Vol</th>
+													<th>Cenário</th>
+													<th>Erro</th>
+												</tr>
+											</thead>
+											<tbody></tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -582,52 +715,83 @@
 					</div>
 				</div>
 			</div>
-			<div class="offcanvas offcanvas-end" tabindex="-1" id="lista_ops">
+			<div class="offcanvas offcanvas-end" id="adicionar_operacoes_offcanvas">
 				<div class="offcanvas-body">
 					<div class="container-fluid">
-						<div class="row"><div class="col p-0"><div id="lista_ops_toasts"></div></div></div>
+						<div class="row"><div class="col p-0"><div id="adicionar_operacoes_offcanvas_toasts"></div></div></div>
 						<div class="row">
 							<div class="col p-0">
-								<div class="card mb-2 rounded-3 shadow-sm">
+								<div class="card rounded-3 shadow-sm">
 									<div class="card-body p-2">
 										<div class="container-fluid d-flex justify-content-end px-0">
-											<form class="row m-0 flex-fill" id="lista_ops__search">
+											<form class="row m-0 flex-fill" id="adicionar_operacoes_offcanvas__form_default">
+												<div class="col-auto" name="hoje">
+													<label class="form-label m-0 text-muted fw-bold">Data (Padrão)</label>
+													<select name="hoje" class="form-control form-control-sm init" multiple>
+														<option value="1" selected>Hoje</option>
+													</select>
+												</div>
 												<div class="col-auto">
-													<label class="form-label m-0 text-muted fw-bold">Data</label>
-													<input type="text" name="data" class="form-control form-control-sm" placeholder="Data">
+													<label class="form-label m-0 text-muted fw-bold">Ativo (Padrão)</label>
+													<input type="text" name="ativo" class="form-control form-control-sm" placeholder="Ativo">
 												</div>
-												<div class="col-auto" name="ativo">
-													<label class="form-label m-0 text-muted fw-bold">Ativo</label>
-													<select name="ativo" class="form-control form-control-sm init" multiple></select>
+												<div class="col-auto">
+													<label class="form-label m-0 text-muted fw-bold">Cts (Padrão)</label>
+													<input type="text" name="cts" class="form-control form-control-sm" placeholder="Cts">
 												</div>
-												<div class="col-auto" name="cenario">
-													<label class="form-label m-0 text-muted fw-bold">Cenário</label>
-													<select name="cenario" class="form-control form-control-sm init" multiple></select>
+												<div class="col-auto">
+													<label class="form-label m-0 text-muted fw-bold">Cenário (Padrão)</label>
+													<input type="text" name="cenario" class="form-control form-control-sm" placeholder="Cenário">
+												</div>
+												<div class="col-auto" name="gerenciamento">
+													<label class="form-label m-0 text-muted fw-bold">R:R (Gerenciamentos)</label>
+													<select name="gerenciamento" class="form-control form-control-sm init" multiple>
+														<option value="1" risco="2" retorno="1" e="0" selected>2:1</option>
+														<option value="2" risco="2" retorno="1" e="1" selected>2:1 E1</option>
+														<option value="3" risco="2" retorno="1" e="1" selected>2:1 E1 Fixo</option>
+														<option value="1" risco="3" retorno="1" e="0" selected>3:1</option>
+													</select>
+												</div>
+												<div class="col-auto">
+													<label class="form-label m-0 text-muted fw-bold">Tempo Gráfico</label>
+													<select name="tempo_grafico" class="form-select form-select-sm">
+														<option value="5" selected>5min</option>
+													</select>
 												</div>
 											</form>
 										</div>
 									</div>
 								</div>
-								<div class="card mb-2 rounded-3 shadow-sm">
-									<div class="card-body p-2">
-										<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">
-											<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>
-											<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>
-										</div>
-									</div>
-								</div>
+							</div>
+						</div>
+						<div class="row mt-3">
+							<div class="col p-0">
+								<button class="btn btn-sm btn-primary w-100" type="button" id="adicionar_operacoes_offcanvas__new_bloco"><i class="fas fa-plus me-2" aria-hidden="true"></i>Nova Operação</button>
+							</div>
+						</div>
+						<div class="row mt-3">
+							<div class="col p-0">
 								<div class="card rounded-3 shadow-sm">
 									<div class="card-body">
-										<table id="lista_ops__table" class="table table-hover w-100">
+										<table id="table_adicionar_operacoes" class="table w-100">
 											<thead>
 												<tr>
 													<th>#</th>
 													<th>Data</th>
-													<th>Hora</th>
 													<th>Ativo</th>
-													<th class="text-center">Op.</th>
+													<th>R:R</th>
+													<th>Entrada</th>
+													<th>Op</th>
+													<th>Barra</th>
 													<th>Vol</th>
+													<th>Cts</th>
+													<th>Stop</th>
+													<th>Alvo</th>
+													<th>MEN</th>
+													<th>MEP</th>
+													<th>Saída</th>
 													<th>Cenário</th>
+													<th>Observações</th>
 													<th>Erro</th>
 												</tr>
 											</thead>

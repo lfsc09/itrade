@@ -35,8 +35,12 @@
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
 				else if ($action === 'remove_ativos'){
-					if (!empty($params_data))
-						echo json_encode(RendaVariavel::remove_ativos($params_data, $_SESSION['id']));
+					if (!empty($params_data)){
+						$status = RendaVariavel::remove_ativos($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = Ativos::get_ativos(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
@@ -58,6 +62,9 @@
 						$status = Ativos::get_ativos(null, $_SESSION['id']);
 						if ($status['status'])
 							$return_data['ativos'] = $status['data'];
+						$status = RendaVariavel::get_gerenciamentos(null, $_SESSION['id']);
+						if ($status['status'])
+							$return_data['gerenciamentos'] = $status['data'];
 						$status = RendaVariavel::get_arcaboucos([], $_SESSION['id']);
 						if ($status['status']){
 							$return_data['arcaboucos'] = $status['data'];
@@ -131,6 +138,37 @@
 				else if ($action === 'remove_cenarios'){
 					if (!empty($params_data))
 						echo json_encode(RendaVariavel::remove_cenarios($params_data, $_SESSION['id']));
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				/*--------------------------------- Gerenciamentos --------------------------------*/
+				else if ($action === 'insert_gerenciamentos'){
+					if (!empty($params_data)){
+						$status = RendaVariavel::insert_gerenciamentos($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = RendaVariavel::get_gerenciamentos(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'update_gerenciamentos'){
+					if (!empty($params_data)){
+						$status = RendaVariavel::update_gerenciamentos($params_data, $params_data['id'], $_SESSION['id']);
+						if ($status['status'])
+							$status = RendaVariavel::get_gerenciamentos(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'remove_gerenciamentos'){
+					if (!empty($params_data)){
+						$status = RendaVariavel::remove_gerenciamentos($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = RendaVariavel::get_gerenciamentos(null, $_SESSION['id']);
+						echo json_encode($status);
+				}
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}

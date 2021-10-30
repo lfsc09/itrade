@@ -189,23 +189,23 @@ let RV_Statistics = (function(){
 		if (op.op == 1){
 			return {
 				result: {
-					brl: (op.saida - op.entrada) * op.ativo_valor_tick * op.cts,
+					brl: ((op.saida - op.entrada) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts,
 					pts: op.saida - op.entrada
 				},
 				stop: {
-					brl: (op.stop != 0) ? (op.entrada - op.stop) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.stop != 0) ? ((op.entrada - op.stop) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.stop != 0) ? op.entrada - op.stop : 0
 				},
 				alvo: {
-					brl: (op.alvo != 0) ? (op.alvo - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.alvo != 0) ? ((op.alvo - op.entrada) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.alvo != 0) ? op.alvo - op.entrada : 0
 				},
 				men: {
-					brl: (op.men != 0) ? (op.entrada - op.men) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.men != 0) ? ((op.entrada - op.men) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.men != 0) ? op.entrada - op.men : 0
 				},
 				mep: {
-					brl: (op.mep != 0) ? (op.mep - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.mep != 0) ? ((op.mep - op.entrada) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.mep != 0) ? op.mep - op.entrada : 0
 				}
 			}
@@ -214,23 +214,23 @@ let RV_Statistics = (function(){
 		else if (op.op == 2){
 			return {
 				result: {
-					brl: (op.entrada - op.saida) * op.ativo_valor_tick * op.cts,
+					brl: ((op.entrada - op.saida) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts,
 					pts: op.entrada - op.saida
 				},
 				stop: {
-					brl: (op.stop != 0) ? (op.stop - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.stop != 0) ? ((op.stop - op.entrada) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.stop != 0) ? op.stop - op.entrada : 0
 				},
 				alvo: {
-					brl: (op.alvo != 0) ? (op.entrada - op.alvo) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.alvo != 0) ? ((op.entrada - op.alvo) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.alvo != 0) ? op.entrada - op.alvo : 0
 				},
 				men: {
-					brl: (op.men != 0) ? (op.men - op.entrada) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.men != 0) ? ((op.men - op.entrada) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.men != 0) ? op.men - op.entrada : 0
 				},
 				mep: {
-					brl: (op.mep != 0) ? (op.entrada - op.mep) * op.ativo_valor_tick * op.cts : 0,
+					brl: (op.mep != 0) ? ((op.entrada - op.mep) / op.ativo_pts_tick) * op.ativo_valor_tick * op.cts : 0,
 					pts: (op.mep != 0) ? op.entrada - op.mep : 0
 				}
 			}	

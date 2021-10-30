@@ -10,7 +10,7 @@
 			$mysqli->set_charset('utf8');
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
-			$result_raw = $mysqli->query("SELECT a.* FROM ativos a WHERE a.id_usuario='{$id_usuario}' ORDER BY a.nome");
+			$result_raw = $mysqli->query("SELECT rva.* FROM rv__ativo rva WHERE rva.id_usuario='{$id_usuario}' ORDER BY rva.nome");
 			while($row = $result_raw->fetch_assoc()){
 				$result[] = [
 					'id' => $row['id'],
@@ -31,7 +31,7 @@
 			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
-			$stmt = $mysqli->prepare("INSERT INTO ativos (id_usuario,nome,custo,valor_tick,pts_tick) VALUES (?,UPPER(?),?,?,?)");
+			$stmt = $mysqli->prepare("INSERT INTO rv__ativo (id_usuario,nome,custo,valor_tick,pts_tick) VALUES (?,UPPER(?),?,?,?)");
 		 	$stmt->bind_param('isddd', $id_usuario, $params['nome'], $params['custo'], $params['valor_tick'], $params['pts_tick']);
 		 	if ($stmt->execute()){
 		 		$mysqli->close();
@@ -65,7 +65,7 @@
 			}
 			$update_data['bind'] .= 'i';
 			$update_data['values'][] = $id_ativo;
-			$stmt = $mysqli->prepare("UPDATE ativos SET {$update_data['wildcards']} WHERE id=? AND id_usuario='{$id_usuario}'");
+			$stmt = $mysqli->prepare("UPDATE rv__ativo SET {$update_data['wildcards']} WHERE id=? AND id_usuario='{$id_usuario}'");
 			$stmt->bind_param($update_data['bind'], ...$update_data['values']);
 		 	if ($stmt->execute()){
 		 		$mysqli->close();

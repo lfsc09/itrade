@@ -214,6 +214,84 @@
 	 			return ['status' => 0, 'error' => 'Erro ao remover este arcabouço.'];
 			}
 		}
+		/*--------------------------------------- GERENCIAMENTOS ----------------------------------------*/
+		/*
+			Retorna a lista de gerenciamentos do usuario.
+		*/
+		public static function get_gerenciamentos($params = [], $id_usuario = ''){
+			$result = [];
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			$mysqli->set_charset('utf8');
+			if ($mysqli->connect_errno)
+				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			$result_raw = $mysqli->query("SELECT rvg.* FROM rv__gerenciamento rvg WHERE rvg.id_usuario='{$id_usuario}' ORDER BY rvg.nome");
+			while($row = $result_raw->fetch_assoc()){
+				$result[] = [
+					'id' => $row['id'],
+					'nome' => $row['nome'],
+					'acoes' => json_decode($row['acoes'], true)
+				];
+			}
+			$result_raw->free();
+			$mysqli->close();
+			return ['status' => 1, 'data' => $result];
+		}
+		/*
+			Insere um novo gerenciamento para o usuario.
+		*/
+		public static function insert_gerenciamentos($params = [], $id_usuario = ''){
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			if ($mysqli->connect_errno)
+				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			$stmt = $mysqli->prepare("INSERT INTO rv__gerenciamento (id_usuario,nome,acoes) VALUES (?,?,?)");
+		 	$stmt->bind_param('iss', $id_usuario, $params['nome'], $params['acoes']);
+		 	if ($stmt->execute()){
+		 		$mysqli->close();
+		 		return ['status' => 1];
+		 	}
+		 	else{
+		 		if ($mysqli->errno === 1062){
+		 			$mysqli->close();
+		 			return ['status' => 0, 'error' => 'Gerenciamento já cadastrado.'];
+		 		}
+		 		$mysqli->close();
+		 		return ['status' => 0, 'error' => 'Erro ao cadastrar esse Gerenciamento.'];
+		 	}
+		}
+		/*
+			Atualiza um gerenciamento para do usuario.
+		*/
+		public static function update_gerenciamentos($params = [], $id_gerenciamento = '', $id_usuario = ''){
+			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
+			if ($mysqli->connect_errno)
+				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
+			//Prepara apenas os dados a serem atualizados
+			foreach ($params as $data_name => $new_data_value){
+				//Pula o ID do gerenciamento
+				if ($data_name === 'id')
+					continue;
+				$update_data['wildcards'] .= (($update_data['wildcards'] !== '') ? ',' : '') . "{$data_name}=?";
+				$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'acoes') ? 's' : 'd';
+				$update_data['values'][] = $new_data_value;
+			}
+			$update_data['bind'] .= 'i';
+			$update_data['values'][] = $id_gerenciamento;
+			$stmt = $mysqli->prepare("UPDATE rv__gerenciamento SET {$update_data['wildcards']} WHERE id=? AND id_usuario='{$id_usuario}'");
+			$stmt->bind_param($update_data['bind'], ...$update_data['values']);
+		 	if ($stmt->execute()){
+		 		$mysqli->close();
+		 		return ['status' => 1];
+		 	}
+		 	else{
+		 		if ($mysqli->errno == 1062){
+		 			$mysqli->close();
+		 			return ['status' => 0, 'error' => 'Esse Gerenciamento já existe.'];
+		 		}
+		 		$mysqli->close();
+		 		return ['status' => 0, 'error' => 'Erro ao atualizar esse Gerenciamento.'];
+		 	}
+		}
 		/*------------------------------------------ CENÁRIOS -------------------------------------------*/
 		/*
 			Retorna a lista de cenarios do usuario.
@@ -497,18 +575,14 @@
 				$result[] = [
 					'id' => $row['id'],
 					'sequencia' => $row['sequencia'],
+					'gerenciamento' => $row['gerenciamento'],
 					'data' => $row['data'],
 					'ativo' => $row['ativo'],
 					'op' => $row['op'],
 					'vol' => (float) $row['vol'],
 					'cts' => (int) $row['cts'],
 					'hora' => $row['hora'],
-					'entrada' => (float) $row['entrada'],
-					'stop' => (float) $row['stop'],
-					'alvo' => (float) $row['alvo'],
-					'men' => (float) $row['men'],
-					'mep' => (float) $row['mep'],
-					'saida' => (float) $row['saida'],
+					'resultado' => (float) $row['resultado'],
 					'cenario' => $row['cenario'],
 					'premissas' => $row['premissas'],
 					'observacoes' => $row['observacoes'],
@@ -541,13 +615,13 @@
 		 		if ($result_raw->num_rows > 0){
 		 			$ult_seq = $result_raw->fetch_assoc()['ult_seq'];
 		 			$operacoes_ja_cadastradas = [];
-		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, entrada, saida, cenario, premissas, observacoes)
-	 				$stmt = $mysqli->prepare("SELECT data,ativo,op,hora,entrada,saida,cenario,premissas,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
+		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, resultado, cenario, premissas, observacoes)
+	 				$stmt = $mysqli->prepare("SELECT gerenciamento,data,ativo,op,hora,resultado,cenario,premissas,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
 			 		$stmt->bind_param('i', $params['id_arcabouco']);
 			 		$stmt->execute();
 	 				$result_raw = $stmt->get_result();
 	 				while($row = $result_raw->fetch_assoc()){
-	 					$key = "{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . rtrim((strpos($row['entrada'], '.') !== false ? rtrim($row['entrada'], '0') : $row['entrada']), '.') . rtrim((strpos($row['saida'], '.') !== false ? rtrim($row['saida'], '0') : $row['saida']), '.') . "{$row['cenario']}{$row['premissas']}{$row['observacoes']}";
+	 					$key = "{$row['gerenciamento']}{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . rtrim((strpos($row['resultado'], '.') !== false ? rtrim($row['resultado'], '0') : $row['resultado']), '.') . "{$row['cenario']}{$row['premissas']}{$row['observacoes']}";
 						$operacoes_ja_cadastradas[$key] = NULL;
 					}
 					$block_size = 50;
@@ -557,21 +631,22 @@
 		 				//Se fechou o bloco
 		 				if ($block_i === $block_size){
 		 					//Faz a inserção do Bloco
-		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,erro,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
+		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
 							$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 							$stmt->execute();
 							//Reseta o Bloco de inserção
 							$block_i = 0;
 							$insert_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
 		 				}
-		 				$find_by_key = "{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['entrada'], '.') !== false ? rtrim($operacao['entrada'], '0') : $operacao['entrada']), '.') . rtrim((strpos($operacao['saida'], '.') !== false ? rtrim($operacao['saida'], '0') : $operacao['saida']), '.') . "{$operacao['cenario']}{$operacao['premissas']}{$operacao['observacoes']}";
+		 				$find_by_key = "{$operacao['gerenciamento']}{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['resultado'], '.') !== false ? rtrim($operacao['resultado'], '0') : $operacao['resultado']), '.') . "{$operacao['cenario']}{$operacao['premissas']}{$operacao['observacoes']}";
 				 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
-				 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
-					 		$insert_data['bind'] .= 'iiissisisissssssssssss';
+				 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+					 		$insert_data['bind'] .= 'iiisssisisisssssss';
 					 		$insert_data['values'] = array_merge($insert_data['values'], [
 					 			$params['id_arcabouco'],
 					 			$id_usuario,
 					 			$ult_seq,
+					 			$operacao['gerenciamento'],
 					 			$operacao['data'],
 					 			$operacao['ativo'],
 					 			$operacao['op'],
@@ -579,12 +654,7 @@
 					 			$operacao['cts'],
 					 			$operacao['hora'],
 					 			$operacao['erro'],
-					 			$operacao['entrada'],
-					 			$operacao['stop'],
-					 			$operacao['alvo'],
-					 			$operacao['men'],
-					 			$operacao['mep'],
-					 			$operacao['saida'],
+					 			$operacao['resultado'],
 					 			$operacao['cenario'],
 					 			$operacao['premissas'],
 					 			$operacao['observacoes'],
@@ -600,7 +670,7 @@
 		 			}
 			 		//Insere caso não tenha fechado o bloco
 			 		if ($block_i > 0){
-			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,data,ativo,op,vol,cts,hora,erro,entrada,stop,alvo,men,mep,saida,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
+			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
 						$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 						$stmt->execute();
 			 		}
