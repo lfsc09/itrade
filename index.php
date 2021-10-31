@@ -257,7 +257,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="container-fluid" id="ativos">
+			<!-- <div class="container-fluid" id="ativos">
 				<div class="bg-light p-5 rounded mt-3">
 					<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
 						<div class="col">
@@ -322,12 +322,12 @@
 						</div>
 					</div>
 				</div>
-			</div>
+			</div> -->
 			<footer class="footer mt-auto fixed-bottom py-2 bg-light">
 				<div class="container-fluid d-flex" id="menu_bottom">
 					<button class="btn btn-sm btn-secondary me-2" type="button" name="renda_variavel">Renda Variável</button>
-					<button class="btn btn-sm btn-secondary me-4 ms-auto" type="button" name="ativos">Ativos</button>
-					<button class="btn btn-sm btn-light me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
+					<!-- <button class="btn btn-sm btn-secondary me-4 ms-auto" type="button" name="ativos">Ativos</button> -->
+					<button class="btn btn-sm btn-light ms-auto me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
 				</div>
 			</footer>
 			<!-- MODAL (AREA) -->
@@ -489,6 +489,127 @@
 													</thead>
 													<tbody></tbody>
 												</table>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer"></div>
+					</div>
+				</div>
+			</div>
+			<div class="modal fade" id="ativos_modal" tabindex="-1" aria-hidden="true">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxl">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Ativos</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="container-fluid">
+								<div class="row"><div class="col"><div id="ativos_modal_toasts"></div></div></div>
+								<div class="row">
+									<div class="col-5">
+										<div class="row">
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body">
+														<div class="container-fluid d-flex px-0">
+															<form class="row m-0 flex-fill" id="ativos_modal_form">
+																<div class="col">
+																	<label class="form-label m-1 text-muted fw-bold">Nome</label>
+																	<input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()">
+																</div>
+																<div class="col">
+																	<label class="form-label m-1 text-muted fw-bold">Custos</label>
+																	<input type="text" name="custo" class="form-control form-control-sm" onclick="this.select()">
+																</div>
+																<div class="col">
+																	<label class="form-label m-1 text-muted fw-bold">Valor por Tick</label>
+																	<input type="text" name="valor_tick" class="form-control form-control-sm" onclick="this.select()">
+																</div>
+																<div class="col">
+																	<label class="form-label m-1 text-muted fw-bold">Pts por Tick</label>
+																	<input type="text" name="pts_tick" class="form-control form-control-sm" onclick="this.select()">
+																</div>
+																<div class="col-12 mt-3">
+																	<div class="row">
+																		<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="ativos_modal_enviar">Enviar</button></div>
+																		<div class="col"><button type="button" class="btn btn-sm btn-danger w-100" id="ativos_modal_cancelar">Cancelar</button></div>
+																	</div>
+																</div>
+															</form>
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mt-2">
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body">
+														<table class="table" id="table_ativos">
+															<thead>
+																<tr>
+																	<th>Nome</th>
+																	<th class="text-center">Custo (Abert. + Fech.)</th>
+																	<th class="text-center">Valor por Tick</th>
+																	<th class="text-center">Pts por Tick</th>
+																	<th></th>
+																	<th></th>
+																</tr>
+															</thead>
+															<tbody></tbody>
+														</table>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="col-7">
+										<div class="row">
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body" id="ativos_modal__vencimentos_search">
+														<div class="col">
+															<label class="form-label m-1 text-muted fw-bold">Ano Vencimento</label>
+															<input type="text" name="ano" class="form-control form-control-sm">
+														</div>
+													</div>
+												</div>
+											</div>
+										</div>
+										<div class="row mt-2">
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body">
+														<table id="ativos_modal__vencimentos_table_win_series" class="table">
+															<thead>
+																<tr>
+																	<th>Data</th>
+																	<th class="text-center">Série</th>
+																</tr>
+															</thead>
+															<tbody></tbody>
+														</table>
+													</div>
+												</div>
+											</div>
+											<div class="col">
+												<div class="card mb-4 rounded-3 shadow-sm">
+													<div class="card-body">
+														<table id="ativos_modal__vencimentos_table_wdo_series" class="table">
+															<thead>
+																<tr>
+																	<th>Data</th>
+																	<th class="text-center">Série</th>
+																</tr>
+															</thead>
+															<tbody></tbody>
+														</table>
+													</div>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -745,12 +866,7 @@
 												</div>
 												<div class="col-auto" name="gerenciamento">
 													<label class="form-label m-0 text-muted fw-bold">R:R (Gerenciamentos)</label>
-													<select name="gerenciamento" class="form-control form-control-sm init" multiple>
-														<option value="1" risco="2" retorno="1" e="0" selected>2:1</option>
-														<option value="2" risco="2" retorno="1" e="1" selected>2:1 E1</option>
-														<option value="3" risco="2" retorno="1" e="1" selected>2:1 E1 Fixo</option>
-														<option value="1" risco="3" retorno="1" e="0" selected>3:1</option>
-													</select>
+													<select name="gerenciamento" class="form-control form-control-sm init" multiple></select>
 												</div>
 												<div class="col-auto">
 													<label class="form-label m-0 text-muted fw-bold">Tempo Gráfico</label>
@@ -780,16 +896,11 @@
 													<th>Data</th>
 													<th>Ativo</th>
 													<th>R:R</th>
-													<th>Entrada</th>
 													<th>Op</th>
 													<th>Barra</th>
 													<th>Vol</th>
 													<th>Cts</th>
-													<th>Stop</th>
-													<th>Alvo</th>
-													<th>MEN</th>
-													<th>MEP</th>
-													<th>Saída</th>
+													<th>Resultado</th>
 													<th>Cenário</th>
 													<th>Observações</th>
 													<th>Erro</th>

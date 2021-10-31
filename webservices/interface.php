@@ -9,44 +9,6 @@
 		$action = $_POST['action'];
 		$params_data = (array_key_exists('params', $_POST))?$_POST['params']:[];
 		switch ($module){
-			/*------------------------------------ ATIVOS -------------------------------------*/
-			case 'ativos':
-				include_once 'api__ativos.php';
-				if ($action === 'get_ativos')
-					echo json_encode(Ativos::get_ativos(null, $_SESSION['id']));
-				else if ($action === 'insert_ativos'){
-					if (!empty($params_data)){
-						$status = Ativos::insert_ativos($params_data, $_SESSION['id']);
-						if ($status['status'])
-							$status = Ativos::get_ativos(null, $_SESSION['id']);
-						echo json_encode($status);
-					}
-					else
-						die(json_encode(['status' => 0, 'error' => 'No data passed']));
-				}
-				else if ($action === 'update_ativos'){
-					if (!empty($params_data)){
-						$status = Ativos::update_ativos($params_data, $params_data['id'], $_SESSION['id']);
-						if ($status['status'])
-							$status = Ativos::get_ativos(null, $_SESSION['id']);
-						echo json_encode($status);
-					}
-					else
-						die(json_encode(['status' => 0, 'error' => 'No data passed']));
-				}
-				else if ($action === 'remove_ativos'){
-					if (!empty($params_data)){
-						$status = RendaVariavel::remove_ativos($params_data, $_SESSION['id']);
-						if ($status['status'])
-							$status = Ativos::get_ativos(null, $_SESSION['id']);
-						echo json_encode($status);
-					}
-					else
-						die(json_encode(['status' => 0, 'error' => 'No data passed']));
-				}
-				else
-					die(json_encode(['status' => 0, 'error' => 'Action not found']));
-				break;
 			/*-------------------------------- RENDA VARIAVEL ---------------------------------*/
 			case 'renda_variavel':
 				include_once 'api__renda_variavel.php';
@@ -55,11 +17,10 @@
 					$return_data = [];
 					if (empty($params_data)){
 						include_once 'api__usuarios.php';
-						include_once 'api__ativos.php';
 						$status = Usuarios::get_usuarios(null, $_SESSION['id']);
 						if ($status['status'])
 							$return_data['usuarios'] = $status['data'];
-						$status = Ativos::get_ativos(null, $_SESSION['id']);
+						$status = RendaVariavel::get_ativos(null, $_SESSION['id']);
 						if ($status['status'])
 							$return_data['ativos'] = $status['data'];
 						$status = RendaVariavel::get_gerenciamentos(null, $_SESSION['id']);
@@ -108,36 +69,34 @@
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
-				/*----------------------------------- Cenários ------------------------------------*/
-				else if ($action === 'get_cenarios'){
-					if (!empty($params_data))
-						echo json_encode(RendaVariavel::get_cenarios($params_data, $_SESSION['id']));
-					else
-						die(json_encode(['status' => 0, 'error' => 'No data passed']));
-				}
-				else if ($action === 'insert_cenarios'){
+				/*------------------------------------ Ativos -------------------------------------*/
+				else if ($action === 'insert_ativos'){
 					if (!empty($params_data)){
-						$status = RendaVariavel::insert_cenarios($params_data, $_SESSION['id']);
+						$status = RendaVariavel::insert_ativos($params_data, $_SESSION['id']);
 						if ($status['status'])
-							$status = RendaVariavel::get_cenarios($status['data'], $_SESSION['id']);
+							$status = RendaVariavel::get_ativos(null, $_SESSION['id']);
 						echo json_encode($status);
 					}
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
-				else if ($action === 'update_cenarios'){
+				else if ($action === 'update_ativos'){
 					if (!empty($params_data)){
-						$status = RendaVariavel::update_cenarios($params_data, $_SESSION['id']);
+						$status = RendaVariavel::update_ativos($params_data, $params_data['id'], $_SESSION['id']);
 						if ($status['status'])
-							$status = RendaVariavel::get_cenarios($status['data'], $_SESSION['id']);
+							$status = RendaVariavel::get_ativos(null, $_SESSION['id']);
 						echo json_encode($status);
 					}
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
-				else if ($action === 'remove_cenarios'){
-					if (!empty($params_data))
-						echo json_encode(RendaVariavel::remove_cenarios($params_data, $_SESSION['id']));
+				else if ($action === 'remove_ativos'){
+					if (!empty($params_data)){
+						$status = RendaVariavel::remove_ativos($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = RendaVariavel::get_ativos(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
@@ -168,7 +127,40 @@
 						if ($status['status'])
 							$status = RendaVariavel::get_gerenciamentos(null, $_SESSION['id']);
 						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}
+				/*----------------------------------- Cenários ------------------------------------*/
+				else if ($action === 'get_cenarios'){
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::get_cenarios($params_data, $_SESSION['id']));
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'insert_cenarios'){
+					if (!empty($params_data)){
+						$status = RendaVariavel::insert_cenarios($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = RendaVariavel::get_cenarios($status['data'], $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'update_cenarios'){
+					if (!empty($params_data)){
+						$status = RendaVariavel::update_cenarios($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = RendaVariavel::get_cenarios($status['data'], $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'remove_cenarios'){
+					if (!empty($params_data))
+						echo json_encode(RendaVariavel::remove_cenarios($params_data, $_SESSION['id']));
 					else
 						die(json_encode(['status' => 0, 'error' => 'No data passed']));
 				}

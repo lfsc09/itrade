@@ -197,10 +197,27 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_arcaboucos tbody td[name='remover'] {width: 4%}
 #table_arcaboucos_filter {display: none}
 #table_arcaboucos_info {font-size: 13px}
+/*-------------------------------------- Ativo ---------------------------------------*/
+#ativos_modal_form .form-label {font-size: 12px}
+#table_ativos {font-size: .80em}
+#table_ativos tbody td{vertical-align: middle}
+#table_ativos tr td[name='custo'], #table_ativos tr td[name='valor_tick'], #table_ativos tr td[name='pts_tick'], #table_ativos tr td[name='action'] {text-align: center}
+#table_ativos tr td[name='custo']:after, #table_ativos tr td[name='valor_tick']:after{content: ' BRL'; font-size: 10px}
+#table_ativos tr td[name='pts_tick']:after{content: ' pt'; font-size: 10px}
+#table_ativos tbody td[name='editar'] {width: 4%}
+#table_ativos tbody td[name='remover'] {width: 4%}
+#ativos_modal__vencimentos_search .form-label {font-size: 12px}
+#ativos_modal__vencimentos_table_win_series, #ativos_modal__vencimentos_table_wdo_series {font-size: .85em}
+#ativos_modal__vencimentos_table_win_series tbody td, #ativos_modal__vencimentos_table_wdo_series tbody td{vertical-align: middle}
+#ativos_modal__vencimentos_table_win_series tr td[name='serie'], #ativos_modal__vencimentos_table_wdo_series tr td[name='serie'] {text-align: center; font-weight: 600}
+#ativos_modal__vencimentos_table_win_series tr td[name='data'] span.daylish:after, #ativos_modal__vencimentos_table_wdo_series tr td[name='data'] span.daylish:after {content: 'th'; font-size: 8px}
 /*---------------------------------- Gerenciamento -----------------------------------*/
 #gerenciamentos_modal_form .form-label {font-size: 12px}
 #table_gerenciamentos {font-size: .85em}
 #table_gerenciamentos tbody td{vertical-align: middle}
+#table_gerenciamentos tbody td[name='acoes'] button {font-size: 10px}
+#table_gerenciamentos tbody td[name='editar'] {width: 4%}
+#table_gerenciamentos tbody td[name='remover'] {width: 4%}
 /*------------------------------------- Cenarios -------------------------------------*/
 #table_cenarios div.card {border-left: 3px solid #0d6efd !important;}
 #table_cenarios div.card[new_cenario] {border-left: 3px solid #198754 !important;}
@@ -250,12 +267,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_adicionar_operacoes tbody td[name='barra'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='vol'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='cts'] {width: 4%}
-#table_adicionar_operacoes tbody td[name='entrada'] {width: 6%}
-#table_adicionar_operacoes tbody td[name='stop'] {width: 6%}
-#table_adicionar_operacoes tbody td[name='alvo'] {width: 6%}
-#table_adicionar_operacoes tbody td[name='men'] {width: 6%}
-#table_adicionar_operacoes tbody td[name='mep'] {width: 6%}
-#table_adicionar_operacoes tbody td[name='saida'] {width: 6%}
+#table_adicionar_operacoes tbody td[name='resultado'] {width: 6%}
 #table_adicionar_operacoes tbody td[name='cenario'] {width: 6%}
 #table_adicionar_operacoes tbody td[name='observacoes'] {width: 10%}
 #table_adicionar_operacoes tbody td[name='erro'] {width: 4%}
@@ -331,14 +343,3 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_trades tbody td[name='mep__porc'] progress {width: 70px; height: 4px; border-radius: 1em;}
 #dashboard_ops__table_trades tbody td[name='mep__porc'] progress[value]::-webkit-progress-bar {background-color: #efefef !important}
 #dashboard_ops__table_trades tbody td[name='mep__porc'] progress[value]::-webkit-progress-value {background-color: #198754 !important}
-/*------------------------------------------------------------------------------------*/
-/*------------------------------------- ATIVOS ---------------------------------------*/
-/*------------------------------------------------------------------------------------*/
-#table_ativos {font-size: .80em}
-#table_ativos tbody td{vertical-align: middle}
-#table_ativos tr td[name='custo'], #table_ativos tr td[name='valor_tick'], #table_ativos tr td[name='pts_tick'], #table_ativos tr td[name='action'] {text-align: center}
-#table_ativos tr td[name='custo']:after, #table_ativos tr td[name='valor_tick']:after{content: ' BRL'; font-size: 10px}
-#table_ativos tr td[name='pts_tick']:after{content: ' pt'; font-size: 10px}
-#table_win_series tbody td, #table_wdo_series tbody td{vertical-align: middle}
-#table_win_series tr td[name='serie'], #table_wdo_series tr td[name='serie'] {text-align: center}
-#table_win_series tr td[name='data'] span.daylish:after, #table_wdo_series tr td[name='data'] span.daylish:after {content: 'th'; font-size: 8px}

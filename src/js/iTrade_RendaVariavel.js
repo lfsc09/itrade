@@ -1509,6 +1509,221 @@ let Renda_variavel = (function(){
 		});
 	}
 	////////////////////////////////////////////////////////////////////////////////////
+	/*--------------------------------- Lista Ativos ---------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Reseta o formulário 'arcaboucos_modal_form'.
+	*/
+	function resetFormAtivosModal(){
+		let form = $(document.getElementById('ativos_modal_form'));
+		form.removeAttr('id_ativo');
+		form.find('input[name]').val('').removeAttr('changed');
+	}
+	/*
+		Constroi o modal de gerenciamento de arcabouços.
+	*/
+	function buildAtivosModal(firstBuild = false, show = false){
+		if (firstBuild){
+			let form = $(document.getElementById('ativos_modal_form')),
+				ano = (new Date()).getFullYear();
+			form.find('input[name="nome"]').inputmask({mask: '*{*}', definitions: {'*': {casing: 'upper'}}, placeholder: ''});
+			form.find('input[name="custo"]').inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			form.find('input[name="valor_tick"]').inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			form.find('input[name="pts_tick"]').inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			buildAtivosTable();
+			//Constroi a tabela de serie de contratos do WIN
+			buildTableWinSeries(ano);
+			//Constroi a tabela de serie de contratos do WDO
+			buildTableWdoSeries(ano);
+			$(document.getElementById('ativos_modal__vencimentos_search')).find('input[name="ano"]').val(ano);
+		}
+		if (show){
+			//Reseta o formulario de cadastro e edição
+			resetFormAtivosModal();
+			$(document.getElementById('ativos_modal')).modal('show');
+		}
+	}
+	/*
+		Constroi a tabela de ativos.
+	*/
+	function buildAtivosTable(){
+		let table = $(document.getElementById('table_ativos')),
+			html = ``;
+		//Constroi tabela de ativos
+		for (let a in _lista__ativos.ativos){
+			html += `<tr ativo="${_lista__ativos.ativos[a].id}">`+
+					`<td name="nome" class="fw-bold">${_lista__ativos.ativos[a].nome}</td>`+
+					`<td name="custo" class="fw-bold">${_lista__ativos.ativos[a].custo}</td>`+
+					`<td name="valor_tick" class="fw-bold">${_lista__ativos.ativos[a].valor_tick}</td>`+
+					`<td name="pts_tick" class="fw-bold">${_lista__ativos.ativos[a].pts_tick}</td>`+
+					`<td name="editar" class="text-center"><button class="btn btn-sm btn-light" type="button" name="editar"><i class="fas fa-edit"></i></button></td>`+
+					`<td name="remover" class="text-center"><button class="btn btn-sm btn-light" type="button" name="remover"><i class="fas fa-trash text-danger"></i></button></td>`+
+					`</tr>`;
+		}
+		table.find('tbody').empty().append(html);
+	}
+	/*
+		Retorna a quarta-feira do mes mais próxima do dia 15.
+	*/
+	function buildTableWinSeries__getQuartas15(ano, mes){
+		let d = new Date(ano, mes, 1),
+			wednesdays = [],
+			choosen_wed = null;
+		// Get the first Wednesday in the month
+		while (d.getDay() !== 3)
+			d.setDate(d.getDate() + 1);
+		// Get all the other Wednesdays in the month
+		while (d.getMonth() === mes){
+			let day = (new Date(d.getTime())).getDate();
+			wednesdays.push({
+				'day': day,
+				'diff': Math.abs(day - 15)
+			});
+			d.setDate(d.getDate() + 7);
+		}
+		for (let q in wednesdays){
+			if (choosen_wed === null)
+				choosen_wed = wednesdays[q];
+			else if (wednesdays[q].diff < choosen_wed.diff)
+				choosen_wed = wednesdays[q];
+		}
+		return choosen_wed.day;
+	}
+	/*
+		Constroi a tabela de vencimentos do WIN.
+	*/
+	function buildTableWinSeries(ano){
+		let tbody_win_series = $('tbody', document.getElementById('ativos_modal__vencimentos_table_win_series')),
+			html = ``,
+			today = new Date(),
+			first_day = null,
+			last_day = null,
+			data = '',
+			serie_class = '';
+		//Dez - Fev
+		first_day = buildTableWinSeries__getQuartas15(ano - 1, 11);
+		last_day = buildTableWinSeries__getQuartas15(ano, 1) - 1;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano-1, 11, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 1, 1))} <span class="daylish">${last_day}</span>`;
+		if (today.getFullYear() == ano){
+			serie_class = '';
+			//Para segunda parte de Dezembro
+			if (today.getMonth() == 11 && today.getDate() >= buildTableWinSeries__getQuartas15(ano, 11))
+				serie_class = ' class="table-success"';
+			//Para Janeiro
+			else if (today.getMonth() == 0)
+				serie_class = ' class="table-success"';
+			//Para primeira parte de Fevereiro
+			else if (today.getMonth() == 1 && today.getDate() <= last_day)
+				serie_class = ' class="table-success"';
+		}
+		html += `<tr><td name="data">${data}</td><td name="serie"${serie_class}>G</td></tr>`;
+		//Fev - Abr
+		first_day = buildTableWinSeries__getQuartas15(ano, 1);
+		last_day = buildTableWinSeries__getQuartas15(ano, 3) - 1;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 1, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 3, 1))} <span class="daylish">${last_day}</span>`;
+		if (today.getFullYear() == ano){
+			serie_class = '';
+			//Para segunda parte de Fevereiro
+			if (today.getMonth() == 1 && today.getDate() >= first_day)
+				serie_class = ' class="table-success"';
+			//Para Março
+			else if (today.getMonth() == 2)
+				serie_class = ' class="table-success"';
+			//Para primeira parte de Abril
+			else if (today.getMonth() == 3 && today.getDate() <= last_day)
+				serie_class = ' class="table-success"';
+		}
+		html += `<tr><td name="data">${data}</td><td name="serie"${serie_class}>J</td></tr>`;
+		//Abr - Jun
+		first_day = buildTableWinSeries__getQuartas15(ano, 3);
+		last_day = buildTableWinSeries__getQuartas15(ano, 5) - 1;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 3, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 5, 1))} <span class="daylish">${last_day}</span>`;
+		if (today.getFullYear() == ano){
+			serie_class = '';
+			//Para segunda parte de Abril
+			if (today.getMonth() == 3 && today.getDate() >= first_day)
+				serie_class = ' class="table-success"';
+			//Para Maio
+			else if (today.getMonth() == 4)
+				serie_class = ' class="table-success"';
+			//Para primeira parte de Junho
+			else if (today.getMonth() == 5 && today.getDate() <= last_day)
+				serie_class = ' class="table-success"';
+		}
+		html += `<tr><td name="data">${data}</td><td name="serie"${serie_class}>M</td></tr>`;
+		//Jun - Ago
+		first_day = buildTableWinSeries__getQuartas15(ano, 5);
+		last_day = buildTableWinSeries__getQuartas15(ano, 7) - 1;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 5, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 7, 1))} <span class="daylish">${last_day}</span>`;
+		if (today.getFullYear() == ano){
+			serie_class = '';
+			//Para segunda parte de Junho
+			if (today.getMonth() == 5 && today.getDate() >= first_day)
+				serie_class = ' class="table-success"';
+			//Para Julho
+			else if (today.getMonth() == 6)
+				serie_class = ' class="table-success"';
+			//Para primeira parte de Agosto
+			else if (today.getMonth() == 7 && today.getDate() <= last_day)
+				serie_class = ' class="table-success"';
+		}
+		html += `<tr><td name="data">${data}</td><td name="serie"${serie_class}>Q</td></tr>`;
+		//Ago - Out
+		first_day = buildTableWinSeries__getQuartas15(ano, 7);
+		last_day = buildTableWinSeries__getQuartas15(ano, 9) - 1;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 7, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 9, 1))} <span class="daylish">${last_day}</span>`;
+		if (today.getFullYear() == ano){
+			serie_class = '';
+			//Para segunda parte de Agosto
+			if (today.getMonth() == 7 && today.getDate() >= first_day)
+				serie_class = ' class="table-success"';
+			//Para Stembro
+			else if (today.getMonth() == 8)
+				serie_class = ' class="table-success"';
+			//Para primeira parte de Outubro
+			else if (today.getMonth() == 9 && today.getDate() <= last_day)
+				serie_class = ' class="table-success"';
+		}
+		html += `<tr><td name="data">${data}</td><td name="serie"${serie_class}>V</td></tr>`;
+		//Out - Dez
+		first_day = buildTableWinSeries__getQuartas15(ano, 9);
+		last_day = buildTableWinSeries__getQuartas15(ano, 11) - 1;
+		data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 9, 1))} <span class="daylish">${first_day}</span><span class="mx-2">-</span>${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, 11, 1))} <span class="daylish">${last_day}</span>`;
+		if (today.getFullYear() == ano){
+			serie_class = '';
+			//Para segunda parte de Outubro
+			if (today.getMonth() == 9 && today.getDate() >= first_day)
+				serie_class = ' class="table-success"';
+			//Para Novembro
+			else if (today.getMonth() == 10)
+				serie_class = ' class="table-success"';
+			//Para primeira parte de Dezembro
+			else if (today.getMonth() == 11 && today.getDate() <= last_day)
+				serie_class = ' class="table-success"';
+		}
+		html += `<tr><td name="data">${data}</td><td name="serie"${serie_class}>Z</td></tr>`;
+		tbody_win_series.empty().append(html);
+	}
+	/*
+		Constroi a tabela de vencimentos do WDO.
+	*/
+	function buildTableWdoSeries(ano){
+		let tbody_wdo_series = $('tbody', document.getElementById('ativos_modal__vencimentos_table_wdo_series')),
+			html = ``,
+			series = ['G', 'H', 'J', 'K', 'M', 'N', 'Q', 'U', 'V', 'X', 'Z', 'F'],
+			today = new Date();
+		for (let m=0; m<12; m++){
+			let first_day = (new Date(ano, m, 1)).getDate(),
+				last_day = new Date(ano, m+1, 0).getDate(),
+				data = `<span class="badge bg-light text-capitalize text-dark">${new Intl.DateTimeFormat('pt-BR', {month: 'short'}).format(new Date(ano, m, 1))} <span class="daylish">${first_day}</span> - <span class="daylish">${last_day}</span></span>`,
+				serie_class = '';
+			if (today.getFullYear() == ano && today.getMonth() == m)
+				serie_class = ' class="table-success"';
+			html += `<tr><td name="data">${data}</td><td name="serie"${serie_class}>${series[m]}</td></tr>`;
+		}
+		tbody_wdo_series.empty().append(html);
+	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*---------------------------- Lista Gerenciamentos ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -1540,9 +1755,18 @@ let Renda_variavel = (function(){
 			html = ``;
 		//Constroi tabela de gerenciamentos
 		for (let g in _lista__gerenciamentos.gerenciamentos){
+			let acoes = ``;
+			for (let ac in _lista__gerenciamentos.gerenciamentos[g].acoes){
+				if (parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]) < 0)
+					acoes += `<button type="button" class="btn btn-sm btn-danger flex-fill">${Math.abs(parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]))}S</button>`;
+				else
+					acoes += `<button type="button" class="btn btn-sm btn-success flex-fill">${Math.abs(parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]))}S</button>`;
+			}
+			if (acoes !== '')
+				acoes = `<div class="input-group d-flex">${acoes}</div>`;
 			html += `<tr gerenciamento="${_lista__gerenciamentos.gerenciamentos[g].id}">`+
 					`<td name="nome" class="fw-bold">${_lista__gerenciamentos.gerenciamentos[g].nome}</td>`+
-					`<td name="acoes" class="fw-bold">${_lista__gerenciamentos.gerenciamentos[g].acoes}</td>`+
+					`<td name="acoes" class="fw-bold">${acoes}</td>`+
 					`<td name="editar" class="text-center"><button class="btn btn-sm btn-light" type="button" name="editar"><i class="fas fa-edit"></i></button></td>`+
 					`<td name="remover" class="text-center"><button class="btn btn-sm btn-light" type="button" name="remover"><i class="fas fa-trash text-danger"></i></button></td>`+
 					`</tr>`;
@@ -2004,27 +2228,26 @@ let Renda_variavel = (function(){
 	/*------------------------ Section Operações Adicionar ---------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
-		Apaga tudo em 'table_adicionar_operacoes'.
-	*/
-	function resetAdicionaOperacaoTable(){
-		$(document.getElementById('table_adicionar_operacoes')).find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
-	}
-	/*
 		Constroi o offcanvas de adicionar operações.
 	*/
 	function buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = false, show = false){
 		if (firstBuild){
-			let form = $(document.getElementById('adicionar_operacoes_offcanvas__form_default'));
-			form.find('select[name="gerenciamento"]').selectpicker({
-				title: 'R:R',
-				selectedTextFormat: 'count > 2',
-				actionsBox: true,
-				deselectAllText: 'Nenhum',
-				selectAllText: 'Todos',
-				style: '',
-				styleBase: 'form-control form-control-sm'
-			}).on('loaded.bs.select', function (){
-				form.find('select[name="gerenciamento"]').parent().addClass('form-control');
+			let form = $(document.getElementById('adicionar_operacoes_offcanvas__form_default')),
+				select_gerenciamentos = form.find('select[name="gerenciamento"]'),
+				select_options_html = '';
+			select_options_html = _lista__gerenciamentos['gerenciamentos'].reduce((p, c) => p + `<option value="${c.id}" selected>${c.nome}</option>`, '');
+			select_gerenciamentos.append(select_options_html).promise().then(function (){
+				select_gerenciamentos.selectpicker({
+					title: 'R:R',
+					selectedTextFormat: 'count > 2',
+					actionsBox: true,
+					deselectAllText: 'Nenhum',
+					selectAllText: 'Todos',
+					style: '',
+					styleBase: 'form-control form-control-sm'
+				}).on('loaded.bs.select', function (){
+					select_gerenciamentos.parent().addClass('form-control');
+				});
 			});
 			form.find('select[name="hoje"]').selectpicker({
 				title: 'Data',
@@ -2036,7 +2259,7 @@ let Renda_variavel = (function(){
 			});
 		}
 		if (forceRebuild)
-			$(document.getElementById('table_adicionar_operacoes')).find('tbody').empty();
+			$(document.getElementById('table_adicionar_operacoes')).find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6" empty><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
 		if (show)
 			$(document.getElementById('adicionar_operacoes_offcanvas')).offcanvas('show');
 	}
@@ -2330,7 +2553,7 @@ let Renda_variavel = (function(){
 		Envia info do formulario de arcabouços para adicionar ou editar um arcabouço.
 	*/
 	$(document.getElementById('arcaboucos_modal_enviar')).click(function (){
-		let form = $(document.getElementById('arcaboucos_modal_form'));
+		let form = $(document.getElementById('arcaboucos_modal_form')),
 			id_arcabouco = form.attr('id_arcabouco'),
 			data = {};
 		form.find('input[name][changed],select[name!="usuarios"][changed],select[name="usuarios"]').each(function (){
@@ -2373,6 +2596,119 @@ let Renda_variavel = (function(){
 						Global.toast.create({location: document.getElementById('arcaboucos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
 				}
 			});
+		}
+	});
+	////////////////////////////////////////////////////////////////////////////////////
+	/*-------------------------------- Lista Ativos ----------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Marca os inputs que forem alterados.
+	*/
+	$(document.getElementById('ativos_modal_form')).on('change', 'input[name]', function (){
+		this.setAttribute('changed', '');
+	});
+	/*
+		Processa click em 'table_ativos' (Para Edição dos ativos)
+			 - (Criador Apenas) Clicar em alterar ativo: Joga os dados para o formulario.
+	*/
+	$(document.getElementById('table_ativos')).on('click', 'tbody tr td button[name="editar"]', function (){
+		let id_ativo = $(this).parentsUntil('tbody').last().attr('ativo'),
+			form = $(document.getElementById('ativos_modal_form'));
+		for (let a in _lista__ativos.ativos){
+			if (_lista__ativos.ativos[a].id == id_ativo){
+				form.find('input[name="nome"]').val(_lista__ativos.ativos[a].nome).removeAttr('changed');
+				form.find('input[name="custo"]').val(_lista__ativos.ativos[a].custo).removeAttr('changed');
+				form.find('input[name="valor_tick"]').val(_lista__ativos.ativos[a].valor_tick).removeAttr('changed');
+				form.find('input[name="pts_tick"]').val(_lista__ativos.ativos[a].pts_tick).removeAttr('changed');
+				form.attr('id_ativo', id_ativo);
+			}
+		}
+	});
+	/*
+		Processa os duplos cliques em 'table_ativos'.
+			 - (Criador Apenas) Duplo clique em remover ativo: Excluir esse ativo.
+	*/
+	$(document.getElementById('table_ativos')).on('dblclick', 'tbody tr td button[name="remover"]', function (){
+		let id_ativo = $(this).parentsUntil('tbody').last().attr('ativo');
+		Global.connect({
+			data: {module: 'renda_variavel', action: 'remove_ativos', params: {id: id_ativo}},
+			success: function (result){
+				if (result.status){
+					_lista__ativos.update(result.data);
+					buildAtivosTable();
+				}
+				else
+					Global.toast.create({location: document.getElementById('ativos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+			}
+		});
+	});
+	/*
+		Cancela envio de adição ou edição de ativos, removendo os dados do formulário e resetando ele.
+	*/
+	$(document.getElementById('ativos_modal_cancelar')).click(function (){
+		resetFormAtivosModal();
+	});
+	/*
+		Envia info do formulario de ativos para adicionar ou editar um ativo.
+	*/
+	$(document.getElementById('ativos_modal_enviar')).click(function (){
+		let form = $(document.getElementById('ativos_modal_form')),
+			id_ativo = form.attr('id_ativo'),
+			data = {};
+		form.find('input[name][changed]').each(function (){
+			data[this.name] = $(this).val();
+		});
+		//Se for edição
+		if (id_ativo){
+			if (!Global.isObjectEmpty(data)){
+				data['id'] = id_ativo;
+				Global.connect({
+					data: {module: 'renda_variavel', action: 'update_ativos', params: data},
+					success: function (result){
+						if (result.status){
+							Global.toast.create({location: document.getElementById('ativos_modal_toasts'), color: 'success', body: 'Ativo Atualizado.', delay: 4000});
+							resetFormAtivosModal();
+							_lista__ativos.update(result.data);
+							buildAtivosTable();
+						}
+						else
+							Global.toast.create({location: document.getElementById('ativos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+					}
+				});
+			}
+		}
+		//Se for adição
+		else{
+			if (!('nome' in data) || data['nome'] === '' || !('custo' in data) || data['custo'] === '' || !('valor_tick' in data) || data['valor_tick'] === '' || !('pts_tick' in data) || data['pts_tick'] === ''){
+				Global.toast.create({location: document.getElementById('ativos_modal_toasts'), color: 'warning', body: 'Todos os campos devem ser preenchidos.', delay: 4000});
+				return;
+			}
+			Global.connect({
+				data: {module: 'renda_variavel', action: 'insert_ativos', params: data},
+				success: function (result){
+					if (result.status){
+						resetFormAtivosModal();
+						_lista__ativos.update(result.data);
+						buildAtivosTable();
+					}
+					else
+						Global.toast.create({location: document.getElementById('ativos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+				}
+			});
+		}
+	});
+	/*
+		Alterar ano dos contratos de vencimento do WIN e WDO.
+	*/
+	$(document.getElementById('ativos_modal__vencimentos_search')).find('input[name="ano"]').on('click', function (){
+		this.focus();
+		this.select();
+	}).on('keyup', function (){
+		if (/^[0-9]+$/.test(this.value) && this.value.length === 4){
+			buildTableWinSeries(this.value);
+			buildTableWdoSeries(this.value);
+			this.focus();
+			this.select();
 		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
@@ -2474,21 +2810,20 @@ let Renda_variavel = (function(){
 		}
 		//Se for edição
 		if (id_gerenciamento){
-			if (!Global.isObjectEmpty(data)){
-				Global.connect({
-					data: {module: 'renda_variavel', action: 'update_gerenciamentos', params: data},
-					success: function (result){
-						if (result.status){
-							Global.toast.create({location: document.getElementById('gerenciamentos_modal_toasts'), color: 'success', body: 'Gerenciamento Atualizado.', delay: 4000});
-							resetFormGerenciamentoModal();
-							_lista__gerenciamentos.update(result.data);
-							buildGerenciamentosTable();
-						}
-						else
-							Global.toast.create({location: document.getElementById('gerenciamentos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+			data['id'] = id_gerenciamento;
+			Global.connect({
+				data: {module: 'renda_variavel', action: 'update_gerenciamentos', params: data},
+				success: function (result){
+					if (result.status){
+						Global.toast.create({location: document.getElementById('gerenciamentos_modal_toasts'), color: 'success', body: 'Gerenciamento Atualizado.', delay: 4000});
+						resetFormGerenciamentoModal();
+						_lista__gerenciamentos.update(result.data);
+						buildGerenciamentosTable();
 					}
-				});
-			}
+					else
+						Global.toast.create({location: document.getElementById('gerenciamentos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+				}
+			});
 		}
 		//Se for adição
 		else{
@@ -3013,40 +3348,38 @@ let Renda_variavel = (function(){
 			ativo_index = -1,
 			default_cts = form.find('input[name="cts"]').val(),
 			default_cenario = form.find('input[name="cenario"]').val(),
-			rr_a_criar = [],
+			gerenciamentos_a_criar = [],
+			default_gerenciamentos = form.find('select[name="gerenciamento"]').val(),
 			ult_seq = (parseInt(tbody.find('tr').last().attr('sequencia')) || 0) + 1,
 			ult_bloco = tbody.find('td[name="bloco"]').length + 1,
 			html = ``;
-		form.find('select[name="gerenciamento"] option:selected').each(function (e, opt){
-			rr_a_criar.push({
-				nome: opt.innerText,
-				risco: opt.getAttribute('risco'),
-				retorno: opt.getAttribute('retorno'),
-				e: opt.getAttribute('e')
-			});
-		});
+		if (!default_gerenciamentos.length)
+			return true;
+		for (let g in _lista__gerenciamentos.gerenciamentos){
+			if (default_gerenciamentos.includes(_lista__gerenciamentos.gerenciamentos[g]['id'])){
+				gerenciamentos_a_criar.push({
+					nome: _lista__gerenciamentos.gerenciamentos[g]['nome'],
+					acoes: _lista__gerenciamentos.gerenciamentos[g]['acoes']
+				});
+			}
+		}
 		//Verifica se o ativo está cadastrado
 		for (let a in _lista__ativos['ativos']){
 			if (default_ativo.localeCompare(_lista__ativos['ativos'][a]['nome'], undefined, {sensitivity: 'base'}) === 0)
 				ativo_index = a;
 		}
 		for (let q=0; q<5; q++){
-			for (let i=0; i<rr_a_criar.length; i++){
+			for (let i=0; i<gerenciamentos_a_criar.length; i++){
 				html += `<tr sequencia="${ult_seq++}" bloco="${ult_bloco}">`+
-						((i === 0) ? `<td rowspan="${rr_a_criar.length}" name="bloco" class="fw-bold text-center">${ult_bloco}</td>` : ``)+
+						((i === 0) ? `<td rowspan="${gerenciamentos_a_criar.length}" name="bloco" class="fw-bold text-center">${ult_bloco}</td>` : ``)+
 						`<td name="data"><input type="text" name="data" class="form-control form-control-sm text-center" value="${default_data}" onclick="this.select()" ${((default_data !== '') ? 'disabled' : '')}></td>`+
 						`<td name="ativo"><input type="text" name="ativo" class="form-control form-control-sm text-center" value="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].nome : '')}" pts_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].pts_tick : '')}" valor_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].valor_tick : '')}" onclick="this.select()" ${((ativo_index !== -1) ? 'disabled' : '')}></td>`+
-						((rr_a_criar[i].e != '' && rr_a_criar[i].e != 0) ? `<td name="gerenciamento"><div class="input-group"><input type="text" name="gerenciamento" class="form-control form-control-sm text-center" value="${rr_a_criar[i].nome}" risco="${rr_a_criar[i].risco}" retorno="${rr_a_criar[i].retorno}" disabled><button class="btn btn-secondary" type="button" name="escalar" e="${rr_a_criar[i].e}" escalou="0"><i class="fas fa-angle-double-up"></i></button></div></td>` : `<td name="gerenciamento"><input type="text" name="gerenciamento" class="form-control form-control-sm text-center" value="${rr_a_criar[i].nome}" risco="${rr_a_criar[i].risco}" retorno="${rr_a_criar[i].retorno}" disabled></td>`)+
-						`<td name="entrada"><input type="text" name="entrada" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
+						((gerenciamentos_a_criar[i].e != '' && gerenciamentos_a_criar[i].e != 0) ? `<td name="gerenciamento"><div class="input-group"><input type="text" name="gerenciamento" class="form-control form-control-sm text-center" value="${gerenciamentos_a_criar[i].nome}" risco="${gerenciamentos_a_criar[i].risco}" retorno="${gerenciamentos_a_criar[i].retorno}" disabled><button class="btn btn-secondary" type="button" name="escalar" e="${gerenciamentos_a_criar[i].e}" escalou="0"><i class="fas fa-angle-double-up"></i></button></div></td>` : `<td name="gerenciamento"><input type="text" name="gerenciamento" class="form-control form-control-sm text-center" value="${gerenciamentos_a_criar[i].nome}" risco="${gerenciamentos_a_criar[i].risco}" retorno="${gerenciamentos_a_criar[i].retorno}" disabled></td>`)+
 						`<td name="op"><input type="text" name="op" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="barra"><input type="text" name="barra" hora="" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm text-center" onclick="this.select()" value="${default_cts}" ${((default_cts !== '') ? 'disabled' : '')}></td>`+
-						`<td name="stop"><input type="text" name="stop" class="form-control form-control-sm text-center" disabled></td>`+
-						`<td name="alvo"><input type="text" name="alvo" class="form-control form-control-sm text-center" disabled></td>`+
-						`<td name="men"><input type="text" name="men" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
-						`<td name="mep"><input type="text" name="mep" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
-						`<td name="saida"><input type="text" name="saida" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
+						`<td name="resultado"><input type="text" name="resultado" class="form-control form-control-sm text-center"></td>`+
 						`<td name="cenario"><input type="text" name="cenario" class="form-control form-control-sm text-center" onclick="this.select()" value="${default_cenario}" ${((default_cenario !== '') ? 'disabled' : '')}></td>`+
 						`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm text-center"></td>`+
 						`<td name="erro"><input type="text" name="erro" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
@@ -3054,6 +3387,7 @@ let Renda_variavel = (function(){
 			}
 			ult_bloco++;
 		}
+		tbody.find('tr[empty]').remove();
 		tbody.append(html);
 	});
 	/*
@@ -3329,6 +3663,8 @@ let Renda_variavel = (function(){
 	$('button', document.getElementById('renda_variavel__menu')).click(function (){
 		if (this.name === 'arcaboucos')
 			buildArcaboucosModal(firstBuild = false, forceRebuild = false, show = true);
+		else if (this.name === 'ativos')
+			buildAtivosModal(firstBuild = false, show = true);
 		else if (this.name === 'gerenciamentos')
 			buildGerenciamentosModal(forceRebuild = false, show = true);
 		else if (this.name === 'cenarios')
@@ -3352,12 +3688,14 @@ let Renda_variavel = (function(){
 				_lista__ativos.update(result.data['ativos']);
 				_lista__gerenciamentos.update(result.data['gerenciamentos']);
 				_lista__arcaboucos.create(result.data['arcaboucos']);
+				//Inicia o modal de Ativos
+				buildAtivosModal(firstBuild = true, show = false);
 				//Inicia o modal de Gerenciamentos
 				buildGerenciamentosModal(forceRebuild = true, show = false);
 				//Inicia o modal de arcabouços
 				buildArcaboucosModal(firstBuild = true, forceRebuild = true, show = false);
 				//Inicia o offcanvas de Adicionar Operações
-				buildAdicionarOperacoesOffcanvas(firstBuild = true, forceRebuild = false, show = false);
+				buildAdicionarOperacoesOffcanvas(firstBuild = true, forceRebuild = true, show = false);
 				//Inicia a lista de instancias (Com uma já salva ou uma nova) e termina de construir o arcabouço Section
 				_lista__instancias_arcabouco.start(result.data);
 				_list_ops__needRebuild = true;
