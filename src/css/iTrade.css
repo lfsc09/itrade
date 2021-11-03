@@ -256,21 +256,27 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #adicionar_operacoes_offcanvas__form_default div[name='gerenciamento'] {width: 190px}
 #table_adicionar_operacoes {font-size: 13px}
 #table_adicionar_operacoes tbody tr.risk_block.hide {visibility: hidden}
-#table_adicionar_operacoes input {font-size: 12px}
+#table_adicionar_operacoes input {font-size: 10px}
 #table_adicionar_operacoes tbody td{vertical-align: middle}
 #table_adicionar_operacoes tbody td[name='bloco'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='data'] {width: 6%}
-#table_adicionar_operacoes tbody td[name='ativo'] {width: 5%}
-#table_adicionar_operacoes tbody td[name='gerenciamento'] {width: 10%}
-#table_adicionar_operacoes tbody td[name='gerenciamento'] button {border: 0; background: #ced4da}
+#table_adicionar_operacoes tbody td[name='ativo'] {width: 4%}
+#table_adicionar_operacoes tbody td[name='gerenciamento'] {width: 8%}
 #table_adicionar_operacoes tbody td[name='op'] {width: 3%}
 #table_adicionar_operacoes tbody td[name='barra'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='vol'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='cts'] {width: 4%}
+#table_adicionar_operacoes tbody td[name='ger_acoes'] {width: 15%}
+#table_adicionar_operacoes tbody td[name='ger_acoes'] button {font-size: 10px; font-weight: 600}
+#table_adicionar_operacoes tbody td[name='ger_acoes'] button.btn-success {color: #212529; background-color: #bce1d0; border-color: #fff}
+#table_adicionar_operacoes tbody td[name='ger_acoes'] button.btn-danger {color: #212529; background-color: #f1bac0; border-color: #fff}
 #table_adicionar_operacoes tbody td[name='resultado'] {width: 6%}
 #table_adicionar_operacoes tbody td[name='cenario'] {width: 6%}
 #table_adicionar_operacoes tbody td[name='observacoes'] {width: 10%}
-#table_adicionar_operacoes tbody td[name='erro'] {width: 4%}
+#table_adicionar_operacoes tbody td[name='erro'] {width: 3%}
+#adicionar_operacoes__extraDados table tbody td {vertical-align: middle; font-size: 12px}
+#adicionar_operacoes__extraDados table tbody td[name='ref'] {font-weight: 600; text-align: center}
+#adicionar_operacoes__extraDados table tbody td[name='nome'] {font-size: 11px; font-weight: 500}
 /*------------------------------------ Lista Ops -------------------------------------*/
 #lista_ops {width: 850px}
 #lista_ops__search .form-label {font-size: 11px}

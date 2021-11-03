@@ -838,10 +838,10 @@
 			</div>
 			<div class="offcanvas offcanvas-end" id="adicionar_operacoes_offcanvas">
 				<div class="offcanvas-body">
-					<div class="container-fluid">
+					<div class="container-fluid p-0">
 						<div class="row"><div class="col p-0"><div id="adicionar_operacoes_offcanvas_toasts"></div></div></div>
 						<div class="row">
-							<div class="col p-0">
+							<div class="col">
 								<div class="card rounded-3 shadow-sm">
 									<div class="card-body p-2">
 										<div class="container-fluid d-flex justify-content-end px-0">
@@ -881,33 +881,33 @@
 							</div>
 						</div>
 						<div class="row mt-3">
-							<div class="col p-0">
+							<div class="col-4">
 								<button class="btn btn-sm btn-primary w-100" type="button" id="adicionar_operacoes_offcanvas__new_bloco"><i class="fas fa-plus me-2" aria-hidden="true"></i>Nova Operação</button>
+							</div>
+							<div class="col-4">
+								<button class="btn btn-sm btn-success w-100" type="button" id="adicionar_operacoes_offcanvas__enviar"><i class="fas fa-paper-plane me-2" aria-hidden="true"></i>Enviar</button>
+							</div>
+							<div class="col-4">
+								<button class="btn btn-sm btn-outline-danger w-100" type="button" id="adicionar_operacoes_offcanvas__erase_all"><i class="fas fa-trash-alt me-2" aria-hidden="true"></i>Limpa</button>
 							</div>
 						</div>
 						<div class="row mt-3">
-							<div class="col p-0">
-								<div class="card rounded-3 shadow-sm">
+							<div class="col-8">
+								<div class="card rounded-3 shadow-sm overflow-auto">
 									<div class="card-body">
-										<table id="table_adicionar_operacoes" class="table w-100">
-											<thead>
-												<tr>
-													<th>#</th>
-													<th>Data</th>
-													<th>Ativo</th>
-													<th>R:R</th>
-													<th>Op</th>
-													<th>Barra</th>
-													<th>Vol</th>
-													<th>Cts</th>
-													<th>Resultado</th>
-													<th>Cenário</th>
-													<th>Observações</th>
-													<th>Erro</th>
-												</tr>
-											</thead>
+										<table id="table_adicionar_operacoes" class="table table-sm m-0 w-100">
+											<thead></thead>
 											<tbody></tbody>
 										</table>
+									</div>
+								</div>
+							</div>
+							<div class="col-4">
+								<div class="card rounded-3 shadow-sm">
+									<div class="card-body">
+										<div id="adicionar_operacoes__extraDados">
+											<div class="container-fluid p-4 text-center text-muted fw-bold"><i class="fas fa-cookie-bite me-2" aria-hidden="true"></i>Nada a mostrar</div>
+										</div>
 									</div>
 								</div>
 							</div>

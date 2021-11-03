@@ -580,7 +580,7 @@ let Renda_variavel = (function(){
 							erro: ((dataMap.indexOf('Erro') !== -1) ? obj[line][dataMap.indexOf('Erro')] : ''),
 							data: obj[line][dataMap.indexOf('Data')],
 							hora: obj[line][dataMap.indexOf('Hora')],
-							resultado: ((dataMap.indexOf('Result') !== -1) ? (obj[line][dataMap.indexOf('Result')].replace(/\.+/g, '')).replace(/\,+/g, '.') : ''),
+							resultado: ((dataMap.indexOf('Resultado') !== -1) ? (obj[line][dataMap.indexOf('Resultado')].replace(/\.+/g, '')).replace(/\,+/g, '.') : ''),
 						});
 					}
 				}
@@ -647,6 +647,11 @@ let Renda_variavel = (function(){
 			return newData;
 		}
 	}
+	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------ Section Operações Adicionar ---------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	//Informa qual tipo de bloco deve construir seguindo o inicial: (Com ações do gerenciamento) | (Sem ações do gerenciamento)
+	let _new_bloco__type__com_acoes = null;
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Dashboard Ops ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -2228,6 +2233,15 @@ let Renda_variavel = (function(){
 	/*------------------------ Section Operações Adicionar ---------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
+		Reseta a table 'table_adicionar_operacoes'.
+	*/
+	function resetAdicionarOperacaoTable(){
+		let table = $(document.getElementById('table_adicionar_operacoes'));
+		table.find('thead').empty();
+		table.find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6" empty><td class="border-0 p-4"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
+		_new_bloco__type__com_acoes = null;
+	}
+	/*
 		Constroi o offcanvas de adicionar operações.
 	*/
 	function buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = false, show = false){
@@ -2259,22 +2273,64 @@ let Renda_variavel = (function(){
 			});
 		}
 		if (forceRebuild)
-			$(document.getElementById('table_adicionar_operacoes')).find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6" empty><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
+			resetAdicionarOperacaoTable();
 		if (show)
 			$(document.getElementById('adicionar_operacoes_offcanvas')).offcanvas('show');
 	}
 	/*
 		Verifica para sempre manter o numero de linhas correto no TD de bloco, após uma remoção de TR.
 	*/
-	function fixTDBlocos__Table(bloco){
-		let trs = $(document.getElementById('table_adicionar_operacoes')).find('tbody').find(`tr[bloco="${bloco}"]`);
-		if (trs.length){
-			let td_bloco = trs.first().find('td[name="bloco"]');
-			if (td_bloco.length)
-				td_bloco.attr('rowspan', trs.length);
-			else
-				trs.first().prepend(`<td rowspan="${trs.length}" name="bloco" class="fw-bold text-center">${bloco}</td>`);
+	function fixTDBlocos__Table(bloco = null){
+		let blocos_to_fix = [],
+			extraData_erased = false;
+		if (bloco === null){
+			$(document.getElementById('table_adicionar_operacoes')).find('tbody').find(`tr[bloco]`).each(function (){
+				if (!blocos_to_fix.includes(this.getAttribute('bloco')))
+					blocos_to_fix.push(this.getAttribute('bloco'));
+			});
 		}
+		else
+			blocos_to_fix.push(bloco);
+		for (let bl in blocos_to_fix){
+			let trs = $(document.getElementById('table_adicionar_operacoes')).find('tbody').find(`tr[bloco="${blocos_to_fix[bl]}"]`);
+			if (trs.length){
+				let td_bloco = trs.first().find('td[name="bloco"]');
+				if (td_bloco.length)
+					td_bloco.attr('rowspan', trs.length);
+				else
+					trs.first().prepend(`<td rowspan="${trs.length}" name="bloco" class="fw-bold text-center">${blocos_to_fix[bl]}</td>`);
+			}
+			else if (!extraData_erased){
+				let default_cenario = $(document.getElementById('adicionar_operacoes_offcanvas__form_default')).find('input[name="cenario"]').val();
+				if (default_cenario === '')
+					buildAdicionarOperacoes__ExtraDados(null, -1);
+				extraData_erased = true;
+			}
+		}
+	}
+	/*
+		Constroi o setor de Extra Dados, com as informações de Observações do cenário escolhido em 'adicionar_operacoes__extraDados'.
+	*/
+	function buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario){
+		let html = ``;
+		if (id_cenario !== -1){
+			html += `<table class="table table-sm table-borderless m-0">`+
+					`<thead><tr>`+
+					`<th colspan="2" class="pb-3">Observações</th>`+
+					`</tr></thead><tbody>`;
+			for (let o in _lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes']){
+				if (_lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes'][o].inativo == 0){
+					html += `<tr>`+
+							`<td name="ref">${_lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes'][o].ref}</td>`+
+							`<td name="nome">${_lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes'][o].nome}</td>`+
+							`</tr>`;
+				}
+			}
+			html += `</tbody></table>`;
+		}
+		if (html === ``)
+			html = `<div class="container-fluid p-4 text-center text-muted fw-bold"><i class="fas fa-cookie-bite me-2" aria-hidden="true"></i>Nada a mostrar</div>`;
+		$(document.getElementById('adicionar_operacoes__extraDados')).empty().append(html);
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Dashboard Ops ---------------------------------*/
@@ -3348,18 +3404,24 @@ let Renda_variavel = (function(){
 			ativo_index = -1,
 			default_cts = form.find('input[name="cts"]').val(),
 			default_cenario = form.find('input[name="cenario"]').val(),
+			id_cenario = -1,
+			id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
 			gerenciamentos_a_criar = [],
 			default_gerenciamentos = form.find('select[name="gerenciamento"]').val(),
 			ult_seq = (parseInt(tbody.find('tr').last().attr('sequencia')) || 0) + 1,
 			ult_bloco = tbody.find('td[name="bloco"]').length + 1,
-			html = ``;
+			html_body = ``,
+			html_head = ``;
 		if (!default_gerenciamentos.length)
 			return true;
-		for (let g in _lista__gerenciamentos.gerenciamentos){
-			if (default_gerenciamentos.includes(_lista__gerenciamentos.gerenciamentos[g]['id'])){
+		//Seta o tipo de bloco a criar
+		if (_new_bloco__type__com_acoes === null)
+			_new_bloco__type__com_acoes = default_data === ''; 
+		for (let g in _lista__gerenciamentos['gerenciamentos']){
+			if (default_gerenciamentos.includes(_lista__gerenciamentos['gerenciamentos'][g]['id'])){
 				gerenciamentos_a_criar.push({
-					nome: _lista__gerenciamentos.gerenciamentos[g]['nome'],
-					acoes: _lista__gerenciamentos.gerenciamentos[g]['acoes']
+					nome: _lista__gerenciamentos['gerenciamentos'][g]['nome'],
+					acoes: _lista__gerenciamentos['gerenciamentos'][g]['acoes']
 				});
 			}
 		}
@@ -3368,17 +3430,44 @@ let Renda_variavel = (function(){
 			if (default_ativo.localeCompare(_lista__ativos['ativos'][a]['nome'], undefined, {sensitivity: 'base'}) === 0)
 				ativo_index = a;
 		}
-		for (let q=0; q<5; q++){
+		//Verifica se o cenario está cadastrado
+		for (let cn in _lista__cenarios['cenarios'][id_arcabouco]){
+			if (default_cenario.localeCompare(_lista__cenarios['cenarios'][id_arcabouco][cn]['nome'], undefined, {sensitivity: 'base'}) === 0){
+				id_cenario = cn;
+				default_cenario = _lista__cenarios['cenarios'][id_arcabouco][cn]['nome'];
+			}
+		}
+		//Tabela não foi iniciada ainda
+		if (ult_bloco === 1){
+			html_head += `<tr>`+
+						`<th>#</th>`+
+						`<th>Data</th>`+
+						`<th>Ativo</th>`+
+						`<th>Gerenc.</th>`+
+						`<th>Op</th>`+
+						`<th>Barra</th>`+
+						`<th>Vol</th>`+
+						`<th>Cts</th>`+
+						((_new_bloco__type__com_acoes) ? `<th>Res. Ações</th>` : ``)+
+						`<th>Resultado</th>`+
+						`<th>Cenário</th>`+
+						`<th>Observações</th>`+
+						`<th>Erro</th>`+
+						`</tr>`;
+		}
+		for (let q=0; q<3; q++){
 			for (let i=0; i<gerenciamentos_a_criar.length; i++){
-				html += `<tr sequencia="${ult_seq++}" bloco="${ult_bloco}">`+
+				let acoes = ((_new_bloco__type__com_acoes) ? gerenciamentos_a_criar[i]['acoes'].reduce((p, c) => p + ((c < 0) ? `<button type="button" class="btn btn-sm btn-danger flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>` : `<button type="button" class="btn btn-sm btn-success flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>`), '') : '');
+				html_body += `<tr sequencia="${ult_seq++}" bloco="${ult_bloco}">`+
 						((i === 0) ? `<td rowspan="${gerenciamentos_a_criar.length}" name="bloco" class="fw-bold text-center">${ult_bloco}</td>` : ``)+
 						`<td name="data"><input type="text" name="data" class="form-control form-control-sm text-center" value="${default_data}" onclick="this.select()" ${((default_data !== '') ? 'disabled' : '')}></td>`+
-						`<td name="ativo"><input type="text" name="ativo" class="form-control form-control-sm text-center" value="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].nome : '')}" pts_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].pts_tick : '')}" valor_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].valor_tick : '')}" onclick="this.select()" ${((ativo_index !== -1) ? 'disabled' : '')}></td>`+
-						((gerenciamentos_a_criar[i].e != '' && gerenciamentos_a_criar[i].e != 0) ? `<td name="gerenciamento"><div class="input-group"><input type="text" name="gerenciamento" class="form-control form-control-sm text-center" value="${gerenciamentos_a_criar[i].nome}" risco="${gerenciamentos_a_criar[i].risco}" retorno="${gerenciamentos_a_criar[i].retorno}" disabled><button class="btn btn-secondary" type="button" name="escalar" e="${gerenciamentos_a_criar[i].e}" escalou="0"><i class="fas fa-angle-double-up"></i></button></div></td>` : `<td name="gerenciamento"><input type="text" name="gerenciamento" class="form-control form-control-sm text-center" value="${gerenciamentos_a_criar[i].nome}" risco="${gerenciamentos_a_criar[i].risco}" retorno="${gerenciamentos_a_criar[i].retorno}" disabled></td>`)+
+						`<td name="ativo"><input type="text" name="ativo" class="form-control form-control-sm text-center" value="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].nome : '')}" pts_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].pts_tick : '')}" valor_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].valor_tick : '')}" custo="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].custo : '')}" onclick="this.select()" ${((ativo_index !== -1) ? 'disabled' : '')}></td>`+
+						`<td name="gerenciamento"><input type="text" name="gerenciamento" class="form-control form-control-sm text-center" value="${gerenciamentos_a_criar[i].nome}" disabled></td>`+
 						`<td name="op"><input type="text" name="op" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="barra"><input type="text" name="barra" hora="" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm text-center" onclick="this.select()" value="${default_cts}" ${((default_cts !== '') ? 'disabled' : '')}></td>`+
+						((_new_bloco__type__com_acoes) ? `<td name="ger_acoes"><div class="input-group d-flex">${acoes}</div></td>` : ``)+
 						`<td name="resultado"><input type="text" name="resultado" class="form-control form-control-sm text-center"></td>`+
 						`<td name="cenario"><input type="text" name="cenario" class="form-control form-control-sm text-center" onclick="this.select()" value="${default_cenario}" ${((default_cenario !== '') ? 'disabled' : '')}></td>`+
 						`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm text-center"></td>`+
@@ -3387,8 +3476,25 @@ let Renda_variavel = (function(){
 			}
 			ult_bloco++;
 		}
-		tbody.find('tr[empty]').remove();
-		tbody.append(html);
+		if (html_head !== '')
+			$(document.getElementById('table_adicionar_operacoes')).find('thead').append(html_head);
+		tbody.find('tr[empty]').remove().end().append(html_body).promise().then(function (){
+			//Para manter a table_adicionar_operacoes dentro da altura da Viewport
+			let table_size = window.innerHeight - 160;
+			tbody.parent().parent().parent().css('height', `${table_size}px`);
+		});
+		if (id_cenario !== -1)
+			buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario);
+	});
+	/*
+		Ao focar na data, se o campo não estiver ja preenchido, copia do de cima em 'table_adicionar_operacoes'.
+	*/
+	$(document.getElementById('table_adicionar_operacoes')).on('focus', 'input[name="data"]', function (){
+		if (this.value === ''){
+			let tr = $(this).parentsUntil('tbody').last(),
+				tr_ant__data = tr.prev().find('input[name="data"]').val() || '';
+			tr.parent().find(`tr[bloco="${tr.attr('bloco')}"] input[name="data"]`).removeClass('border-danger').val(tr_ant__data);
+		}
 	});
 	/*
 		Processa alterações nos inputs em 'table_adicionar_operacoes'.
@@ -3396,10 +3502,9 @@ let Renda_variavel = (function(){
 	$(document.getElementById('table_adicionar_operacoes')).on('change', 'input[name]', function (){
 		if (this.hasAttribute('disabled'))
 			return true;
-		let inputs_validate = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'entrada', 'men', 'mep', 'saida', 'cenario', 'erro'],
-			inputs_copy = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'entrada', 'cenario', 'observacoes', 'erro'],
-			inputs_autofill__stop_alvo = ['ativo', 'op', 'vol', 'entrada'],
-			inputs_check_riscoMax = ['ativo', 'op', 'vol', 'entrada', 'cts'],
+		let inputs_validate = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'resultado', 'cenario', 'erro'],
+			inputs_copy = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'cenario', 'observacoes', 'erro'],
+			inputs_check_riscoMax = ['ativo', 'vol', 'cts'],
 			tr = $(this).parentsUntil('tbody').last(),
 			sequencia = tr.attr('sequencia'),
 			bloco = tr.attr('bloco');
@@ -3417,11 +3522,13 @@ let Renda_variavel = (function(){
 				}
 				if (ativo_index !== -1){
 					this.value = _lista__ativos['ativos'][ativo_index].nome;
+					this.setAttribute('custo', _lista__ativos['ativos'][ativo_index].custo);
 					this.setAttribute('pts_tick', _lista__ativos['ativos'][ativo_index].pts_tick);
 					this.setAttribute('valor_tick', _lista__ativos['ativos'][ativo_index].valor_tick);
 				}
 				else{
 					this.value = '';
+					this.setAttribute('custo', '');
 					this.setAttribute('pts_tick', '');
 					this.setAttribute('valor_tick', '');
 				}
@@ -3441,124 +3548,217 @@ let Renda_variavel = (function(){
 					this.setAttribute('hora', hora);
 				}
 			}
-			//Valida a Vol, Cts, Entrada, MEN, MEP e Saida
-			if ((this.name === 'vol' || this.name === 'cts' || this.name === 'entrada' || this.name === 'men' || this.name === 'mep' || this.name === 'saida') && (isNaN(this.value) || this.value == 0))
+			//Valida a Vol e Cts
+			if ((this.name === 'vol' || this.name === 'cts') && (isNaN(this.value) || this.value == 0))
 				this.value = '';
+			//Valida o Resultado
+			if (this.name === 'resultado'){
+				if ((isNaN(this.value) || this.value == 0))
+					this.value = '';
+				else
+					$(this).removeClass('border-danger');
+			}
+			//Trata o cenário, para mostrar suas observações ao lado
+			if (this.name === 'cenario'){
+				let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+					id_cenario = -1;
+				for (let cn in _lista__cenarios['cenarios'][id_arcabouco]){
+					if (this.value.localeCompare(_lista__cenarios['cenarios'][id_arcabouco][cn]['nome'], undefined, {sensitivity: 'base'}) === 0)
+						id_cenario = cn;
+				}
+				if (id_cenario !== -1)
+					this.value = _lista__cenarios['cenarios'][id_arcabouco][id_cenario].nome;
+				buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario);
+			}
 			//Valida o Erro
 			if (this.name === 'erro' && (isNaN(this.value) || this.value != 1))
 				this.value = '';
 		}
 		//Copia o valor para outras operações do mesmo bloco
 		if (inputs_copy.includes(this.name)){
-			//Copia o pts_tick e valor_tick
+			//Copia o custo, pts_tick e valor_tick
 			if (this.name === 'ativo'){
-				let pts_tick = tr.find('input[name="ativo"]').attr('pts_tick'),
+				let custo = tr.find('input[name="ativo"]').attr('custo'),
+					pts_tick = tr.find('input[name="ativo"]').attr('pts_tick'),
 					valor_tick = tr.find('input[name="ativo"]').attr('valor_tick');
-				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).val(this.value).attr('pts_tick', pts_tick).attr('valor_tick', valor_tick);
+				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).removeClass('border-danger').val(this.value).attr('custo', custo).attr('pts_tick', pts_tick).attr('valor_tick', valor_tick);
 			}
 			//Copia a hora
 			else if (this.name === 'barra'){
 				let hora = tr.find('input[name="barra"]').attr('hora');
-				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).val(this.value).attr('hora', hora);
+				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).removeClass('border-danger').val(this.value).attr('hora', hora);
 			}
 			else
-				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).val(this.value);
-		}
-		//Calcula tambem o Stop e Alvo
-		if (inputs_autofill__stop_alvo.includes(this.name)){
-			tr.parent().find(`tr[bloco="${bloco}"]`).each(function (i, e_tr){
-				e_tr = $(e_tr);
-				let pts_tick = e_tr.find('input[name="ativo"]').attr('pts_tick'),
-					risco = e_tr.find('input[name="gerenciamento"]').attr('risco'),
-					retorno = e_tr.find('input[name="gerenciamento"]').attr('retorno'),
-					op = e_tr.find('input[name="op"]').val(),
-					vol = e_tr.find('input[name="vol"]').val(),
-					entrada = e_tr.find('input[name="entrada"]').val(),
-					stop = '',
-					alvo = '';
-				if (pts_tick !== '' && risco !== '' && retorno !== '' && op !== '' && vol !== '' && entrada !== ''){
-					if (op === 'c'){
-						stop = parseFloat(entrada) - (parseFloat(pts_tick) * parseInt(vol) * parseInt(risco));
-						alvo = parseFloat(entrada) + (parseFloat(pts_tick) * parseInt(vol) * parseInt(retorno));
-					}
-					else if (op === 'v'){
-						stop = parseFloat(entrada) + (parseFloat(pts_tick) * parseInt(vol) * parseInt(risco));
-						alvo = parseFloat(entrada) - (parseFloat(pts_tick) * parseInt(vol) * parseInt(retorno));
-					}
-				}
-				e_tr.find('input[name="stop"]').val(stop);
-				e_tr.find('input[name="alvo"]').val(alvo);
-			});
+				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).removeClass('border-danger').val(this.value);
 		}
 		//Calcula Risco Máx com base nos dados para ver se a operação pode existir
 		if (inputs_check_riscoMax.includes(this.name)){
 			let simulations = _lista__instancias_arcabouco.getSelected('simulations'),
 				R = ('R' in simulations) ? parseFloat(simulations.R) : null;
+			//Para cada gerenciamento do bloco
 			tr.parent().find(`tr[bloco="${bloco}"]`).each(function (i, e_tr){
 				e_tr = $(e_tr);
 				let valor_tick = e_tr.find('input[name="ativo"]').attr('valor_tick'),
-					pts_tick = e_tr.find('input[name="ativo"]').attr('pts_tick'),
-					op = e_tr.find('input[name="op"]').val(),
-					entrada = e_tr.find('input[name="entrada"]').val(),
-					stop = e_tr.find('input[name="stop"]').val(),
+					gerenciamento = e_tr.find('input[name="gerenciamento"]').attr('value'),
+					gerenciamento_index = -1,
+					vol = e_tr.find('input[name="vol"]').val(),
 					cts = e_tr.find('input[name="cts"]').val();
-				if (R !== null && valor_tick !== '' && pts_tick !== '' && op !== '' && entrada !== '' && stop !== '' && cts !== ''){
-					let financeiro = (op === 'c') ? parseFloat(entrada) - parseFloat(stop) : parseFloat(stop) - parseFloat(entrada);
-					if (((financeiro / pts_tick) * parseFloat(valor_tick) * parseInt(cts)) <= R){
-						e_tr.removeClass('risk_block');
-						if (i === 0)
-							e_tr.find('input[name="men"],input[name="mep"],input[name="saida"]').prop('disabled', false);
-						else
-							e_tr.removeClass('hide');
+				if (R !== null && valor_tick !== '' && gerenciamento !== '' && vol !== '' && cts !== ''){
+					for (let g in _lista__gerenciamentos['gerenciamentos']){
+						if (gerenciamento.localeCompare(_lista__gerenciamentos['gerenciamentos'][g]['nome'], undefined, {sensitivity: 'base'}) === 0)
+							gerenciamento_index = g;
 					}
-					else{
-						e_tr.addClass('risk_block');
-						if (i === 0)
-							e_tr.find('input[name="men"],input[name="mep"],input[name="saida"]').prop('disabled', true);
-						else
-							e_tr.addClass('hide');
+					if (gerenciamento_index !== -1){
+						//Verifica se algum Stop do gerenciamento passa do R máximo
+						for (let r in _lista__gerenciamentos['gerenciamentos'][gerenciamento_index]['acoes']){
+							let acao_value = parseFloat(_lista__gerenciamentos['gerenciamentos'][gerenciamento_index]['acoes'][r]);
+							if (acao_value < 0){
+								let stop = parseFloat(vol) * parseFloat(valor_tick) * parseInt(cts) * acao_value;
+								if (Math.abs(stop) > R){
+									e_tr.addClass('risk_block');
+									if (i === 0)
+										e_tr.find('input[name="resultado"]').prop('disabled', true);
+									else
+										e_tr.addClass('hide');
+									return true;
+								}
+							}
+						}
 					}
 				}
-				else{
-					e_tr.removeClass('risk_block');
-					if (i === 0)
-						e_tr.find('input[name="men"],input[name="mep"],input[name="saida"]').prop('disabled', false);
-					else
-						e_tr.removeClass('hide');
-				}
+				//Todos os stops deste gerenciamento estao dentro do R
+				e_tr.removeClass('risk_block');
+				if (i === 0)
+					e_tr.find('input[name="resultado"]').prop('disabled', false);
+				else
+					e_tr.removeClass('hide');
 			});
 		}
 	});
 	/*
-		Processa escalada da operação em 'table_adicionar_operacoes'.
+		Processa o preenchimento automatico do resultado com base na ação executada do gerenciamento.
 	*/
-	$(document.getElementById('table_adicionar_operacoes')).on('click', 'td[name="gerenciamento"] button[name="escalar"]', function (){
-		let escalou = parseInt(this.getAttribute('escalou')) + 1,
-			escalar_max = parseInt(this.getAttribute('e'));
-		//Ve se ainda da pra escalar
-		if (escalou <= escalar_max){
-			let tr = $(this).parentsUntil('tbody').last(),
-				valor_tick = tr.find('input[name="ativo"]').attr('valor_tick'),
-				pts_tick = tr.find('input[name="ativo"]').attr('pts_tick'),
-				op = tr.find('input[name="op"]').val(),
-				entrada = tr.find('input[name="entrada"]').val(),
-				stop = tr.find('input[name="stop"]').val(),
-				cts = tr.find('input[name="cts"]').val();
-		}
+	$(document.getElementById('table_adicionar_operacoes')).on('click', 'tbody button[value]', function (){
+		let tr = $(this).parentsUntil('tbody').last(),
+			valor_tick = tr.find('input[name="ativo"]').attr('valor_tick'),
+			vol = tr.find('input[name="vol"]').val(),
+			cts = tr.find('input[name="cts"]').val(),
+			resultado = '';
+		if (valor_tick !== '' && vol !== '' && cts !== '')
+			resultado = parseFloat(vol) * parseFloat(valor_tick) * parseInt(cts) * parseFloat(this.getAttribute('value'));
+		tr.find('input[name="resultado"]').removeClass('border-danger').val(resultado);
 	});
 	/*
 		Processa a remoção de linhas ou blocos em 'table_adicionar_operacoes'
 	*/
-	$(document.getElementById('table_adicionar_operacoes')).on('dblclick', 'tbody tr[sequencia]', function (e){
+	$(document.getElementById('table_adicionar_operacoes')).on('click', 'tbody tr[sequencia]', function (e){
 		if (e.ctrlKey && !Global.hasClass(this, 'risk_block')){
-			let bloco = this.getAttribute('bloco');
+			let bloco = this.getAttribute('bloco'),
+				table = $(this).parent().parent();
 			//Remove o bloco todo
 			if (e.target.nodeName === 'TD' && e.target.hasAttribute('name') && e.target.getAttribute('name') === 'bloco')
 				$(this).parent().find(`tr[bloco="${bloco}"]`).remove();
 			else
 				$(this).remove();
+			if (table.find('tbody tr').length === 0)
+				resetAdicionarOperacaoTable();
 			fixTDBlocos__Table(bloco);
 		}
+	});
+	/*
+		Limpa as operações removendo tudo do offcanvas.
+	*/
+	$(document.getElementById('adicionar_operacoes_offcanvas__erase_all')).on('dblclick', function (){
+		resetAdicionarOperacaoTable();
+	});
+	/*
+		Envia as operações para serem adicionadas ao arcabouço em 'adicionar_operacoes_offcanvas'.
+	*/
+	$(document.getElementById('adicionar_operacoes_offcanvas__enviar')).on('click', function (){
+		let tbody = $(document.getElementById('table_adicionar_operacoes')).find('tbody'),
+			insert_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []},
+			error = false;
+		//Exclui as linhas com 'risk_block'
+		tbody.find('tr.risk_block').remove();
+		if (tbody.find('input[name].border-danger').length)
+			return true;
+		tbody.find('tr[sequencia]').each(function (i, tr){
+			tr = $(tr);
+			let sequencia = tr.attr('sequencia'),
+				data = tr.find('input[name="data"]'),
+				ativo = tr.find('input[name="ativo"]'),
+				gerenciamento = tr.find('input[name="gerenciamento"]'),
+				op = tr.find('input[name="op"]'),
+				barra = tr.find('input[name="barra"]'),
+				vol = tr.find('input[name="vol"]'),
+				cts = tr.find('input[name="cts"]'),
+				resultado = tr.find('input[name="resultado"]'),
+				cenario = tr.find('input[name="cenario"]'),
+				observacoes = tr.find('input[name="observacoes"]'),
+				erro = tr.find('input[name="erro"]');
+			//Se for linha em branco remove
+			if ((data.val() === '' || data.is(':disabled')) && (ativo.val() === '' || ativo.is(':disabled')) && (gerenciamento.val() === '' || gerenciamento.is(':disabled')) && (op.val() === '' || op.is(':disabled')) && (vol.val() === '' || vol.is(':disabled')) && (cts.val() === '' || cts.is(':disabled')) && (resultado.val() === '' || resultado.is(':disabled'))){
+				tr.remove();
+				return true;
+			}
+			if (data.val() === ''){
+				data.addClass('border-danger');
+				error = true;
+			}
+			if (ativo.val() === ''){
+				ativo.addClass('border-danger');
+				error = true;
+			}
+			if (gerenciamento.val() === ''){
+				gerenciamento.addClass('border-danger');
+				error = true;
+			}
+			if (op.val() === ''){
+				op.addClass('border-danger');
+				error = true;
+			}
+			if (vol.val() === ''){
+				vol.addClass('border-danger');
+				error = true;
+			}
+			if (cts.val() === ''){
+				cts.addClass('border-danger');
+				error = true;
+			}
+			if (resultado.val() === ''){
+				resultado.addClass('border-danger');
+				error = true;
+			}
+			if (!error){
+				insert_data['operacoes'].push({
+					sequencia: sequencia,
+					data: Global.convertDate(data.val()),
+					ativo: ativo.val(),
+					gerenciamento: gerenciamento.val(),
+					op: op.val(),
+					hora: barra.attr('hora'),
+					vol: vol.val(),
+					cts: cts.val(),
+					resultado: resultado.val(),
+					cenario: cenario.val(),
+					premissas: '',
+					observacoes: observacoes.val(),
+					erro: erro.val(),
+					ativo_custo: ativo.attr('custo'),
+					ativo_valor_tick: ativo.attr('valor_tick'),
+					ativo_pts_tick: ativo.attr('pts_tick')
+				});
+			}
+		});
+		if (!error){
+			if (insert_data['operacoes'].length){
+				console.log(insert_data);
+			}
+			else
+				resetAdicionarOperacaoTable();
+		}
+		else
+			fixTDBlocos__Table();
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Dashboard Ops ----------------------------------*/
@@ -3575,6 +3775,8 @@ let Renda_variavel = (function(){
 			if (_lista__instancias_arcabouco.getSelected('instancia') !== this.getAttribute('instancia')){
 				_lista__instancias_arcabouco.setSelected(this.getAttribute('instancia'));
 				_list_ops__needRebuild = true;
+				//Inicia o offcanvas de Adicionar Operações
+				buildAdicionarOperacoesOffcanvas(firstBuild = true, forceRebuild = true, show = false);
 				if (!(_lista__instancias_arcabouco.getSelected('id') in _lista__operacoes.operacoes)){
 					Global.connect({
 						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: _lista__instancias_arcabouco.getSelected('id')}},
