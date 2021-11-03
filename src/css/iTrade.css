@@ -179,16 +179,17 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 	}
 }
 #arcaboucos_modal_form .form-label, #arcaboucos_modal__search .form-label {font-size: 12px}
-#table_arcaboucos {font-size: .85em}
+#arcaboucos_modal_form .ck-editor__editable {min-height: 350px}
+#table_arcaboucos {font-size: .80em}
 #table_arcaboucos tbody td{vertical-align: middle}
 #table_arcaboucos tbody td[name='situacao'] {width: 2%; text-align: center}
 #table_arcaboucos tbody td[name='situacao'] i {font-size: 8px; margin-left: 5px}
 #table_arcaboucos tbody td[name='situacao'] i.fechado {color: #198754}
 #table_arcaboucos tbody td[name='situacao'] i.pendente {color: #0d6efd}
 #table_arcaboucos tbody td[name='situacao'] i.fazendo {color: #0d6efd; border-radius: 50%; animation: pulse 1.5s infinite}
-#table_arcaboucos tbody td[name='tipo'] {width: 6%; text-align: center}
-#table_arcaboucos tbody td[name='data_criacao'] {width: 10%; font-size: 11px}
-#table_arcaboucos tbody td[name='data_atualizacao'] {width: 12%; font-size: 11px}
+#table_arcaboucos tbody td[name='tipo'] {width: 5%; text-align: center}
+#table_arcaboucos tbody td[name='data_criacao'] {width: 11%; font-size: 11px}
+#table_arcaboucos tbody td[name='data_atualizacao'] {width: 13%; font-size: 11px}
 #table_arcaboucos tbody td[name='qtd_ops'] {width: 8%; font-size: 12px}
 #table_arcaboucos tbody td[name='usuarios'] {width: 20%}
 #table_arcaboucos tbody td[name='usuarios'] span.badge {vertical-align: middle}

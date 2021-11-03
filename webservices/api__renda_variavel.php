@@ -39,7 +39,8 @@
 					'situacao' => (int) $row['situacao'],
 					'tipo' => (int) $row['tipo'],
 					'usuarios' => $usuarios_arcabouco,
-					'qtd_ops' => !is_null($row['qtd_ops']) ? (int) $row['qtd_ops'] : 0
+					'qtd_ops' => !is_null($row['qtd_ops']) ? (int) $row['qtd_ops'] : 0,
+					'observacao' => $row['observacao']
 				];
 			}
 			$result_raw->free();

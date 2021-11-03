@@ -374,9 +374,16 @@ let Renda_variavel = (function(){
 			{name: 'remover', orderable: false}
 		],
 		lengthChange: false,
-		order: [[ 2, 'desc' ]],
-		pageLength: 25,
+		order: [[ 4, 'desc' ]],
+		pageLength: 10,
 		pagingType: 'input'
+	}
+	//Editor da Observação do arcabouço (Plugin CKEditor5)
+	let _arcabouco__ckeditor = null,
+		_arcabouco__ckeditor__changed = false;
+	let _arcabouco__ckeditor_config = {
+		language: 'pt-br',
+		licenseKey: ''
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------------- Lista Ops ------------------------------------*/
@@ -1445,9 +1452,10 @@ let Renda_variavel = (function(){
 		let form = $(document.getElementById('arcaboucos_modal_form'));
 		form.removeAttr('id_arcabouco');
 		form.find('input[name]').val('').removeAttr('changed');
-		form.find('textarea[name]').val('').removeAttr('changed');
 		form.find('select[name!="usuarios"]').prop('selectedIndex', 0).removeAttr('changed');
 		form.find('select[name="usuarios"]').selectpicker('deselectAll');
+		_arcabouco__ckeditor.setData('');
+		_arcabouco__ckeditor__changed = false;
 	}
 	/*
 		Constroi o modal de gerenciamento de arcabouços.
@@ -1476,6 +1484,12 @@ let Renda_variavel = (function(){
 					form.find('select[name="usuarios"]').parent().addClass('form-control');
 				});
 			});
+			ClassicEditor.create(document.getElementById('arcabouco_modal__observacao'), _arcabouco__ckeditor_config).then(editor => {
+				_arcabouco__ckeditor = editor;
+				_arcabouco__ckeditor.model.document.on('change', () => {
+					_arcabouco__ckeditor__changed = true;
+				});
+			}).catch(error => {console.error(error);});
 		}
 		if (forceRebuild)
 			buildArcaboucosTable();
@@ -2571,11 +2585,12 @@ let Renda_variavel = (function(){
 			form = $(document.getElementById('arcaboucos_modal_form'));
 		for (let u in _lista__arcaboucos.arcaboucos[id_arcabouco].usuarios)
 			usuarios_select.push(_lista__arcaboucos.arcaboucos[id_arcabouco]['usuarios'][u].usuario);
+		form.find('input[name="nome"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].nome).removeAttr('changed');
 		form.find('select[name="situacao"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].situacao).removeAttr('changed');
 		form.find('select[name="tipo"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].tipo).removeAttr('changed');
-		form.find('textarea[name="observacao"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].observacao).removeAttr('changed');
-		form.find('input[name="nome"]').val(_lista__arcaboucos.arcaboucos[id_arcabouco].nome).removeAttr('changed');
 		form.find('select[name="usuarios"]').selectpicker('val', usuarios_select);
+		_arcabouco__ckeditor.setData(_lista__arcaboucos.arcaboucos[id_arcabouco].observacao);
+		_arcabouco__ckeditor__changed = false;
 		form.attr('id_arcabouco', id_arcabouco);
 	});
 	/*
@@ -2612,11 +2627,13 @@ let Renda_variavel = (function(){
 		let form = $(document.getElementById('arcaboucos_modal_form')),
 			id_arcabouco = form.attr('id_arcabouco'),
 			data = {};
-		form.find('input[name][changed],select[name!="usuarios"][changed],select[name="usuarios"]').each(function (){
-			data[this.name] = $(this).val();
-		});
 		//Se for edição
 		if (id_arcabouco){
+			form.find('input[name][changed],select[name!="usuarios"][changed],select[name="usuarios"]').each(function (){
+				data[this.name] = $(this).val();
+			});
+			if (_arcabouco__ckeditor__changed)
+				data['observacao'] = _arcabouco__ckeditor.getData();
 			if (!Global.isObjectEmpty(data)){
 				data['id'] = id_arcabouco;
 				Global.connect({
@@ -2636,6 +2653,10 @@ let Renda_variavel = (function(){
 		}
 		//Se for adição
 		else{
+			form.find('input[name],select[name]').each(function (){
+				data[this.name] = $(this).val();
+			});
+			data['observacao'] = _arcabouco__ckeditor.getData();
 			if (!('nome' in data) || data['nome'] === ''){
 				Global.toast.create({location: document.getElementById('arcaboucos_modal_toasts'), color: 'warning', body: 'Nome inválido.', delay: 4000});
 				return;
@@ -3409,7 +3430,7 @@ let Renda_variavel = (function(){
 			gerenciamentos_a_criar = [],
 			default_gerenciamentos = form.find('select[name="gerenciamento"]').val(),
 			ult_seq = (parseInt(tbody.find('tr').last().attr('sequencia')) || 0) + 1,
-			ult_bloco = tbody.find('td[name="bloco"]').length + 1,
+			ult_bloco = (parseInt(tbody.find('tr').last().attr('bloco')) || 0) + 1,
 			html_body = ``,
 			html_head = ``;
 		if (!default_gerenciamentos.length)
@@ -3752,7 +3773,33 @@ let Renda_variavel = (function(){
 		});
 		if (!error){
 			if (insert_data['operacoes'].length){
-				console.log(insert_data);
+				Global.connect({
+					data: {module: 'renda_variavel', action: 'insert_operacoes', params: JSON.stringify(insert_data)},
+					success: function (result){
+						if (result.status){
+							_dashboard_ops__needRebuild = true;
+							_list_ops__needRebuild = true;
+							_lista__operacoes.update(result['data']['operacoes']);
+							_lista__arcaboucos.update(result['data']['arcabouco'][0]);
+							if (result.hold_ops.length === 0){
+								Global.toast.create({location: document.getElementById('adicionar_operacoes_offcanvas_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
+								resetAdicionarOperacaoTable();
+							}
+							else{
+								Global.toast.create({location: document.getElementById('adicionar_operacoes_offcanvas_toasts'), color: 'warning', body: 'Essas operações já foram adicionadas.', delay: 4000});
+								$(document.getElementById('table_adicionar_operacoes')).find('tbody tr[sequencia]').each(function (t, tr){
+									tr = $(tr);
+									let seq = tr.attr('sequencia');
+									if (!result.hold_ops.includes(seq))
+										tr.remove();
+								});
+								fixTDBlocos__Table();
+							}
+						}
+						else
+							Global.toast.create({location: document.getElementById('adicionar_operacoes_offcanvas_toasts'), color: 'danger', body: result.error, delay: 4000});
+					}
+				});
 			}
 			else
 				resetAdicionarOperacaoTable();

@@ -257,72 +257,6 @@
 					</div>
 				</div>
 			</div>
-			<!-- <div class="container-fluid" id="ativos">
-				<div class="bg-light p-5 rounded mt-3">
-					<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-						<div class="col">
-							<div class="card mb-4 rounded-3 shadow-sm">
-								<div class="card-header py-3 d-flex">
-									<button type="button" class="btn btn-sm btn-primary" id="table_ativos_adicionar"><i class="fas fa-plus"></i></button>
-									<h4 class="my-0 flex-fill">Ativos</h4>
-								</div>
-								<div class="card-body">
-									<table id="table_ativos" class="table table-hover">
-										<thead>
-											<tr>
-												<th>Nome</th>
-												<th class="text-center">Custo (Abert. + Fech.)</th>
-												<th class="text-center">Valor por Tick</th>
-												<th class="text-center">Pts por Tick</th>
-												<th></th>
-											</tr>
-										</thead>
-										<tbody></tbody>
-									</table>
-								</div>
-							</div>
-						</div>
-						<div class="col">
-							<div class="card mb-4 rounded-3 shadow-sm">
-								<div class="card-header py-3">
-									<h4 class="my-0">WIN Vencimentos</h4>
-								</div>
-								<div class="card-body">
-									<table id="table_win_series" class="table">
-										<thead>
-											<tr><th colspan="2"><input type="text" name="ano" class="form-control form-control-sm"></th></tr>
-											<tr>
-												<th>Data</th>
-												<th class="text-center">Série</th>
-											</tr>
-										</thead>
-										<tbody></tbody>
-									</table>
-								</div>
-							</div>
-						</div>
-						<div class="col">
-							<div class="card mb-4 rounded-3 shadow-sm">
-								<div class="card-header py-3">
-									<h4 class="my-0">WDO Vencimentos</h4>
-								</div>
-								<div class="card-body">
-									<table id="table_wdo_series" class="table">
-										<thead>
-											<tr><th colspan="2"><input type="text" name="ano" class="form-control form-control-sm"></th></tr>
-											<tr>
-												<th>Data</th>
-												<th class="text-center">Série</th>
-											</tr>
-										</thead>
-										<tbody></tbody>
-									</table>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div> -->
 			<footer class="footer mt-auto fixed-bottom py-2 bg-light">
 				<div class="container-fluid d-flex" id="menu_bottom">
 					<button class="btn btn-sm btn-secondary me-2" type="button" name="renda_variavel">Renda Variável</button>
@@ -378,7 +312,7 @@
 			</div>
 			<!-- MODAIS RENDA VARIAVEL -->
 			<div class="modal fade" id="arcaboucos_modal" tabindex="-1" aria-hidden="true">
-				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xxl">
 					<div class="modal-content">
 						<div class="modal-header">
 							<h5 class="modal-title">Arcabouços</h5>
@@ -388,16 +322,16 @@
 							<div class="container-fluid">
 								<div class="row"><div class="col"><div id="arcaboucos_modal_toasts"></div></div></div>
 								<div class="row">
-									<div class="col">
+									<div class="col-4">
 										<div class="card rounded-3 shadow-sm">
 											<div class="card-body">
-												<div class="container-fluid d-flex px-0">
+												<div class="container-fluid px-0">
 													<form class="row m-0 flex-fill" id="arcaboucos_modal_form">
-														<div class="col-3">
+														<div class="col-12">
 															<label class="form-label m-1 text-muted fw-bold">Nome</label>
 															<input type="text" name="nome" class="form-control form-control-sm" onclick="this.select()">
 														</div>
-														<div class="col-2">
+														<div class="col-6">
 															<label class="form-label m-1 text-muted fw-bold">Situação</label>
 															<select name="situacao" class="form-select form-select-sm">
 																<option value="2">Pendente</option>
@@ -405,22 +339,22 @@
 																<option value="1">Fechado</option>
 															</select>
 														</div>
-														<div class="col-2">
+														<div class="col-6">
 															<label class="form-label m-1 text-muted fw-bold">Tipo</label>
-															<select name="situacao" class="form-select form-select-sm">
+															<select name="tipo" class="form-select form-select-sm">
 																<option value="1">Live</option>
 																<option value="2">Replay</option>
 																<option value="3">Paper Trade</option>
 																<option value="4">Misto</option>
 															</select>
 														</div>
-														<div class="col-5">
+														<div class="col-12">
 															<label class="form-label m-1 text-muted fw-bold">Usuários com Acesso</label>
 															<select name="usuarios" multiple></select>
 														</div>
 														<div class="col-12 mt-2">
 															<label class="form-label m-1 text-muted fw-bold">Observações</label>
-															<textarea name="observacao" class="form-control form-control-sm"></textarea>
+															<textarea id="arcabouco_modal__observacao" class="form-control form-control-sm"></textarea>
 														</div>
 														<div class="col-12 mt-3">
 															<div class="row">
@@ -433,62 +367,64 @@
 											</div>
 										</div>
 									</div>
-								</div>
-								<div class="row mt-2">
-									<div class="col">
-										<div class="card rounded-3 shadow-sm">
-											<div class="card-body p-2">
-												<div class="container-fluid d-flex justify-content-end px-0">
-													<form class="row m-0 flex-fill" id="arcaboucos_modal__search">
-														<div class="col-auto">
-															<label class="form-label m-0 text-muted fw-bold">Nome</label>
-															<input type="text" name="nome" class="form-control form-control-sm" placeholder="Nome">
+									<div class="col-8">
+										<div class="row">
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body p-2">
+														<div class="container-fluid d-flex justify-content-end px-0">
+															<form class="row m-0 flex-fill" id="arcaboucos_modal__search">
+																<div class="col-auto">
+																	<label class="form-label m-0 text-muted fw-bold">Nome</label>
+																	<input type="text" name="nome" class="form-control form-control-sm" placeholder="Nome">
+																</div>
+																<div class="col-auto">
+																	<label class="form-label m-0 text-muted fw-bold">Situação</label>
+																	<select name="situacao" class="form-select form-select-sm">
+																		<option value="">Todos</option>
+																		<option value="2">Pendente</option>
+																		<option value="3">Fazendo</option>
+																		<option value="1">Fechado</option>
+																	</select>
+																</div>
+																<div class="col-auto">
+																	<label class="form-label m-0 text-muted fw-bold">Tipo</label>
+																	<select name="situacao" class="form-select form-select-sm">
+																		<option value="">Todos</option>
+																		<option value="1">Live</option>
+																		<option value="2">Replay</option>
+																		<option value="3">Paper Trade</option>
+																		<option value="4">Misto</option>
+																	</select>
+																</div>
+															</form>
 														</div>
-														<div class="col-auto">
-															<label class="form-label m-0 text-muted fw-bold">Situação</label>
-															<select name="situacao" class="form-select form-select-sm">
-																<option value="">Todos</option>
-																<option value="2">Pendente</option>
-																<option value="3">Fazendo</option>
-																<option value="1">Fechado</option>
-															</select>
-														</div>
-														<div class="col-auto">
-															<label class="form-label m-0 text-muted fw-bold">Tipo</label>
-															<select name="situacao" class="form-select form-select-sm">
-																<option value="">Todos</option>
-																<option value="1">Live</option>
-																<option value="2">Replay</option>
-																<option value="3">Paper Trade</option>
-																<option value="4">Misto</option>
-															</select>
-														</div>
-													</form>
+													</div>
 												</div>
 											</div>
 										</div>
-									</div>
-								</div>
-								<div class="row mt-2">
-									<div class="col">
-										<div class="card rounded-3 shadow-sm">
-											<div class="card-body">
-												<table class="table" id="table_arcaboucos">
-													<thead>
-														<tr>
-															<th></th>
-															<th></th>
-															<th>Nome</th>
-															<th>Criado Em</th>
-															<th>Atualizado</th>
-															<th>Trades</th>
-															<th>Usuários</th>
-															<th></th>
-															<th></th>
-														</tr>
-													</thead>
-													<tbody></tbody>
-												</table>
+										<div class="row mt-2">
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body">
+														<table class="table" id="table_arcaboucos">
+															<thead>
+																<tr>
+																	<th></th>
+																	<th></th>
+																	<th>Nome</th>
+																	<th>Criado Em</th>
+																	<th>Atualizado</th>
+																	<th>Trades</th>
+																	<th>Usuários</th>
+																	<th></th>
+																	<th></th>
+																</tr>
+															</thead>
+															<tbody></tbody>
+														</table>
+													</div>
+												</div>
 											</div>
 										</div>
 									</div>
@@ -839,7 +775,7 @@
 			<div class="offcanvas offcanvas-end" id="adicionar_operacoes_offcanvas">
 				<div class="offcanvas-body">
 					<div class="container-fluid p-0">
-						<div class="row"><div class="col p-0"><div id="adicionar_operacoes_offcanvas_toasts"></div></div></div>
+						<div class="row"><div class="col"><div id="adicionar_operacoes_offcanvas_toasts"></div></div></div>
 						<div class="row">
 							<div class="col">
 								<div class="card rounded-3 shadow-sm">
@@ -917,6 +853,7 @@
 			</div>
 			<div id="loading_div" style="display: none"><div class="loading-spinner"></div></div>
 		</body>
+		<script src="src/js/base/ckeditor.min.js"></script>
 		<script src="src/js/global.js"></script>
 		<script src="src/js/iTrade.js"></script>
 	</html>
