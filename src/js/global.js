@@ -293,7 +293,8 @@ let Global = (function(){
  				let filters = $(document.getElementById('lista_ops__search')),
  					data_filter = filters.find('input[name="data"]').val().split(' - '),
  					ativo_filter = filters.find('select[name="ativo"]').val(),
- 					cenario_filter = filters.find('select[name="cenario"]').val();
+ 					cenario_filter = filters.find('select[name="cenario"]').val(),
+ 					gerenciamento_filter = filters.find('select[name="gerenciamento"]').val();
  				//Verifica filtro de Data
  				if (data_filter.length === 2){
  					let fI = data_filter[0].split('/'),
@@ -308,8 +309,11 @@ let Global = (function(){
  				//Verifica filtro de Ativo
  				if (ativo_filter.length && !ativo_filter.includes(searchData[3]))
  					return false;
+ 				//Verifica filtro de Gerenciamento
+ 				if (gerenciamento_filter.length && !gerenciamento_filter.includes(searchData[4]))
+ 					return false;
  				//Verifica filtro de Cenario
- 				if (cenario_filter.length && !cenario_filter.includes(searchData[6]))
+ 				if (cenario_filter.length && !cenario_filter.includes(searchData[8]))
  					return false;
  				return true;
  			}

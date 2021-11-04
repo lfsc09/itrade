@@ -707,7 +707,7 @@
 					'gerenciamento' => $row['gerenciamento'],
 					'data' => $row['data'],
 					'ativo' => $row['ativo'],
-					'op' => $row['op'],
+					'op' => (int) $row['op'],
 					'vol' => (float) $row['vol'],
 					'cts' => (int) $row['cts'],
 					'hora' => $row['hora'],

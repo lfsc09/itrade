@@ -683,6 +683,10 @@
 													<label class="form-label m-0 text-muted fw-bold">Cenário</label>
 													<select name="cenario" class="form-control form-control-sm init" multiple></select>
 												</div>
+												<div class="col-auto" name="gerenciamento">
+													<label class="form-label m-0 text-muted fw-bold">Gerenciamento</label>
+													<select name="gerenciamento" class="form-control form-control-sm init" multiple></select>
+												</div>
 											</form>
 										</div>
 									</div>
@@ -707,7 +711,9 @@
 													<th>Gerenciamento</th>
 													<th class="text-center">Op.</th>
 													<th>Vol</th>
+													<th>Result.</th>
 													<th>Cenário</th>
+													<th>Obs. Ref</th>
 													<th>Erro</th>
 												</tr>
 											</thead>
