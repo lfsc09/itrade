@@ -114,7 +114,8 @@ let Renda_variavel = (function(){
 		//Lista de cores para cada instancia na lista
 		colors: {
 			class: ['--bs-blue', '--bs-red', '--bs-green', '--bs-orange', '--bs-indigo'],
-			code: ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2']
+			code: ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2'],
+			code_transparent: ['rgba(13, 110, 253, 0.1)', 'rgba(220, 53, 69, 0.2)', 'rgba(25, 135, 84, 0.2)', 'rgba(253, 126, 20, 0.2)', 'rgba(102, 16, 242, 0.2)']
 		},
 		/*
 			Inicia a lista de instancias:
@@ -192,6 +193,7 @@ let Renda_variavel = (function(){
 					nome: allData['arcaboucos'][0].nome,
 					color: this.colors.class[0],
 					chartColor: this.colors.code[0],
+					chartColor_Transparent: this.colors.code_transparent[0],
 					selected: true,
 					filters: {},
 					simulations: {}
@@ -203,7 +205,7 @@ let Renda_variavel = (function(){
 				_lista__operacoes.update(allData['operacoes']);
 				//Inicia o 'dashboard_ops__search' com os 'filters' e 'simulations'
 				_dashboard_ops__search.init();
-				//Constroi a seção (Filtros + Dashboard)
+				//Constroi o arcabouço section
 				rebuildArcaboucoSection(rebuildSearch = false);
 			}
 		},
@@ -242,6 +244,7 @@ let Renda_variavel = (function(){
 				nome: inst.nome || '----',
 				color: this.colors.class[this.instancias.length],
 				chartColor: this.colors.code[this.instancias.length],
+				chartColor_Transparent: this.colors.code_transparent[this.instancias.length],
 				selected: inst.selected || false,
 				filters: {},
 				simulations: {}
@@ -263,6 +266,8 @@ let Renda_variavel = (function(){
 						delete this.instancias[i]['filters'][key];
 				}
 			}
+			//Constroi o arcabouço section
+			rebuildArcaboucoSection(rebuildSearch = false);
 			Global.browserStorage__Sync.set('instancias', this.instancias, 'localStorage');
 		},
 		//Atualiza os 'simulations' da instancia selecionada
@@ -276,6 +281,8 @@ let Renda_variavel = (function(){
 					break;
 				}
 			}
+			//Constroi o arcabouço section
+			rebuildArcaboucoSection(rebuildSearch = false);
 			Global.browserStorage__Sync.set('instancias', this.instancias, 'localStorage');
 		},
 		//Atualiza todas as instancias de um arcabouço da lista
@@ -303,8 +310,11 @@ let Renda_variavel = (function(){
 				}
 			}
 			//Atualiza as cores
-			for (let i in this.instancias)
+			for (let i in this.instancias){
 				this.instancias[i].color = this.colors.class[i];
+				this.instancias[i].chartColor = this.colors.code[i];
+				this.instancias[i].chartColor_Transparent = this.colors.code_transparent[i];
+			}
 			rebuild__instanciasArcabouco_HTML();
 			Global.browserStorage__Sync.set('instancias', this.instancias, 'localStorage');
 		},
@@ -710,6 +720,7 @@ let Renda_variavel = (function(){
 			data: null,
 			hora: null,
 			ativo: null,
+			gerenciamento: null,
 			cenario: null,
 			premissas: null,
 			observacoes: null
@@ -785,9 +796,12 @@ let Renda_variavel = (function(){
 			//Filtro do Ativo
 			//////////////////////////////////
 			let ativos_in_operacoes = {},
+				gerenciamento_in_operacoes = {},
 				select_options_html = '';
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco])
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
 				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
+			}
 			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
 			me.filters.ativo = dashboard_ops__search.find('select[name="ativo"]');
 			me.filters.ativo.append(select_options_html).promise().then(function (){
@@ -797,14 +811,32 @@ let Renda_variavel = (function(){
 					actionsBox: true,
 					deselectAllText: 'Nenhum',
 					selectAllText: 'Todos',
-					liveSearch: true,
-					liveSearchNormalize: true,
 					style: '',
 					styleBase: 'form-control form-control-sm'
 				}).on('loaded.bs.select', function (){
 					me.filters.ativo.parent().addClass('form-control');
 				}).on('changed.bs.select', function (){
 					_lista__instancias_arcabouco.updateInstancia_Filters('ativo', $(this).val());
+				});
+			});
+			//////////////////////////////////
+			//Filtro do Gerenciamento
+			//////////////////////////////////
+			select_options_html = (Object.keys(gerenciamento_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('gerenciamento' in dashboard_filters && dashboard_filters['gerenciamento'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
+			me.filters.gerenciamento = dashboard_ops__search.find('select[name="gerenciamento"]');
+			me.filters.gerenciamento.append(select_options_html).promise().then(function (){
+				me.filters.gerenciamento.selectpicker({
+					title: 'Ativo',
+					selectedTextFormat: 'count > 1',
+					actionsBox: true,
+					deselectAllText: 'Nenhum',
+					selectAllText: 'Todos',
+					style: '',
+					styleBase: 'form-control form-control-sm'
+				}).on('loaded.bs.select', function (){
+					me.filters.gerenciamento.parent().addClass('form-control');
+				}).on('changed.bs.select', function (){
+					_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', $(this).val());
 				});
 			});
 			//////////////////////////////////
@@ -819,8 +851,6 @@ let Renda_variavel = (function(){
 					actionsBox: true,
 					deselectAllText: 'Nenhum',
 					selectAllText: 'Todos',
-					liveSearch: true,
-					liveSearchNormalize: true,
 					style: '',
 					styleBase: 'form-control form-control-sm'
 				}).on('loaded.bs.select', function (){
@@ -945,12 +975,22 @@ let Renda_variavel = (function(){
 			//Filtro do Ativo
 			//////////////////////////////////
 			let ativos_in_operacoes = {},
+				gerenciamento_in_operacoes = {},
 				select_options_html = '';
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco])
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
 				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
+			}
 			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
 			me.filters.ativo.empty().append(select_options_html).promise().then(function (){
 				me.filters.ativo.selectpicker('refresh');
+			});
+			//////////////////////////////////
+			//Filtro do Gerenciamento
+			//////////////////////////////////
+			select_options_html = (Object.keys(gerenciamento_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('gerenciamento' in dashboard_filters && dashboard_filters['gerenciamento'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
+			me.filters.gerenciamento.empty().append(select_options_html).promise().then(function (){
+				me.filters.gerenciamento.selectpicker('refresh');
 			});
 			//////////////////////////////////
 			//Filtro de Cenario
@@ -1054,6 +1094,13 @@ let Renda_variavel = (function(){
 			{name: 'result__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
 			{name: 'result__R', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__R}
 		],
+		createdRow: function (row, data, index){
+			let classes = ['text-muted fw-bold', 'text-muted fw-bold', 'fw-bold', 'fw-bold', 'fw-bold', 'fw-bold', 'fw-bold text-danger', 'fw-bold', 'fw-bold'];
+			for (var i=0; i<_dashboard_ops__table_trades_DT["columns"].length; i++){
+				row.children[i].setAttribute("name", _dashboard_ops__table_trades_DT["columns"][i]["name"]);
+				row.children[i].setAttribute("class", classes[i]);
+			}
+		},
 		lengthChange: false,
 		info: false,
 		dom: '<"container-fluid p-0"<"row"<"col-12"<"card rounded-3 shadow-sm"<"card-body py-2 d-flex justify-content-between align-items-center head"fp>>>><"row mt-2"<"col-12"<"card rounded-3 shadow-sm"<"card-body body"t>>>>>',
@@ -1093,7 +1140,7 @@ let Renda_variavel = (function(){
 		_dashboard_ops__section.show('building');
 		if (selected_inst_arcabouco in _lista__operacoes.operacoes && _lista__operacoes.operacoes[selected_inst_arcabouco].length > 0){
 			let finish_building = 0,
-				dashboard_data = RV_Statistics.generate(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), _lista__instancias_arcabouco.getSelected('simulations'));
+				dashboard_data = RV_Statistics.generate(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), _lista__instancias_arcabouco.getSelected('simulations'), _lista__gerenciamentos.gerenciamentos);
 			console.log(dashboard_data);
 			//////////////////////////////////
 			//Info Estatistica (Total + Por Cenário)
@@ -1132,13 +1179,8 @@ let Renda_variavel = (function(){
 				});
 			}
 			else{
-				html = `<thead>${rebuildDashboardOps__Table_Trades('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades)}</tbody>`;
-				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().destroy();
-				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].empty().append(html).promise().then(function (){
-					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
-					_dashboard_ops__section.show('data', ++finish_building);
-				});
+				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().clear().rows.add(rebuildDashboardOps__Table_Trades('dataOnly', dashboard_data.dashboard_ops__table_trades)).draw();
+				_dashboard_ops__section.show('data', ++finish_building);
 			}
 			//////////////////////////////////
 			//Gráfico de Resultados Normalizados
@@ -1392,6 +1434,14 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Gráfico de Evolução Patrimonial
 			//////////////////////////////////
+			let linha_zero = [{
+				type: 'line',
+				scaleID: 'y',
+				value: 0,
+				borderColor: '#212529',
+				borderWidth: 0.5,
+				label: { enabled: false }
+			}];
 			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'] === null){
 				$(document.getElementById('dashboard_ops__chart_evolucaoPatrimonial')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
 					_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'] = new Chart(document.getElementById('dashboard_ops__chart_evolucaoPatrimonial').querySelector('canvas'), {
@@ -1412,7 +1462,22 @@ let Renda_variavel = (function(){
 	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
 	      							borderWidth: 1,
 	      							borderDash: [5, 5],
-	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial__mm20']['data']
+	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
+								},
+								{
+									label: 'Desvio Padrão (Sup)',
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderWidth: 0,
+									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
+								},
+								{
+									label: 'Desvio Padrão (Inf)',
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderWidth: 0,
+									fill: '-1',
+									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
 								}
 							]
 						},
@@ -1430,6 +1495,37 @@ let Renda_variavel = (function(){
 								title: {
 									display: true,
 									text: 'Evolução Patrimonial'
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											return (!item.text.includes('Desvio Padrão (Sup)') && !item.text.includes('Desvio Padrão (Inf)'));
+										}
+									},
+									onClick: function (e, legendItem){
+										let dataset_name = legendItem.text,
+											index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome')){
+											if (me.hidden === null){
+												me.hidden = true;
+												this.chart.getDatasetMeta(index + 2).hidden = true;
+												this.chart.getDatasetMeta(index + 3).hidden = true;
+											}
+											else{
+												me.hidden = null;
+												this.chart.getDatasetMeta(index + 2).hidden = null;
+												this.chart.getDatasetMeta(index + 3).hidden = null;
+											}
+										}
+										else
+											me.hidden = (me.hidden === null) ? true : null;
+										this.chart.update();
+									}
+								},
+								annotation: {
+									annotations: linha_zero
 								}
 							},
 							scales: {
@@ -1446,17 +1542,32 @@ let Renda_variavel = (function(){
 						{
 							label: _lista__instancias_arcabouco.getSelected('nome'),
 							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderWidth: 1,
-  							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							borderWidth: 1,
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
 						},
 						{
 							label: 'SMA20',
 							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderWidth: 1,
-  							borderDash: [5, 5],
-  							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial__mm20']['data']
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							borderWidth: 1,
+							borderDash: [5, 5],
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
+						},
+						{
+							label: 'Desvio Padrão (Sup)',
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderWidth: 0,
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
+						},
+						{
+							label: 'Desvio Padrão (Inf)',
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderWidth: 0,
+							fill: '-1',
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
 						}
 					]
 				};
@@ -2514,8 +2625,8 @@ let Renda_variavel = (function(){
 		Retorna o html da seção de 'thead' ou 'tbody' da 'dashboard_ops__table_trades'.
 	*/
 	function rebuildDashboardOps__Table_Trades(section = '', trades = {}){
-		let html = ``;
-		if (section === 'thead')
+		if (section === 'thead'){
+			let html = ``;
 			html += `<tr>`+
 					`<th>#</th>`+
 					`<th>Data</th>`+
@@ -2527,22 +2638,42 @@ let Renda_variavel = (function(){
 					`<th>Líquido BRL</th>`+
 					`<th>Líquido R</th>`+
 					`</tr>`;
+			return html;
+		}
 		else if (section === 'tbody'){
+			let html = ``;
 			for (let o in trades){
 				html += `<tr>`+
-						`<td name="trade__seq" class="text-muted fw-bold">${trades[o].trade__seq}</td>`+
-						`<td name="trade__data" class="text-muted fw-bold">${Global.convertDate(trades[o].trade__data)}</td>`+
-						`<td name="trade__cenario" class="fw-bold">${trades[o].trade__cenario}</td>`+
-						`<td name="trade__cts" class="fw-bold">${trades[o].trade__cts}</td>`+
-						`<td name="result_bruto__brl" class="fw-bold">${trades[o].result_bruto__brl}</td>`+
-						`<td name="result_bruto__R" class="fw-bold">${trades[o].result_bruto__R}</td>`+
-						`<td name="trade__custo" class="fw-bold text-danger">${trades[o].trade__custo}</td>`+
-						`<td name="result__brl" class="fw-bold">${trades[o].result__brl}</td>`+
-						`<td name="result__R" class="fw-bold">${trades[o].result__R}</td>`+
+						`<td name="trade__seq">${trades[o].trade__seq}</td>`+
+						`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
+						`<td name="trade__cenario">${trades[o].trade__cenario}</td>`+
+						`<td name="trade__cts">${trades[o].trade__cts}</td>`+
+						`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
+						`<td name="result_bruto__R">${trades[o].result_bruto__R}</td>`+
+						`<td name="trade__custo">${trades[o].trade__custo}</td>`+
+						`<td name="result__brl">${trades[o].result__brl}</td>`+
+						`<td name="result__R">${trades[o].result__R}</td>`+
 						`</tr>`;
 			}
+			return html;
 		}
-		return html;
+		else if (section === 'dataOnly'){
+			let data = [];
+			for (let o in trades){
+				data.push([
+					trades[o].trade__seq,
+					Global.convertDate(trades[o].trade__data),
+					trades[o].trade__cenario,
+					trades[o].trade__cts,
+					trades[o].result_bruto__brl,
+					trades[o].result_bruto__R,
+					trades[o].trade__custo,
+					trades[o].result__brl,
+					trades[o].result__R
+				]);
+			}
+			return data;
+		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
@@ -3437,9 +3568,16 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Corrige bug no bootstrap que não mostra o offcanvas na 1 vez que abre.	
+		Processa o fechamento do offcanvas 'adicionar_operacoes_offcanvas', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('adicionar_operacoes_offcanvas')).on('shown.bs.offcanvas', function (){
 		$(this).show();
+	}).on('hidden.bs.offcanvas', function (){
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
+			rebuildArcaboucoSection(rebuildSearch = true);
+			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+		}
 	});
 	/*
 		Insere um novo bloco de operações.

@@ -312,6 +312,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
 #dashboard_ops__search input[name='data'] {width: 175px}
 #dashboard_ops__search div[name='ativo'] {width: 190px}
+#dashboard_ops__search div[name='gerenciamento'] {width: 190px}
 #dashboard_ops__search div[name='cenario'] {width: 190px}
 #dashboard_ops__search div[name='premissas'] {width: 190px; font-size: 13px}
 #dashboard_ops__search div[name='observacoes'] {width: 190px}
@@ -319,7 +320,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
 #dashboard_ops__search input[name='vol'] {width: 80px}
 #dashboard_ops__search select[name='tipo_cts'] {width: 115px}
-#dashboard_ops__search select[name='ativo'].init, #dashboard_ops__search select[name='cenario'].init {height: 30px}
+#dashboard_ops__search select[name='ativo'].init, #dashboard_ops__search select[name='gerenciamento'].init, #dashboard_ops__search select[name='cenario'].init {height: 30px}
 #dashboard_ops__table_stats__byCenario {font-size: 12px}
 #dashboard_ops__table_stats__byCenario span.data-small {font-weight: bold; font-size: 11px}
 #dashboard_ops__table_stats__byCenario span.data-tiny {font-weight: bold; font-size: 9px}
@@ -345,17 +346,9 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__chart_resultadoNormalizado {height: 539px}
 #dashboard_ops__chart_resultadoPorHorario {height: 539px}
 #dashboard_ops__chart_evolucaoPatrimonial {height: 539px}
-#dashboard_ops__table_trades {font-size: 12px}
+#dashboard_ops__table_trades {font-size: 11px}
 #dashboard_ops__table_trades_filter {font-size: 14px}
 #dashboard_ops__table_trades_paginate {font-size: 12px}
 #dashboard_ops__table_trades_filter input, #dashboard_ops__table_trades_paginate input {font-size: 12px}
 #dashboard_ops__table_trades tbody td{vertical-align: middle}
-#dashboard_ops__table_trades tbody td[name='trade__custo'] {font-size: 11px}
-#dashboard_ops__table_trades tbody td[name='men__porc'] {width: 10%}
-#dashboard_ops__table_trades tbody td[name='men__porc'] progress {width: 70px; height: 4px; border-radius: 1em;}
-#dashboard_ops__table_trades tbody td[name='men__porc'] progress[value]::-webkit-progress-bar {background-color: #efefef !important}
-#dashboard_ops__table_trades tbody td[name='men__porc'] progress[value]::-webkit-progress-value {background-color: #dc3545 !important}
-#dashboard_ops__table_trades tbody td[name='mep__porc'] {width: 10%}
-#dashboard_ops__table_trades tbody td[name='mep__porc'] progress {width: 70px; height: 4px; border-radius: 1em;}
-#dashboard_ops__table_trades tbody td[name='mep__porc'] progress[value]::-webkit-progress-bar {background-color: #efefef !important}
-#dashboard_ops__table_trades tbody td[name='mep__porc'] progress[value]::-webkit-progress-value {background-color: #198754 !important}
+#dashboard_ops__table_trades tbody td[name='trade__custo'] {font-size: 10px}

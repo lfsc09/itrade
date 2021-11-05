@@ -125,6 +125,10 @@
 																<label class="form-label m-0 text-muted fw-bold">Filtrar Ativo</label>
 																<select name="ativo" class="form-control form-control-sm init" multiple></select>
 															</div>
+															<div class="col-auto" name="gerenciamento">
+																<label class="form-label m-0 text-muted fw-bold">Filtrar Gerenciamento</label>
+																<select name="gerenciamento" class="form-control form-control-sm init" multiple></select>
+															</div>
 															<div class="col-auto" name="cenario">
 																<label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label>
 																<select name="cenario" class="form-control form-control-sm init" multiple></select>
