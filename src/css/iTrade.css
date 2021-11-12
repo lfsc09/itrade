@@ -225,17 +225,19 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #gerenciamentos_modal_form__acoes button.btn-success {color: #212529; background-color: #bce1d0; border-color: #fff}
 #gerenciamentos_modal_form__acoes button.btn-danger {color: #212529; background-color: #f1bac0; border-color: #fff}
 /*------------------------------------- Cenarios -------------------------------------*/
-#table_cenarios div.card {border-left: 3px solid #0d6efd !important;}
-#table_cenarios div.card[new_cenario] {border-left: 3px solid #198754 !important;}
-#table_cenarios a.nav-link span.badge {font-size: .6em;vertical-align: middle;margin-top: -2px;}
-#table_cenarios table tbody td{vertical-align: middle}
-#table_cenarios table tbody tr:last-child td {border: 0}
-#table_cenarios table tbody td[name='ref']{width: 7%}
-#table_cenarios table tbody td[name='obrigatoria']{width: 15%}
-#table_cenarios table tbody td[name='inativo']{width: 15%}
-#table_cenarios table tbody td[name='cor']{width: 10%}
-#table_cenarios .accordion-button-with-input::after {margin-left: 1rem}
-#table_cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
+#cenarios_modal__cenarios div.card {border-left: 3px solid #0d6efd !important; border-radius: 0}
+#cenarios_modal__cenarios div.card[new_cenario] {border-left: 3px solid #ffc107 !important}
+#cenarios_modal__cenarios div.card-body {overflow: auto; max-height: 250px; background-color: #fdfdfd}
+#cenarios_modal__cenarios button {font-size: 12px}
+#cenarios_modal__cenarios input{font-size: 12px}
+#cenarios_modal__cenarios table {font-size: 12px}
+#cenarios_modal__cenarios table tbody td{vertical-align: middle; font-size: 12px}
+#cenarios_modal__cenarios table tbody tr:last-child td {border: 0}
+#cenarios_modal__cenarios table tbody td[name='ref']{width: 7%}
+#cenarios_modal__cenarios table tbody td[name='obrigatoria']{width: 15%}
+#cenarios_modal__cenarios table tbody td[name='inativo']{width: 15%}
+#cenarios_modal__cenarios .accordion-button-with-input::after {margin-left: 1rem}
+#cenarios_modal__cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
 /*--------------------------------- Upload Operações ---------------------------------*/
 #upload_operacoes_modal .form-label {font-size: 12px}
 #table_upload_operacoes {font-size: 12px}
@@ -251,7 +253,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_upload_operacoes td[name='cts'] {width: 4%; text-align: center}
 #table_upload_operacoes td[name='hora'] {width: 5%}
 #table_upload_operacoes td[name='resultado'] {width: 7%; text-align: center}
-#table_upload_operacoes td[name='premissas'] {width: 15%}
 #table_upload_operacoes td[name='observacoes'] {width: 15%}
 #table_upload_operacoes td[name='erro'] {width: 2%; text-align: center}
 /*-------------------------------- Adicionar Operações -------------------------------*/
@@ -314,7 +315,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__search div[name='ativo'] {width: 190px}
 #dashboard_ops__search div[name='gerenciamento'] {width: 190px}
 #dashboard_ops__search div[name='cenario'] {width: 190px}
-#dashboard_ops__search div[name='premissas'] {width: 190px; font-size: 13px}
 #dashboard_ops__search div[name='observacoes'] {width: 190px}
 #dashboard_ops__search div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
 #dashboard_ops__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}

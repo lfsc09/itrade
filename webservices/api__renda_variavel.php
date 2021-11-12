@@ -197,7 +197,7 @@
 			 		$stmt->bind_param('i', $params['id']);
 					$stmt->execute();
 					//Remove os cenarios
-					$stmt = $mysqli->prepare("DELETE rvc,rvcp,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_premissa rvcp ON rvc.id=rvcp.id_cenario LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id_arcabouco=?");
+					$stmt = $mysqli->prepare("DELETE rvc,rvcp,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id_arcabouco=?");
 			 		$stmt->bind_param('i', $params['id']);
 					$stmt->execute();
 					//Remove as operações
@@ -449,19 +449,6 @@
 			}
 			$stmt->free_result();
 			foreach ($result as $i => $cenario){
-				$result[$i]['premissas'] = [];
-				$result_raw = $mysqli->query("SELECT rvcp.* FROM rv__cenario_premissa rvcp WHERE rvcp.id_cenario='{$cenario['id']}' ORDER BY rvcp.ref ASC");
-				while($row = $result_raw->fetch_assoc()){
-					$result[$i]['premissas'][] = [
-						'id' => $row['id'],
-						'inativo' => $row['inativo'],
-						'ref' => $row['ref'],
-						'obrigatoria' => $row['obrigatoria'],
-						'cor' => $row['cor'],
-						'nome' => $row['nome']
-					];
-				}
-				$result_raw->free();
 				$result[$i]['observacoes'] = [];
 				$result_raw = $mysqli->query("SELECT rvco.* FROM rv__cenario_obs rvco WHERE rvco.id_cenario='{$cenario['id']}' ORDER BY rvco.ref ASC");
 				while($row = $result_raw->fetch_assoc()){
@@ -469,7 +456,6 @@
 						'id' => $row['id'],
 						'inativo' => $row['inativo'],
 						'ref' => $row['ref'],
-						'cor' => $row['cor'],
 						'nome' => $row['nome']
 					];
 				}
@@ -479,7 +465,7 @@
 			return ['status' => 1, 'data' => $result];
 		}
 		/*
-			Insere um novo Cenario com suas (Premissas / Observacoes) no arcabouco de um usuario.
+			Insere um novo Cenario com suas (Observacoes) no arcabouco de um usuario.
 		*/
 		public static function insert_cenarios($params = [], $id_usuario = ''){
 			mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -493,21 +479,12 @@
 			 	$stmt->bind_param('is', $params['id_arcabouco'], $params['nome']);
 				$stmt->execute();
 				$id_cenario = $mysqli->insert_id;
-				//Adicionar agora as premissas se houver
-				if (array_key_exists('premissas', $params)){
-					foreach ($params['premissas'] as $premissa){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_premissa (id_cenario,ref,obrigatoria,cor,nome,inativo) VALUES ({$id_cenario}',?,?,?,?,?)");
-				 		$stmt->bind_param('iissi', $premissa['ref'], $premissa['obrigatoria'], $premissa['cor'], $premissa['nome'], $premissa['inativo']);
-						$stmt->execute();
-					}
-				}
+				//Adicionar as observacoes se houver
 				if (array_key_exists('observacoes', $params)){
-					//Adicionar agora as observacoes se houver
-					foreach ($params['observacoes'] as $obs){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,ref,cor,nome,inativo) VALUES ('{$id_cenario}',?,?,?,?)");
-				 		$stmt->bind_param('issi', $obs['ref'], $obs['cor'], $obs['nome'], $obs['inativo']);
-						$stmt->execute();
-					}
+					$insert_data = preg_replace('/^,/', '', array_reduce($params['observacoes'], function($result, $item) use ($id_cenario, $mysqli){
+	    				return $result . ",('{$id_cenario}'," . "'".$mysqli->real_escape_string($item['ref'])."'," . "'".$mysqli->real_escape_string($item['nome'])."'," . "'".$mysqli->real_escape_string($item['inativo'])."'" . ")";
+	    			}));
+	    			$mysqli->query("INSERT INTO rv__cenario_obs (id_cenario,ref,nome,inativo) VALUES {$insert_data}");
 				}
 				$mysqli->commit();
 		 		$mysqli->close();
@@ -516,7 +493,7 @@
 			catch (mysqli_sql_exception $exception){
 				$mysqli->rollback();
 				if ($exception->getCode() === 1062)
-					$error = 'Cenário já cadastrado ou existem Premissas/Observações duplicadas.';
+					$error = 'Cenário já cadastrado ou existem Observações duplicadas.';
 				else
 					$error = 'Erro ao cadastrar este cenário.';
 		 		$mysqli->close();
@@ -524,7 +501,7 @@
 			}
 		}
 		/*
-			Altera um Cenario e/ou Adiciona/Altera/Remove (Premissas / Observacoes) do arcabouco de um usuario.
+			Altera um Cenario e/ou Adiciona/Altera/Remove (Observacoes) do arcabouco de um usuario.
 		*/
 		public static function update_cenarios($params = [], $id_usuario = ''){
 			$place = 0;
@@ -534,25 +511,30 @@
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
 			$mysqli->begin_transaction();
 			try {
-				if (!empty($params['insert']['premissas'])){
-					$place = 1;
-					foreach ($params['insert']['premissas'] as $premissa){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_premissa (id_cenario,ref,obrigatoria,cor,nome,inativo) VALUES (?,?,?,?,?,?)");
-				 		$stmt->bind_param('iiissi', $params['id_cenario'], $premissa['ref'], $premissa['obrigatoria'], $premissa['cor'], $premissa['nome'], $premissa['inativo']);
-						$stmt->execute();
-					}
-				}
 				if (!empty($params['insert']['observacoes'])){
-					$place = 2;
+					$place = 1;
 					foreach ($params['insert']['observacoes'] as $obs){
-						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,ref,cor,nome,inativo) VALUES (?,?,?,?,?)");
-				 		$stmt->bind_param('iissi', $params['id_cenario'], $obs['ref'], $obs['cor'], $obs['nome'], $obs['inativo']);
+						$stmt = $mysqli->prepare("INSERT INTO rv__cenario_obs (id_cenario,ref,nome,inativo) VALUES (?,?,?,?)");
+				 		$stmt->bind_param('iisi', $params['id_cenario'], $obs['ref'], $obs['nome'], $obs['inativo']);
 						$stmt->execute();
 					}
 				}
+				//Usado para atualizar o nome do cenario nas operações
+				$cenarios_change__nome = [];
 				if (!empty($params['update']['cenarios'])){
-					$place = 3;
+					$place = 2;
 					foreach ($params['update']['cenarios'] as $cenario){
+						if (array_key_exists('nome', $cenario)){
+							//Busca o nome antigo do cenario
+							$stmt = $mysqli->prepare("SELECT nome FROM rv__cenario WHERE id=?");
+						 	$stmt->bind_param('i', $params['id_cenario']);
+						 	$stmt->execute();
+						 	$result_raw = $stmt->get_result();
+						 	$old_nome = $result_raw->fetch_row()[0] ?? '';
+						 	if ($old_nome !== '')
+								$cenarios_change__nome[$old_nome] = $mysqli->real_escape_string($cenario['nome']);
+					 		$stmt->free_result();
+						}
 						$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
 						//Prepara apenas os dados a serem atualizados
 						foreach ($cenario as $data_name => $new_data_value){
@@ -570,28 +552,39 @@
 						$stmt->execute();
 					}
 				}
-				if (!empty($params['update']['premissas'])){
-					$place = 4;
-					foreach ($params['update']['premissas'] as $premissa){
-						$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
-						//Prepara apenas os dados a serem atualizados
-						foreach ($premissa as $data_name => $new_data_value){
-							//Pula o ID da Premissa
-							if ($data_name === 'id')
-								continue;
-							$update_data['wildcards'] .= (($update_data['wildcards'] !== '') ? ',' : '') . "{$data_name}=?";
-							$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'cor') ? 's' : 'i';
-							$update_data['values'][] = $new_data_value;
-						}
-						$update_data['bind'] .= 'i';
-						$update_data['values'][] = $premissa['id'];
-						$stmt = $mysqli->prepare("UPDATE rv__cenario_premissa SET {$update_data['wildcards']} WHERE id=?");
-						$stmt->bind_param($update_data['bind'], ...$update_data['values']);
-						$stmt->execute();
-					}
+				$cenarios_obs_remove__ref = [];
+				if (!empty($params['remove']['observacoes'])){
+					$place = 3;
+					//Captura as Refs de todas as observações removidas
+					$where = preg_replace('/^ OR /', '', array_reduce($params['remove']['observacoes'], function($result, $item) use ($mysqli){
+	    				return $result . " OR id='" . $mysqli->real_escape_string($item['id']) . "'";
+	    			}));
+	    			$result_raw = $mysqli->query("SELECT ref FROM rv__cenario_obs WHERE {$where}");
+					while($row = $result_raw->fetch_assoc())
+						$cenarios_obs_remove__ref[] = $row['ref'];
+					$result_raw->free();
+					//Faz a remoção das observações
+	    			$mysqli->query("DELETE FROM rv__cenario_obs WHERE {$where}");
 				}
+				$cenarios_obs_change__ref = [];
 				if (!empty($params['update']['observacoes'])){
-					$place = 5;
+					$place = 4;
+					//Captura as Refs antigas das observações a serem atualizadas
+					$where = preg_replace('/^ OR /', '', array_reduce($params['update']['observacoes'], function($result, $item) use ($mysqli){
+	    				return $result . " OR id='" . $mysqli->real_escape_string($item['id']) . "'";
+	    			}));
+	    			$result_raw = $mysqli->query("SELECT id,ref FROM rv__cenario_obs WHERE {$where}");
+					while($row = $result_raw->fetch_assoc()){
+						$index_novo_ref__id = null;
+						//Busca qual a nova Ref, para parear os dois
+						foreach ($params['update']['observacoes'] as $index_ob => $observacao){
+							if ($observacao['id'] == $row['id'] && array_key_exists('ref', $observacao))
+								$index_novo_ref__id = $index_ob;
+						}
+						if (!is_null($index_novo_ref__id))
+							$cenarios_obs_change__ref[$row['ref']] = $mysqli->real_escape_string($params['update']['observacoes'][$index_novo_ref__id]['ref']);
+					}
+					$result_raw->free();
 					foreach ($params['update']['observacoes'] as $observacao){
 						$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
 						//Prepara apenas os dados a serem atualizados
@@ -600,7 +593,7 @@
 							if ($data_name === 'id')
 								continue;
 							$update_data['wildcards'] .= (($update_data['wildcards'] !== '') ? ',' : '') . "{$data_name}=?";
-							$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'cor') ? 's' : 'i';
+							$update_data['bind'] .= ($data_name === 'nome') ? 's' : 'i';
 							$update_data['values'][] = $new_data_value;
 						}
 						$update_data['bind'] .= 'i';
@@ -610,23 +603,50 @@
 						$stmt->execute();
 					}
 				}
-				if (!empty($params['remove']['premissas'])){
-					$place = 6;
-					foreach ($params['remove']['premissas'] as $premissa){
-						//Remove a premissa
-						$stmt = $mysqli->prepare("DELETE FROM rv__cenario_premissa WHERE id=?");
-				 		$stmt->bind_param('i', $premissa['id']);
-						$stmt->execute();
-					}
-				}
-				if (!empty($params['remove']['observacoes'])){
-					$place = 7;
-					foreach ($params['remove']['observacoes'] as $observacao){
-						//Remove a observacao
-						$stmt = $mysqli->prepare("DELETE FROM rv__cenario_obs WHERE id=?");
-				 		$stmt->bind_param('i', $observacao['id']);
-						$stmt->execute();
-					}
+				//Arruma o Cenario e Refs de Observações nas operações do arcabouço
+				if (!empty($cenarios_change__nome) || !empty($cenarios_obs_remove__ref) || !empty($cenarios_obs_change__ref)){
+					//Pega todas as operações do arcabouço
+					$stmt = $mysqli->prepare("SELECT id,cenario,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
+				 	$stmt->bind_param('i', $params['id_arcabouco']);
+				 	$stmt->execute();
+				 	$result_raw = $stmt->get_result();
+				 	$arcabouco_operacoes = [];
+				 	while($row = $result_raw->fetch_assoc()){
+				 		$arcabouco_operacoes[] = [
+				 			'id' => $row['id'],
+				 			'cenario' => $row['cenario'],
+				 			'observacoes' => $row['observacoes']
+				 		];
+				 	}
+				 	$stmt->free_result();
+				 	$insert_duplicate_update = '';
+				 	foreach ($arcabouco_operacoes as $operacao){
+				 		$cenario_usar = $operacao['cenario'];
+				 		$observacoes_usar = $operacao['observacoes'];
+				 		//Atualiza o nome do cenario se foi alterado
+				 		if (array_key_exists($operacao['cenario'], $cenarios_change__nome))
+				 			$cenario_usar = $cenarios_change__nome[$operacao['cenario']];
+				 		if (!empty($cenarios_obs_remove__ref) || !empty($cenarios_obs_change__ref)){
+				 			$observacoes_usar = explode(',', $observacoes_usar);
+			 				//Remove as Ref antes
+				 			foreach ($observacoes_usar as $i => $observacao){
+				 				if (in_array($observacao, $cenarios_obs_remove__ref))
+				 					unset($observacoes_usar[$i]);
+				 			}
+			 				//Altera as Refs
+			 				foreach ($observacoes_usar as $i => $observacao){
+			 					if (array_key_exists($observacao, $cenarios_obs_change__ref))
+			 						$observacoes_usar[$i] = $cenarios_obs_change__ref[$observacao];
+			 				}
+			 				sort($observacoes_usar);
+			 				$observacoes_usar = implode(',', $observacoes_usar);
+				 		}
+				 		//Se teve alguma mudanca inclui na lista para atualizar
+				 		if ($cenario_usar !== $operacao['cenario'] || $observacoes_usar !== $operacao['observacoes'])
+				 			$insert_duplicate_update .= (($insert_duplicate_update === '') ? '' : ',') . "('{$operacao['id']}', '{$cenario_usar}', '{$observacoes_usar}')";
+				 	}
+				 	if ($insert_duplicate_update !== '')
+				 		$mysqli->query("INSERT INTO rv__operacoes (id, cenario, observacoes) VALUES {$insert_duplicate_update} ON DUPLICATE KEY UPDATE cenario=VALUES(cenario), observacoes=VALUES(observacoes)");
 				}
 				$mysqli->commit();
 		 		$mysqli->close();
@@ -636,34 +656,26 @@
 				$mysqli->rollback();
 				if ($exception->getCode() === 1062){
 					if ($place === 1 || $place === 4)
-						$error = 'Essa premissa já está cadastrada neste cenário.';
-					else if ($place === 2 || $place === 5)
 						$error = 'Essa observação já está cadastrada neste cenário.';
-					else if ($place === 3)
+					else if ($place === 2)
 						$error = 'Já existe um cenário com esse nome neste arcabouço.';
 				}
 				else{
 					if ($place === 1)
-						$error = 'Erro no cadastro de novas premissas.';
-					else if ($place === 2)
 						$error = 'Erro no cadastro de novas observações.';
-					else if ($place === 3)
+					else if ($place === 2)
 						$error = 'Erro na atualização de cenários.';
-					else if ($place === 4)
-						$error = 'Erro na atualização de premissas.';
-					else if ($place === 5)
-						$error = 'Erro na atualização de observações.';
-					else if ($place === 6)
-						$error = 'Erro na remoção de premissas.';
-					else if ($place === 7)
+					else if ($place === 3)
 						$error = 'Erro na remoção de observações.';
+					else if ($place === 4)
+						$error = 'Erro na atualização de observações.';
 				}
 		 		$mysqli->close();
 	 			return ['status' => 0, 'error' => $error];
 			}
 		}
 		/*
-			Remove um Cenario e suas (Premissas / Observacoes) no arcabouco de um usuario.
+			Remove um Cenario e suas (Observacoes) no arcabouco de um usuario.
 		*/
 		public static function remove_cenarios($params = [], $id_usuario = ''){
 			mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -672,8 +684,8 @@
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
 			$mysqli->begin_transaction();
 			try {
-				//Remove o cenario, premissas e observações
-				$stmt = $mysqli->prepare("DELETE rvc,rvcp,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_premissa rvcp ON rvc.id=rvcp.id_cenario LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id=?");
+				//Remove o cenario e suas observações
+				$stmt = $mysqli->prepare("DELETE rvc,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id=?");
 		 		$stmt->bind_param('i', $params['id']);
 				$stmt->execute();
 				$mysqli->commit();
@@ -713,12 +725,12 @@
 					'hora' => $row['hora'],
 					'resultado' => (float) $row['resultado'],
 					'cenario' => $row['cenario'],
-					'premissas' => $row['premissas'],
 					'observacoes' => $row['observacoes'],
 					'erro' => (int) $row['erro'],
 					'ativo_custo' => (float) $row['ativo_custo'],
 					'ativo_valor_tick' => (float) $row['ativo_valor_tick'],
-					'ativo_pts_tick' => (float) $row['ativo_pts_tick']
+					'ativo_pts_tick' => (float) $row['ativo_pts_tick'],
+					'gerenciamento_acoes' => json_decode($row['gerenciamento_acoes'], true)
 				];
 			}
 			$result_raw->free();
@@ -744,13 +756,13 @@
 		 		if ($result_raw->num_rows > 0){
 		 			$ult_seq = $result_raw->fetch_assoc()['ult_seq'];
 		 			$operacoes_ja_cadastradas = [];
-		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, resultado, cenario, premissas, observacoes)
-	 				$stmt = $mysqli->prepare("SELECT gerenciamento,data,ativo,op,hora,resultado,cenario,premissas,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
+		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, resultado, cenario, observacoes)
+	 				$stmt = $mysqli->prepare("SELECT gerenciamento,data,ativo,op,hora,resultado,cenario,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
 			 		$stmt->bind_param('i', $params['id_arcabouco']);
 			 		$stmt->execute();
 	 				$result_raw = $stmt->get_result();
 	 				while($row = $result_raw->fetch_assoc()){
-	 					$key = "{$row['gerenciamento']}{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . rtrim((strpos($row['resultado'], '.') !== false ? rtrim($row['resultado'], '0') : $row['resultado']), '.') . "{$row['cenario']}{$row['premissas']}{$row['observacoes']}";
+	 					$key = "{$row['gerenciamento']}{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . rtrim((strpos($row['resultado'], '.') !== false ? rtrim($row['resultado'], '0') : $row['resultado']), '.') . "{$row['cenario']}{$row['observacoes']}";
 						$operacoes_ja_cadastradas[$key] = NULL;
 					}
 					$block_size = 50;
@@ -760,14 +772,14 @@
 		 				//Se fechou o bloco
 		 				if ($block_i === $block_size){
 		 					//Faz a inserção do Bloco
-		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
+		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
 							$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 							$stmt->execute();
 							//Reseta o Bloco de inserção
 							$block_i = 0;
 							$insert_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
 		 				}
-		 				$find_by_key = "{$operacao['gerenciamento']}{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['resultado'], '.') !== false ? rtrim($operacao['resultado'], '0') : $operacao['resultado']), '.') . "{$operacao['cenario']}{$operacao['premissas']}{$operacao['observacoes']}";
+		 				$find_by_key = "{$operacao['gerenciamento']}{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['resultado'], '.') !== false ? rtrim($operacao['resultado'], '0') : $operacao['resultado']), '.') . "{$operacao['cenario']}{$operacao['observacoes']}";
 				 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
 				 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
 					 		$insert_data['bind'] .= 'iiisssisisisssssss';
@@ -785,11 +797,11 @@
 					 			$operacao['erro'],
 					 			$operacao['resultado'],
 					 			$operacao['cenario'],
-					 			$operacao['premissas'],
 					 			$operacao['observacoes'],
 					 			$operacao['ativo_custo'],
 					 			$operacao['ativo_valor_tick'],
-					 			$operacao['ativo_pts_tick']
+					 			$operacao['ativo_pts_tick'],
+					 			$operacao['gerenciamento_acoes']
 					 		]);
 							$ult_seq++;
 							$block_i++;
@@ -799,7 +811,7 @@
 		 			}
 			 		//Insere caso não tenha fechado o bloco
 			 		if ($block_i > 0){
-			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,premissas,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick) VALUES {$insert_data['wildcards']}");
+			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
 						$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 						$stmt->execute();
 			 		}

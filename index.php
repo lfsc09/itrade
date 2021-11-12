@@ -133,13 +133,6 @@
 																<label class="form-label m-0 text-muted fw-bold">Filtrar Cenário</label>
 																<select name="cenario" class="form-control form-control-sm init" multiple></select>
 															</div>
-															<div class="col-auto" name="premissas">
-																<label class="form-label m-0 text-muted fw-bold">Filtrar Premissas</label>
-																<div class="iSelectKami dropdown bootstrap-select w-100" name="premissas">
-																	<button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Premissas</button>
-																	<ul class="dropdown-menu overflow-auto"></ul>
-																</div>
-															</div>
 															<div class="col-auto" name="observacoes">
 																<label class="form-label m-0 text-muted fw-bold">Filtrar Observações</label>
 																<div class="iSelectKami dropdown bootstrap-select w-100" name="observacoes">
@@ -657,7 +650,7 @@
 									</div>
 								</div>
 								<div class="row">
-									<div class="col" id="table_cenarios"></div>
+									<div class="col" id="cenarios_modal__cenarios"></div>
 								</div>
 							</div>
 						</div>

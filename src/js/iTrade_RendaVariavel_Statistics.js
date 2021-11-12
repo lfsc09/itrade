@@ -125,7 +125,7 @@ let RV_Statistics = (function(){
 		Recebe a lista de operações (Por Trade), e agrupa dependendo do escolhido. (Por Trade 'Default', Por Dia, Por Mes)
 		Já calcula as informações de resultado necessárias.
 	*/
-	let groupData_byPeriodo = function (list, filters, simulation, gerenciamentos){
+	let groupData_byPeriodo = function (list, filters, simulation){
 		let new_list = [];
 		//Mantem 'por Trade'
 		if (simulation.periodo_calc === '1'){
@@ -133,7 +133,7 @@ let RV_Statistics = (function(){
 				//Roda os 'filters' na operação
 				if (okToUse_filterOp(list[e], filters, simulation)){
 					//Calcula o resultado bruto da operação com apenas 1 contrato
-					let op_resultBruto_Unitario = calculate_op_result(list[e], simulation, gerenciamentos);
+					let op_resultBruto_Unitario = calculate_op_result(list[e], simulation);
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
 					let cts_usado = findCts_toUse(list[e]['cts'], op_resultBruto_Unitario['stop']['brl'], simulation);
 					//Calcula o resultado bruto aplicando o numero de contratos
@@ -171,14 +171,24 @@ let RV_Statistics = (function(){
 	/*
 		Calcula em 'Brl' e 'R' o Resultado, Alvo, Stop de uma operação, dada as infos de 'simulation'.
 	*/
-	let calculate_op_result = function (op, simulation, gerenciamentos){
-		let maior_stop__gerenciamento = (op.gerenciamento !== '') ? Math.min(...gerenciamentos[op.gerenciamento]) : 0,
-			maior_alvo__gerenciamento = (op.gerenciamento !== '') ? Math.max(...gerenciamentos[op.gerenciamento]) : 0;
-		return {
-			//Resultado com apenas 1 contrato
-			result: { brl: (op.resultado / op.cts) },
-			stop: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_stop__gerenciamento) },
-			alvo: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_alvo__gerenciamento) }
+	let calculate_op_result = function (op, simulation){
+		if (op.gerenciamento_acoes && op.gerenciamento_acoes.length){
+			let maior_stop__gerenciamento = Math.min(...op.gerenciamento_acoes),
+				maior_alvo__gerenciamento = Math.max(...op.gerenciamento_acoes);
+			return {
+				//Resultado com apenas 1 contrato
+				result: { brl: (op.resultado / op.cts) },
+				stop: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_stop__gerenciamento) },
+				alvo: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_alvo__gerenciamento) }
+			}
+		}
+		else{
+			console.log(`A operação não possui ações registrada para o gerenciamento '${op.gerenciamento}'.`);
+			return {
+				result: { brl: 0 },
+				stop: { brl: 0 },
+				alvo: { brl: 0 }
+			}
 		}
 	}
 	/*
@@ -241,13 +251,9 @@ let RV_Statistics = (function(){
 			- ops: Lista de operações. (Seguira a ordem da lista passada)
 			- filters: Filtros a serem aplicados na lista de operações.
 			- simulation: Dados de simulação para serem substituidos na lista de operações.
-			- gerenciamentos: Lista de gerenciamentos cadastrados no sistema.
 	*/
-	let generate = function (ops = [], filters = {}, simulation = {}, gerenciamentos = []){
+	let generate = function (ops = [], filters = {}, simulation = {}){
 		/*------------------------------------ Vars --------------------------------------*/
-		let _gerenciamentos = {};
-		for (let g in gerenciamentos)
-			_gerenciamentos[gerenciamentos[g].nome] = gerenciamentos[g].acoes;
 		//Modifca alguns valores do 'filters' e 'simulation'
 		let _filters = {
 			data_inicial: ('data_inicial' in filters) ? filters.data_inicial : null,
@@ -377,7 +383,7 @@ let RV_Statistics = (function(){
 		let _temp_listas = {
 			resultados_R: []
 		}
-		let _ops = groupData_byPeriodo(ops, _filters, _simulation, _gerenciamentos);
+		let _ops = groupData_byPeriodo(ops, _filters, _simulation);
 		/*----------------------------- Percorre as operações ----------------------------*/
 		for (let o in _ops){
 			//////////////////////////////////

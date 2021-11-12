@@ -151,8 +151,14 @@
 				else if ($action === 'update_cenarios'){
 					if (!empty($params_data)){
 						$status = RendaVariavel::update_cenarios($params_data, $_SESSION['id']);
-						if ($status['status'])
-							$status = RendaVariavel::get_cenarios($status['data'], $_SESSION['id']);
+						if ($status['status']){
+							$operacoes_data = RendaVariavel::get_operacoes(['id_arcabouco' => $status['data']['id_arcabouco']], $_SESSION['id']);
+							$cenario_data = RendaVariavel::get_cenarios($status['data'], $_SESSION['id']);
+							if ($cenario_data['status'])
+								$status['data']['cenario'] = $cenario_data['data'][0];
+							if ($operacoes_data['status'])
+								$status['data']['operacoes'] = $operacoes_data['data'];
+						}
 						echo json_encode($status);
 					}
 					else
