@@ -160,9 +160,10 @@ let Renda_variavel = (function(){
 						_lista__cenarios.create(allData['cenarios']);
 						_lista__operacoes.update(allData['operacoes']);
 						//Inicia o 'dashboard_ops__search' com os 'filters' e 'simulations'
-						_dashboard_ops__search.init();
-						//Constroi o arcabouço section
-						rebuildArcaboucoSection(rebuildSearch = false);
+						if (_dashboard_ops__search.init()){
+							//Constroi o arcabouço section
+							rebuildArcaboucoSection(rebuildSearch = false);
+						}
 					}
 					else{
 						Global.connect({
@@ -173,9 +174,10 @@ let Renda_variavel = (function(){
 									_lista__cenarios.create(result.data['cenarios']);
 									_lista__operacoes.update(result.data['operacoes']);
 									//Inicia o 'dashboard_ops__search' com os 'filters' e 'simulations'
-									_dashboard_ops__search.init();
-									//Constroi o arcabouço section
-									rebuildArcaboucoSection(rebuildSearch = false);
+									if (_dashboard_ops__search.init()){
+										//Constroi o arcabouço section
+										rebuildArcaboucoSection(rebuildSearch = false);
+									}
 								}
 								else
 									Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
@@ -204,9 +206,10 @@ let Renda_variavel = (function(){
 				_lista__cenarios.create(allData['cenarios']);
 				_lista__operacoes.update(allData['operacoes']);
 				//Inicia o 'dashboard_ops__search' com os 'filters' e 'simulations'
-				_dashboard_ops__search.init();
-				//Constroi o arcabouço section
-				rebuildArcaboucoSection(rebuildSearch = false);
+				if (_dashboard_ops__search.init()){
+					//Constroi o arcabouço section
+					rebuildArcaboucoSection(rebuildSearch = false);
+				}
 			}
 		},
 		//Retorna a instancia selecionada ou um atributo da instancia selecionada
@@ -257,7 +260,7 @@ let Renda_variavel = (function(){
 			return true;
 		},
 		//Atualiza os 'filters' da instancia selecionada
-		updateInstancia_Filters: function (key, value){
+		updateInstancia_Filters: function (key, value, rebuildSection = true){
 			for (let i in this.instancias){
 				if (this.instancias[i].selected){
 					if (value !== '')
@@ -267,11 +270,12 @@ let Renda_variavel = (function(){
 				}
 			}
 			//Constroi o arcabouço section
-			rebuildArcaboucoSection(rebuildSearch = false);
+			if (rebuildSection)
+				rebuildArcaboucoSection(rebuildSearch = false);
 			Global.browserStorage__Sync.set('instancias', this.instancias, 'localStorage');
 		},
 		//Atualiza os 'simulations' da instancia selecionada
-		updateInstancia_Simulations: function (key, value){
+		updateInstancia_Simulations: function (key, value, rebuildSection = true){
 			for (let i in this.instancias){
 				if (this.instancias[i].selected){
 					if (value !== '')
@@ -282,7 +286,8 @@ let Renda_variavel = (function(){
 				}
 			}
 			//Constroi o arcabouço section
-			rebuildArcaboucoSection(rebuildSearch = false);
+			if (rebuildSection)
+				rebuildArcaboucoSection(rebuildSearch = false);
 			Global.browserStorage__Sync.set('instancias', this.instancias, 'localStorage');
 		},
 		//Atualiza todas as instancias de um arcabouço da lista
@@ -825,22 +830,17 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro do Gerenciamento
 			//////////////////////////////////
-			select_options_html = (Object.keys(gerenciamento_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('gerenciamento' in dashboard_filters && dashboard_filters['gerenciamento'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
+			let gerenciamento_in_operacoes__lista = Object.keys(gerenciamento_in_operacoes);
+			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
 			me.filters.gerenciamento = dashboard_ops__search.find('select[name="gerenciamento"]');
+			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
+				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
 			me.filters.gerenciamento.append(select_options_html).promise().then(function (){
-				me.filters.gerenciamento.selectpicker({
-					title: 'Ativo',
-					selectedTextFormat: 'count > 1',
-					actionsBox: true,
-					deselectAllText: 'Nenhum',
-					selectAllText: 'Todos',
-					style: '',
-					styleBase: 'form-control form-control-sm'
-				}).on('loaded.bs.select', function (){
-					me.filters.gerenciamento.parent().addClass('form-control');
-				}).on('changed.bs.select', function (){
-					_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', $(this).val());
-				});
+				if ('gerenciamento' in dashboard_filters)
+					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
+			});
+			me.filters.gerenciamento.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', $(this).val());
 			});
 			//////////////////////////////////
 			//Filtro de Cenario
@@ -946,6 +946,7 @@ let Renda_variavel = (function(){
 			if ('R' in dashboard_simulations)
 				me.simulations.R.val(dashboard_simulations['R']);
 			me.simulations.R.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			return true;
 		},
 		update: function (){
 			let me = this,
@@ -984,9 +985,13 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro do Gerenciamento
 			//////////////////////////////////
-			select_options_html = (Object.keys(gerenciamento_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('gerenciamento' in dashboard_filters && dashboard_filters['gerenciamento'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
+			let gerenciamento_in_operacoes__lista = Object.keys(gerenciamento_in_operacoes);
+			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
+			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
+				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
 			me.filters.gerenciamento.empty().append(select_options_html).promise().then(function (){
-				me.filters.gerenciamento.selectpicker('refresh');
+				if ('gerenciamento' in dashboard_filters)
+					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
 			});
 			//////////////////////////////////
 			//Filtro de Cenario
@@ -3589,7 +3594,7 @@ let Renda_variavel = (function(){
 	$(document.getElementById('table_adicionar_operacoes')).on('change', 'input[name]', function (){
 		if (this.hasAttribute('disabled'))
 			return true;
-		let inputs_validate = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'resultado', 'cenario', 'erro'],
+		let inputs_validate = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'resultado', 'cenario', 'observacoes', 'erro'],
 			inputs_copy = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'cenario', 'observacoes', 'erro'],
 			inputs_check_riscoMax = ['ativo', 'vol', 'cts'],
 			tr = $(this).parentsUntil('tbody').last(),
@@ -3657,6 +3662,9 @@ let Renda_variavel = (function(){
 					this.value = _lista__cenarios['cenarios'][id_arcabouco][id_cenario].nome;
 				buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario);
 			}
+			//Trata as observações para remover ',' sobrando
+			if (this.name === 'observacoes' && this.value !== '')
+				this.value = this.value.split(',').filter(n => n);
 			//Valida o Erro
 			if (this.name === 'erro' && (isNaN(this.value) || this.value != 1))
 				this.value = '';
@@ -3935,9 +3943,8 @@ let Renda_variavel = (function(){
 		//Se for no input, caso não esteja selecionado, des-checa o input
 		else{
 			if (!this.hasAttribute('selected'))
-				me.find('input[name="negar_valor"]').prop('checked', false);
-			else
-				dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')] = (me.find('input[name="negar_valor"]').prop('checked')) ? 1 : 0;	
+				me.attr('selected', '');
+			dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')] = (me.find('input[name="negar_valor"]').prop('checked')) ? 1 : 0;	
 		}
 		//Atualiza no localStorage
 		_lista__instancias_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);

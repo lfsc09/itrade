@@ -315,7 +315,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
 #dashboard_ops__search input[name='data'] {width: 175px}
 #dashboard_ops__search div[name='ativo'] {width: 190px}
-#dashboard_ops__search div[name='gerenciamento'] {width: 190px}
 #dashboard_ops__search div[name='cenario'] {width: 190px}
 #dashboard_ops__search div[name='observacoes'] {width: 190px}
 #dashboard_ops__search div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}

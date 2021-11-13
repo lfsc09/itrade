@@ -25,28 +25,25 @@ let RV_Statistics = (function(){
 		else return 0;
 	}
 	/*
-		Busca premissas do cenario passado na lista de premissas dos filtros.
+		Busca observações do cenario passado na lista de observações dos filtros.
 	*/
-	let checkPremissas_Observacoes = function (opCenario, opPrem_Obs, filter_cenarios, key = '', method = 'OR'){
+	let checkObservacoes = function (opCenario, opObs, filter_cenarios, method = 'OR'){
 		//Verifica se o cenario está nos filtros
 		if (opCenario in filter_cenarios){
-			//Verifica se há premissas ou observações escolhidas nos filtros do cenario
-			if (!Global.isObjectEmpty(filter_cenarios[opCenario][key])){
-				let opPrem_Obs__Array = opPrem_Obs.split(',');
-				//Descarta operações sem premissas/observações cadastradas
-				if (opPrem_Obs__Array.length === 0)
-					return false;
+			//Verifica se há observações escolhidas nos filtros do cenario
+			if (!Global.isObjectEmpty(filter_cenarios[opCenario]['observacoes'])){
+				let opObs__Array = opObs.split(',');
 				//A operação deve ter pelo menos um dos filtros escolhidos 
 				if (method === 'OR'){
-					for (let ref in filter_cenarios[opCenario][key]){
-						//Operações que TENHAM a premissa/observação
-						if (filter_cenarios[opCenario][key][ref] == 0){
-							if (opPrem_Obs__Array.includes(ref))
+					for (let ref in filter_cenarios[opCenario]['observacoes']){
+						//Operações que TENHAM a observação
+						if (filter_cenarios[opCenario]['observacoes'][ref] == 0){
+							if (opObs__Array.includes(ref))
 								return true;
 						}
-						//Operações que NÃO TENHAM a premissa/observação
-						else if (filter_cenarios[opCenario][key][ref] == 1){
-							if (!opPrem_Obs__Array.includes(ref))
+						//Operações que NÃO TENHAM a observação
+						else if (filter_cenarios[opCenario]['observacoes'][ref] == 1){
+							if (!opObs__Array.includes(ref))
 								return true;
 						}
 					}
@@ -54,15 +51,15 @@ let RV_Statistics = (function(){
 				}
 				//A operação deve ter todos os filtros escolhidos 
 				if (method === 'AND'){
-					for (let ref in filter_cenarios[opCenario][key]){
-						//Operações que TENHAM a premissa/observação
-						if (filter_cenarios[opCenario][key][ref] == 0){
-							if (!opPrem_Obs__Array.includes(ref))
+					for (let ref in filter_cenarios[opCenario]['observacoes']){
+						//Operações que TENHAM a observação
+						if (filter_cenarios[opCenario]['observacoes'][ref] == 0){
+							if (!opObs__Array.includes(ref))
 								return false;
 						}
-						//Operações que NÃO TENHAM a premissa/observação
-						else if (filter_cenarios[opCenario][key][ref] == 1){
-							if (opPrem_Obs__Array.includes(ref))
+						//Operações que NÃO TENHAM a observação
+						else if (filter_cenarios[opCenario]['observacoes'][ref] == 1){
+							if (opObs__Array.includes(ref))
 								return false;
 						}
 					}
@@ -105,16 +102,13 @@ let RV_Statistics = (function(){
 		if (filters.ativo.length > 0 && !filters.ativo.includes(op.ativo))
 			return false;
 		//Filtra apenas os gerenciamentos selecionados
-		if (filters.gerenciamento.length > 0 && !filters.gerenciamento.includes(op.gerenciamento))
+		if (filters.gerenciamento !== null && filters.gerenciamento != op.gerenciamento)
 			return false;
 		//Filtra apenas os cenarios selecionados
 		if (!Global.isObjectEmpty(filters.cenario) && !(op.cenario in filters.cenario))
 			return false;
-		//Filtra apenas as premissas selecionadas dos cenarios
-		if (!checkPremissas_Observacoes(op.cenario, op.premissas, filters.cenario, 'premissas', filters.premissas_query_union))
-			return false;
 		//Filtra apenas as observações selecionadas dos cenarios
-		if (!checkPremissas_Observacoes(op.cenario, op.observacoes, filters.cenario, 'observacoes', filters.observacoes_query_union))
+		if (!checkObservacoes(op.cenario, op.observacoes, filters.cenario, filters.observacoes_query_union))
 			return false;
 		//Filtra operações com Erro
 		if (simulation.ignora_erro && op.erro == 1)
@@ -261,9 +255,8 @@ let RV_Statistics = (function(){
 			hora_inicial: ('hora_inicial' in filters) ? filters.hora_inicial : null,
 			hora_final: ('hora_final' in filters) ? filters.hora_final : null,
 			ativo: ('ativo' in filters) ? filters.ativo : [],
-			gerenciamento: ('gerenciamento' in filters) ? filters.gerenciamento : [],
+			gerenciamento: ('gerenciamento' in filters) ? filters.gerenciamento : null,
 			cenario: ('cenario' in filters) ? filters.cenario : {},
-			premissas_query_union: ('premissas_query_union' in filters) ? filters.premissas_query_union : 'OR',
 			observacoes_query_union: ('observacoes_query_union' in filters) ? filters.observacoes_query_union : 'OR'
 		};
 		let _simulation = {
