@@ -197,7 +197,7 @@
 			 		$stmt->bind_param('i', $params['id']);
 					$stmt->execute();
 					//Remove os cenarios
-					$stmt = $mysqli->prepare("DELETE rvc,rvcp,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id_arcabouco=?");
+					$stmt = $mysqli->prepare("DELETE rvc,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id_arcabouco=?");
 			 		$stmt->bind_param('i', $params['id']);
 					$stmt->execute();
 					//Remove as operações

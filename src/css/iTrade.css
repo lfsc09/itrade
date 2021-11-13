@@ -262,9 +262,11 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #adicionar_operacoes_offcanvas__form_default div[name='hoje'] {width: 135px}
 #adicionar_operacoes_offcanvas__form_default div[name='gerenciamento'] {width: 190px}
 #table_adicionar_operacoes {font-size: 13px}
+#table_adicionar_operacoes tbody tr:nth-child(1) td {padding-top: 8px}
+#table_adicionar_operacoes tbody tr.tr_separator td {padding-bottom: 15px}
 #table_adicionar_operacoes tbody tr.risk_block.hide {visibility: hidden}
 #table_adicionar_operacoes input {font-size: 10px}
-#table_adicionar_operacoes tbody td{vertical-align: middle}
+#table_adicionar_operacoes tbody td{vertical-align: middle; border: 0;}
 #table_adicionar_operacoes tbody td[name='bloco'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='data'] {width: 6%}
 #table_adicionar_operacoes tbody td[name='ativo'] {width: 4%}

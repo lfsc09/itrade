@@ -2374,7 +2374,7 @@ let Renda_variavel = (function(){
 			$(document.getElementById('adicionar_operacoes_offcanvas')).offcanvas('show');
 	}
 	/*
-		Verifica para sempre manter o numero de linhas correto no TD de bloco, após uma remoção de TR.
+		Sempre manter o primeiro TR do bloco com o TD('#') e manter a ultima TR do bloco com a classe 'tr_separator', após uma remoção de TR.
 	*/
 	function fixTDBlocos__Table(bloco = null){
 		let blocos_to_fix = [],
@@ -2395,6 +2395,7 @@ let Renda_variavel = (function(){
 					td_bloco.attr('rowspan', trs.length);
 				else
 					trs.first().prepend(`<td rowspan="${trs.length}" name="bloco" class="fw-bold text-center">${blocos_to_fix[bl]}</td>`);
+				trs.last().addClass('tr_separator');
 			}
 			else
 				bloco_vazio = true;
@@ -3530,7 +3531,7 @@ let Renda_variavel = (function(){
 		for (let q=0; q<3; q++){
 			for (let i=0; i<gerenciamentos_a_criar.length; i++){
 				let acoes = ((_new_bloco__type__com_acoes) ? gerenciamentos_a_criar[i]['acoes'].reduce((p, c) => p + ((c < 0) ? `<button type="button" class="btn btn-sm btn-danger flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>` : `<button type="button" class="btn btn-sm btn-success flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>`), '') : '');
-				html_body += `<tr sequencia="${ult_seq++}" bloco="${ult_bloco}">`+
+				html_body += `<tr sequencia="${ult_seq++}" bloco="${ult_bloco}" ${((i === gerenciamentos_a_criar.length-1) ? `class="tr_separator"` : ``)}>`+
 						((i === 0) ? `<td rowspan="${gerenciamentos_a_criar.length}" name="bloco" class="fw-bold text-center">${ult_bloco}</td>` : ``)+
 						`<td name="data"><input type="text" name="data" class="form-control form-control-sm text-center" value="${default_data}" onclick="this.select()" ${((default_data !== '') ? 'disabled' : '')}></td>`+
 						`<td name="ativo"><input type="text" name="ativo" class="form-control form-control-sm text-center" value="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].nome : '')}" pts_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].pts_tick : '')}" valor_tick="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].valor_tick : '')}" custo="${((ativo_index !== -1) ? _lista__ativos['ativos'][ativo_index].custo : '')}" onclick="this.select()" ${((ativo_index !== -1) ? 'disabled' : '')}></td>`+
