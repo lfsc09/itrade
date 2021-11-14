@@ -96,7 +96,7 @@
 								<button class="btn btn-sm btn-primary me-2" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="ativos"><i class="fas fa-euro-sign me-2"></i>Ativos</button>
 								<button class="btn btn-sm btn-primary" type="button" name="gerenciamentos"><i class="fas fa-coins me-2"></i>Gerenciamentos</button>
-								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="info_arcabouco"><i class="fas fa-info-circle me-2"></i>Info</button>
+								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="arcabouco_info"><i class="fas fa-info-circle me-2"></i>Info</button>
 								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
 								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</button>
@@ -622,6 +622,16 @@
 							</div>
 						</div>
 						<div class="modal-footer"></div>
+					</div>
+				</div>
+			</div>
+			<div class="offcanvas offcanvas-start" id="arcabouco_info">
+				<div class="offcanvas-body">
+					<div class="container-fluid">
+						<div class="row"><div class="col p-0"><div id="arcabouco_info_toasts"></div></div></div>
+						<div class="row">
+							<div class="col p-0" id="arcabouco_info_place"></div>
+						</div>
 					</div>
 				</div>
 			</div>

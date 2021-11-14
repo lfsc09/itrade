@@ -401,6 +401,11 @@ let Renda_variavel = (function(){
 		licenseKey: ''
 	}
 	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------- Arcabouco Info ---------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	//Informa se o 'arcabouco_info' precisa ser reconstruido
+	let _arcabouco_info__needRebuild = false;
+	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------------- Lista Ops ------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	//Informa se o 'list_ops' precisa ser reconstruido
@@ -1924,6 +1929,54 @@ let Renda_variavel = (function(){
 		table.find('tbody').empty().append(html);
 	}
 	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------- Arcabouco Info ---------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Gera as estatisticas para o offcanvas 'arcabouco_info'.
+	*/
+	function buildArcaboucoInfo__Stats(id_arcabouco){
+
+	}
+	/*
+		Constroi o offcanvas de 'arcabouco_info'.
+	*/
+	function buildArcaboucoInfoOffcanvas(){
+		if (_arcabouco_info__needRebuild){
+			_arcabouco_info__needRebuild = false;
+			let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+				stats_data = buildArcaboucoInfo__Stats(id_arcabouco),
+				html = ``;
+			//Constroi a seção com as observações do arcabouço
+			html += `<div class="card rounded-3 shadow-sm">`+
+					`<div class="card-body arcabouco_info__observacao">${_lista__arcaboucos.arcaboucos[id_arcabouco].observacao}</div>`+
+					`</div>`;
+			//Constroi a seção com informações adicionais
+			html += `<div class="card rounded-3 shadow-sm">`+
+					`<div class="card-body arcabouco_info__observacao">`+
+					`<div class="row">`+
+					`<div class="col">`+
+					`<table class="table table-sm table-borderless">`+
+					`<tbody>`+
+					//Quantidade de dias operados
+					`<tr><td>Dias Operados</td><td></td></tr>`+
+					`<tr><td>Trades Total</td><td></td></tr>`+
+					`</tbody>`+
+					`</table>`+
+					`</div>`+
+					`</div>`+
+					`</div>`+
+					`</div>`;
+			//Quantidade de operações por Gerenciamento
+
+			//Quantidade de operações por Ativo
+
+			//Constroi a lista de observações por cenário do arcabouço
+
+			$(document.getElementById('arcabouco_info_place')).empty().append(html);
+		}
+		$(document.getElementById('arcabouco_info')).offcanvas('show');
+	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Section Cenarios --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -2667,6 +2720,7 @@ let Renda_variavel = (function(){
 				if (_lista__instancias_arcabouco.add({id: id_arcabouco, nome: _lista__arcaboucos.arcaboucos[id_arcabouco].nome, selected: true})){
 					_dashboard_ops__needRebuild = true;
 					_list_ops__needRebuild = true;
+					_arcabouco_info__needRebuild = true;
 					if (!(id_arcabouco in _lista__operacoes.operacoes)){
 						Global.connect({
 							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: id_arcabouco}},
@@ -2715,6 +2769,7 @@ let Renda_variavel = (function(){
 					if (_lista__arcaboucos.remove(id_arcabouco)){
 						_dashboard_ops__needRebuild = true;
 						_list_ops__needRebuild = true;
+						_arcabouco_info__needRebuild = true;
 					}
 					buildArcaboucosTable();
 				}
@@ -3028,6 +3083,15 @@ let Renda_variavel = (function(){
 		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------- Arcabouco Info ---------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Corrige bug no bootstrap que não mostra o offcanvas na 1 vez que abre.	
+	*/
+	$(document.getElementById('arcabouco_info')).on('shown.bs.offcanvas', function (){
+		$(this).show();
+	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Section Cenarios --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -3110,6 +3174,7 @@ let Renda_variavel = (function(){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
 							_list_ops__needRebuild = true;
+							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Removido.', delay: 4000});
 							_lista__cenarios.remove(remove_data.id);
 							rebuildCenarios_modal_copiar();
@@ -3204,6 +3269,7 @@ let Renda_variavel = (function(){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
 							_list_ops__needRebuild = true;
+							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Adicionado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
 							_lista__cenarios.update(result.data[0]);
@@ -3226,6 +3292,7 @@ let Renda_variavel = (function(){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
 							_list_ops__needRebuild = true;
+							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Atualizado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result['data']['cenario'], false));
 							_lista__cenarios.update(result['data']['cenario']);
@@ -3429,6 +3496,7 @@ let Renda_variavel = (function(){
 					if (result.status){
 						_dashboard_ops__needRebuild = true;
 						_list_ops__needRebuild = true;
+						_arcabouco_info__needRebuild = true;
 						_lista__operacoes.update(result['data']['operacoes']);
 						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
 						if (result.hold_ops.length === 0){
@@ -3853,6 +3921,7 @@ let Renda_variavel = (function(){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
 							_list_ops__needRebuild = true;
+							_arcabouco_info__needRebuild = true;
 							_lista__operacoes.update(result['data']['operacoes']);
 							_lista__arcaboucos.update(result['data']['arcabouco'][0]);
 							if (result.hold_ops.length === 0){
@@ -3896,6 +3965,7 @@ let Renda_variavel = (function(){
 			if (_lista__instancias_arcabouco.getSelected('instancia') !== this.getAttribute('instancia')){
 				_lista__instancias_arcabouco.setSelected(this.getAttribute('instancia'));
 				_list_ops__needRebuild = true;
+				_arcabouco_info__needRebuild = true;
 				//Inicia o offcanvas de Adicionar Operações
 				buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = true, show = false);
 				if (!(_lista__instancias_arcabouco.getSelected('id') in _lista__operacoes.operacoes)){
@@ -3989,6 +4059,8 @@ let Renda_variavel = (function(){
 			buildAtivosModal(firstBuild = false, show = true);
 		else if (this.name === 'gerenciamentos')
 			buildGerenciamentosModal(forceRebuild = false, show = true);
+		else if (this.name === 'arcabouco_info')
+			buildArcaboucoInfoOffcanvas();
 		else if (this.name === 'cenarios')
 			buildCenariosModal();
 		else if (this.name === 'lista_ops')
@@ -4021,6 +4093,7 @@ let Renda_variavel = (function(){
 				//Inicia a lista de instancias (Com uma já salva ou uma nova) e termina de construir o arcabouço Section
 				_lista__instancias_arcabouco.start(result.data);
 				_list_ops__needRebuild = true;
+				_arcabouco_info__needRebuild = true;
 			}
 			else
 				Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
