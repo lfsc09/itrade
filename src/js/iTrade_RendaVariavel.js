@@ -1932,10 +1932,52 @@ let Renda_variavel = (function(){
 	/*------------------------------- Arcabouco Info ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
+		Gera as observações e cenários para o offcanvas 'arcabouco_info'.
+	*/
+	function buildArcaboucoInfo__CenariosEObs(id_arcabouco){
+		let html = { table: ``, select: `<option value="">Todos</option>`};
+		for (let c in _lista__cenarios.cenarios[id_arcabouco]){
+			//Constroi o Select de filtro
+			html['select'] += `<option value="${_lista__cenarios.cenarios[id_arcabouco][c].id}">${_lista__cenarios.cenarios[id_arcabouco][c].nome}</option>`;
+			for (let o = 0; o < _lista__cenarios.cenarios[id_arcabouco][c]['observacoes'].length; o++){
+				html['table'] += `<tr cenario="${_lista__cenarios.cenarios[id_arcabouco][c].id}" ${((o === 0 && html['table'] !== '') ? `class="divider"` : ``)}>`+
+								 ((o === 0) ? `<td name="cenario" rowspan="${_lista__cenarios.cenarios[id_arcabouco][c]['observacoes'].length}"><span class="text-small"><code>${_lista__cenarios.cenarios[id_arcabouco][c].nome}</code></span></td>` : ``)+
+								 `<td name="ref"><span class="text-small"><code>${_lista__cenarios.cenarios[id_arcabouco][c]['observacoes'][o].ref}</code></span></td>`+
+								 `<td name="observacao"><span class="text-small"><code>${_lista__cenarios.cenarios[id_arcabouco][c]['observacoes'][o].nome}</code></span></td>`+
+								 `</tr>`;
+			}
+		}
+		return html;
+	}
+	/*
 		Gera as estatisticas para o offcanvas 'arcabouco_info'.
 	*/
 	function buildArcaboucoInfo__Stats(id_arcabouco){
-
+		let stats = {
+			total: 0,
+			dias: 0,
+			por_gerenciamento: {},
+			por_ativo: {}
+		}
+		let temp = { data_unica: {} }
+		for (let o = 0; o < _lista__operacoes.operacoes[id_arcabouco].length; o++){
+			stats.total++;
+			temp.data_unica[_lista__operacoes.operacoes[id_arcabouco][o].data] = null;
+			//Por Gerenciamento
+			if (!(_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento in stats.por_gerenciamento))
+				stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento] = { total: 0, cenario: {}};
+			stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento].total++;
+			//Por Cenario no Gerenciamento
+			if (!(_lista__operacoes.operacoes[id_arcabouco][o].cenario in stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario']))
+				stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario] = 0;
+			stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario]++;
+			//Por Ativo
+			if (!(_lista__operacoes.operacoes[id_arcabouco][o].ativo in stats.por_ativo))
+				stats.por_ativo[_lista__operacoes.operacoes[id_arcabouco][o].ativo] = 0;
+			stats.por_ativo[_lista__operacoes.operacoes[id_arcabouco][o].ativo]++;
+		}
+		stats.dias = Object.keys(temp.data_unica).length;
+		return stats;
 	}
 	/*
 		Constroi o offcanvas de 'arcabouco_info'.
@@ -1945,33 +1987,54 @@ let Renda_variavel = (function(){
 			_arcabouco_info__needRebuild = false;
 			let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
 				stats_data = buildArcaboucoInfo__Stats(id_arcabouco),
+				cenarios_obs__html = buildArcaboucoInfo__CenariosEObs(id_arcabouco),
+				first_tr_block = 0,
 				html = ``;
 			//Constroi a seção com as observações do arcabouço
-			html += `<div class="card rounded-3 shadow-sm">`+
-					`<div class="card-body arcabouco_info__observacao">${_lista__arcaboucos.arcaboucos[id_arcabouco].observacao}</div>`+
+			html += `<div class="card rounded-3 shadow-sm arcabouco_info__observacao">`+
+					`<div class="card-body">${_lista__arcaboucos.arcaboucos[id_arcabouco].observacao}</div>`+
+					`</div>`;
+			//Constroi o filtro de cenários do arcabouço
+			html += `<div class="card rounded-3 shadow-sm mt-2 arcabouco_info__cenarios__filter">`+
+					`<div class="card-body p-0">`+
+					`<select name="cenario" class="form-select form-select-sm">${cenarios_obs__html.select}</select>`+
+					`</div>`+
+					`</div>`;
+			//Constroi a lista de observações por cenário do arcabouço
+			html += `<div class="card rounded-3 shadow-sm mt-2 arcabouco_info__cenarios_obs">`+
+					`<div class="card-body">`+
+					`<table class="table table-sm table-borderless m-0">`+
+					`<tbody>${cenarios_obs__html.table}</tbody>`+
+					`</table>`+
+					`</div>`+
 					`</div>`;
 			//Constroi a seção com informações adicionais
-			html += `<div class="card rounded-3 shadow-sm">`+
-					`<div class="card-body arcabouco_info__observacao">`+
+			html += `<div class="card rounded-3 shadow-sm mt-2 arcabouco_info__stats">`+
+					`<div class="card-body">`+
 					`<div class="row">`+
 					`<div class="col">`+
-					`<table class="table table-sm table-borderless">`+
+					`<table class="table table-sm table-borderless m-0">`+
 					`<tbody>`+
 					//Quantidade de dias operados
-					`<tr><td>Dias Operados</td><td></td></tr>`+
-					`<tr><td>Trades Total</td><td></td></tr>`+
-					`</tbody>`+
+					`<tr><td class="fw-bold"><span class="text-small"><code>Dias Operados</code></span></td><td class="text-end fw-bold"><span class="text-small"><code>${stats_data.dias}</code></span></td></tr>`+
+					//Total de operações cadastradas no Arcabouço
+					`<tr><td class="fw-bold"><span class="text-small"><code>Trades Total</code></span></td><td class="text-end fw-bold"><span class="text-small"><code>${stats_data.total}</code></span></td></tr>`;
+			//Quantidade de operações por Gerenciamento
+			for (let gerenciamento in stats_data.por_gerenciamento){
+				html += `<tr ${((first_tr_block++ === 0) ? `class="divider"` : ``)}><td class="fw-bold"><span class="text-small"><code>${gerenciamento}</code></span></td><td class="text-end fw-bold"><span class="text-small"><code>${stats_data.por_gerenciamento[gerenciamento].total}</code></span></td></tr>`;
+				for (let cenario in stats_data['por_gerenciamento'][gerenciamento]['cenario'])
+					html += `<tr><td><span class="text-small"><code>&nbsp;&nbsp;&nbsp;${cenario}</code></span></td><td class="text-end"><span class="text-small"><code>${stats_data.por_gerenciamento[gerenciamento]['cenario'][cenario]}</code></span></td></tr>`;
+			}
+			//Quantidade de operações por Ativo
+			first_tr_block = 0;
+			for (let ativo in stats_data.por_ativo)
+				html += `<tr ${((first_tr_block++ === 0) ? `class="divider"` : ``)}><td class="fw-bold"><span class="text-small"><code>${ativo}</code></span></td><td class="text-end fw-bold"><span class="text-small"><code>${stats_data.por_ativo[ativo]}</code></span></td></tr>`;
+			html += `</tbody>`+
 					`</table>`+
 					`</div>`+
 					`</div>`+
 					`</div>`+
 					`</div>`;
-			//Quantidade de operações por Gerenciamento
-
-			//Quantidade de operações por Ativo
-
-			//Constroi a lista de observações por cenário do arcabouço
-
 			$(document.getElementById('arcabouco_info_place')).empty().append(html);
 		}
 		$(document.getElementById('arcabouco_info')).offcanvas('show');
@@ -3090,6 +3153,15 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('arcabouco_info')).on('shown.bs.offcanvas', function (){
 		$(this).show();
+	});
+	/*
+		Filtra os cenários e observações em 'arcabouco_info'.
+	*/
+	$(document.getElementById("arcabouco_info_place")).on('change', '.arcabouco_info__cenarios__filter select', function (){
+		let cenario = $(this).val();
+		$(document.getElementById('arcabouco_info_place')).find('.arcabouco_info__cenarios_obs table tr').each(function (){
+			$(this).toggleClass('d-none', (cenario !== '' && this.getAttribute('cenario') != cenario));
+		});
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Section Cenarios --------------------------------*/

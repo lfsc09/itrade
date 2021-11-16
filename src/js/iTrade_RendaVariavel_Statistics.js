@@ -85,7 +85,7 @@ let RV_Statistics = (function(){
 	/*
 		Aplica os 'filters' na operacao passada.
 	*/
-	let okToUse_filterOp = function (op, filters, simulation){
+	let okToUse_filterOp = function (op, op_stopBrl, filters, simulation){
 		//Filtra a data com a data inicial
 		if (filters.data_inicial !== null && compareDate_Time(op.data, filters.data_inicial, 'date') === -1)
 			return false;
@@ -110,6 +110,9 @@ let RV_Statistics = (function(){
 		//Filtra apenas as observações selecionadas dos cenarios
 		if (!checkObservacoes(op.cenario, op.observacoes, filters.cenario, filters.observacoes_query_union))
 			return false;
+		//Filtra apenas as operações com Stop dentro do R passado
+		if (simulation.R !== null && op_stopBrl > simulation.R)
+			return false;
 		//Filtra operações com Erro
 		if (simulation.ignora_erro && op.erro == 1)
 			return false;
@@ -124,10 +127,10 @@ let RV_Statistics = (function(){
 		//Mantem 'por Trade'
 		if (simulation.periodo_calc === '1'){
 			for (let e in list){
+				let op_resultBruto_Unitario = calculate_op_result(list[e], simulation);
 				//Roda os 'filters' na operação
-				if (okToUse_filterOp(list[e], filters, simulation)){
+				if (okToUse_filterOp(list[e], op_resultBruto_Unitario['stop'].brl, filters, simulation)){
 					//Calcula o resultado bruto da operação com apenas 1 contrato
-					let op_resultBruto_Unitario = calculate_op_result(list[e], simulation);
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
 					let cts_usado = findCts_toUse(list[e]['cts'], op_resultBruto_Unitario['stop']['brl'], simulation);
 					//Calcula o resultado bruto aplicando o numero de contratos
