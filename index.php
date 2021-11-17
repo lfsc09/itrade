@@ -852,10 +852,44 @@
 								</div>
 							</div>
 							<div class="col-4">
-								<div class="card rounded-3 shadow-sm">
-									<div class="card-body">
-										<div id="adicionar_operacoes__extraDados">
-											<div class="container-fluid p-4 text-center text-muted fw-bold"><i class="fas fa-cookie-bite me-2" aria-hidden="true"></i>Nada a mostrar</div>
+								<div class="row">
+									<div class="col-12 p-0">
+										<div class="card rounded-3 shadow-sm">
+											<div class="card-body">
+												<div class="container-fluid d-flex justify-content-end px-0">
+													<form class="row m-0 flex-fill" id="adicionar_operacoes_offcanvas__contagem">
+														<div class="col-6">
+															<label class="form-label m-0 text-muted fw-bold">Contagem Tendência</label>
+															<div class="input-group">
+																<input type="text" class="form-control form-control-sm" name="c_tendencia" value="" raw_value="0" not_ok="0" disabled>
+																<button class="btn btn-sm btn-outline-secondary" type="button" name="up_c_tendencia"><i class="fas fa-caret-up"></i></button>
+																<button class="btn btn-sm btn-outline-secondary" type="button" name="down_c_tendencia"><i class="fas fa-caret-down"></i></button>
+																<button class="btn btn-sm btn-outline-secondary" type="button" name="restart_c_tendencia"><i class="fas fa-times"></i></button>
+															</div>
+														</div>
+														<div class="col-6">
+															<label class="form-label m-0 text-muted fw-bold">Contagem Pernada</label>
+															<div class="input-group">
+																<input type="text" class="form-control form-control-sm" name="c_pernada" value="" raw_value="0" not_ok="0" disabled>
+																<button class="btn btn-sm btn-outline-secondary" type="button" name="up_c_pernada"><i class="fas fa-caret-up"></i></button>
+																<button class="btn btn-sm btn-outline-secondary" type="button" name="down_c_pernada"><i class="fas fa-caret-down"></i></button>
+																<button class="btn btn-sm btn-outline-secondary" type="button" name="restart_c_pernada"><i class="fas fa-times"></i></button>
+															</div>
+														</div>
+													</form>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="row mt-2">
+									<div class="col-12 p-0">
+										<div class="card rounded-3 shadow-sm">
+											<div class="card-body">
+												<div id="adicionar_operacoes__extraDados">
+													<div class="container-fluid p-4 text-center text-muted fw-bold"><i class="fas fa-cookie-bite me-2" aria-hidden="true"></i>Nada a mostrar</div>
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>

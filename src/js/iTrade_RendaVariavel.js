@@ -2459,6 +2459,15 @@ let Renda_variavel = (function(){
 		fixTDBlocos__Table();
 	}
 	/*
+		Zera a contagem de Tendencia e Pernada em 'adicionar_operacoes_offcanvas__contagem'.
+	*/
+	function resetAdicionarOperacao__ContagemForm(){
+		let form_contagem = $(document.getElementById('adicionar_operacoes_offcanvas__contagem'));
+		form_contagem.find('input').attr('not_ok', 0).attr('raw_value', 0).val('');
+		form_contagem.find('button[name="up_c_tendencia"], button[name="down_c_tendencia"], button[name="restart_c_tendencia"]').removeClass('disabled');
+		form_contagem.find('button[name="up_c_pernada"], button[name="down_c_pernada"], button[name="restart_c_pernada"]').addClass('disabled');
+	}
+	/*
 		Constroi o offcanvas de adicionar operações.
 	*/
 	function buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = false, show = false){
@@ -2489,8 +2498,10 @@ let Renda_variavel = (function(){
 				form.find('select[name="hoje"]').parent().addClass('form-control');
 			});
 		}
-		if (forceRebuild)
+		if (forceRebuild){
 			resetAdicionarOperacaoTable();
+			resetAdicionarOperacao__ContagemForm();
+		}
 		if (show)
 			$(document.getElementById('adicionar_operacoes_offcanvas')).offcanvas('show');
 	}
@@ -3611,6 +3622,96 @@ let Renda_variavel = (function(){
 		}
 	});
 	/*
+		Gerencia a contagem de Pernada e Tendencia em 'adicionar_operacoes_offcanvas__contagem'.
+	*/
+	$(document.getElementById('adicionar_operacoes_offcanvas__contagem')).find('button[name]').on('click', function (){
+		let form = $(document.getElementById('adicionar_operacoes_offcanvas__contagem')),
+			c_tendencia = form.find('input[name="c_tendencia"]'),
+			c_pernada = form.find('input[name="c_pernada"]'),
+			raw_value_c_tendencia = parseInt(c_tendencia.attr('raw_value')),
+			raw_value_c_pernada = parseInt(c_pernada.attr('raw_value')),
+			show_value_c_tendencia = '',
+			show_value_c_pernada = '',
+			not_ok_c_tendencia = false,
+			not_ok_c_pernada = false;
+		//Contagem de Tendencia
+		if (this.getAttribute('name') === 'up_c_tendencia'){
+			if (raw_value_c_tendencia === 0)
+				form.find('button[name="down_c_tendencia"], button[name="up_c_pernada"]').addClass('disabled');
+			form.find('button[name="up_c_tendencia"], button[name="restart_c_pernada"]').addClass('disabled');
+			form.find('button[name="down_c_pernada"], button[name="restart_c_tendencia"]').removeClass('disabled');
+			raw_value_c_tendencia++;
+			//Atualiza texto tendencia
+			show_value_c_tendencia = `A${Math.abs(raw_value_c_tendencia)}`;
+			if (Math.abs(raw_value_c_tendencia) === 2 || Math.abs(raw_value_c_tendencia) === 4)
+				not_ok_c_tendencia = true;
+			//Atualiza texto pernada
+			if (Math.abs(raw_value_c_pernada) > 0){
+				show_value_c_pernada = `F B${Math.abs(raw_value_c_pernada)}`;
+				if (Math.abs(raw_value_c_pernada) === 1 || Math.abs(raw_value_c_pernada) === 3)
+					not_ok_c_pernada = true;
+			}
+		}
+		else if (this.getAttribute('name') === 'down_c_tendencia'){
+			if (raw_value_c_tendencia === 0)
+				form.find('button[name="up_c_tendencia"], button[name="down_c_pernada"]').addClass('disabled');
+			form.find('button[name="down_c_tendencia"], button[name="restart_c_pernada"]').addClass('disabled');
+			form.find('button[name="up_c_pernada"], button[name="restart_c_tendencia"]').removeClass('disabled');
+			raw_value_c_tendencia--;
+			//Atualiza texto tendencia
+			show_value_c_tendencia = `B${Math.abs(raw_value_c_tendencia)}`;
+			if (Math.abs(raw_value_c_tendencia) === 2 || Math.abs(raw_value_c_tendencia) === 4)
+				not_ok_c_tendencia = true;
+			//Atualiza texto pernada
+			if (Math.abs(raw_value_c_pernada) > 0){
+				show_value_c_pernada = `F A${Math.abs(raw_value_c_pernada)}`;
+				if (Math.abs(raw_value_c_pernada) === 1 || Math.abs(raw_value_c_pernada) === 3)
+					not_ok_c_pernada = true;
+			}
+		}
+		else if (this.getAttribute('name') === 'restart_c_tendencia'){
+			form.find('button[name="up_c_tendencia"], button[name="down_c_tendencia"], button[name="restart_c_tendencia"]').removeClass('disabled');
+			form.find('button[name="up_c_pernada"], button[name="down_c_pernada"], button[name="restart_c_pernada"]').addClass('disabled');
+			raw_value_c_tendencia = 0;
+			raw_value_c_pernada = 0;
+		}
+		//Contagem de Pernada
+		else if (this.getAttribute('name') === 'up_c_pernada'){
+			form.find('button[name="up_c_pernada"], button[name="restart_c_tendencia"]').addClass('disabled');
+			form.find('button[name="down_c_tendencia"], button[name="restart_c_pernada"]').removeClass('disabled');
+			raw_value_c_pernada++;
+			//Atualiza texto pernada
+			show_value_c_pernada = `A${Math.abs(raw_value_c_pernada)}`;
+			if (Math.abs(raw_value_c_pernada) === 2 || Math.abs(raw_value_c_pernada) === 4)
+				not_ok_c_pernada = true;
+			//Atualiza texto tendencia
+			show_value_c_tendencia = `F B${Math.abs(raw_value_c_tendencia)}`;
+			if (Math.abs(raw_value_c_tendencia) === 1 || Math.abs(raw_value_c_tendencia) === 3)
+				not_ok_c_tendencia = true;
+		}
+		else if (this.getAttribute('name') === 'down_c_pernada'){
+			form.find('button[name="down_c_pernada"], button[name="restart_c_tendencia"]').addClass('disabled');
+			form.find('button[name="up_c_tendencia"], button[name="restart_c_pernada"]').removeClass('disabled');
+			raw_value_c_pernada--;
+			//Atualiza texto pernada
+			show_value_c_pernada = `B${Math.abs(raw_value_c_pernada)}`;
+			if (Math.abs(raw_value_c_pernada) === 2 || Math.abs(raw_value_c_pernada) === 4)
+				not_ok_c_pernada = true;
+			//Atualiza texto tendencia
+			show_value_c_tendencia = `F A${Math.abs(raw_value_c_tendencia)}`;
+			if (Math.abs(raw_value_c_tendencia) === 1 || Math.abs(raw_value_c_tendencia) === 3)
+				not_ok_c_tendencia = true;
+		}
+		else if (this.getAttribute('name') === 'restart_c_pernada'){
+			form.find('button[name="restart_c_restart"]').addClass('disabled');
+			raw_value_c_pernada = 0;
+			show_value_c_tendencia = c_tendencia.val();
+			not_ok_c_tendencia = parseInt(c_tendencia.attr('not_ok')) === 1;
+		}
+		form.find('input[name="c_tendencia"]').attr('not_ok', ((not_ok_c_tendencia) ? 1 : 0)).attr('raw_value', raw_value_c_tendencia).toggleClass('not_ok', not_ok_c_tendencia).val(show_value_c_tendencia);
+		form.find('input[name="c_pernada"]').attr('not_ok', ((not_ok_c_pernada) ? 1 : 0)).attr('raw_value', raw_value_c_pernada).toggleClass('not_ok', not_ok_c_pernada).val(show_value_c_pernada);
+	});
+	/*
 		Insere um novo bloco de operações.
 	*/
 	$(document.getElementById('adicionar_operacoes_offcanvas__new_bloco')).on('click', function (){
@@ -3905,6 +4006,7 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('adicionar_operacoes_offcanvas__erase_all')).on('dblclick', function (){
 		resetAdicionarOperacaoTable();
+		resetAdicionarOperacao__ContagemForm();
 	});
 	/*
 		Envia as operações para serem adicionadas ao arcabouço em 'adicionar_operacoes_offcanvas'.

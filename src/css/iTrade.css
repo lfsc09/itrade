@@ -286,6 +286,13 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #adicionar_operacoes__extraDados table tbody td {vertical-align: middle; font-size: 12px}
 #adicionar_operacoes__extraDados table tbody td[name='ref'] {font-weight: 600; text-align: center}
 #adicionar_operacoes__extraDados table tbody td[name='nome'] {font-size: 11px; font-weight: 500}
+#adicionar_operacoes_offcanvas__contagem .form-label {font-size: 11px}
+#adicionar_operacoes_offcanvas__contagem input {font-size: 11px; background-color: #fff; text-align: center; font-weight: bold}
+#adicionar_operacoes_offcanvas__contagem input.not_ok {color: #dc3545}
+#adicionar_operacoes_offcanvas__contagem button.disabled {color: #6c757d !important; background-color: transparent !important}
+#adicionar_operacoes_offcanvas__contagem button[name='up_c_tendencia'], #adicionar_operacoes_offcanvas__contagem button[name='up_c_pernada'] {width: 50px; color: #198754; background-color: #bce1d0; border-color: #ced4da}
+#adicionar_operacoes_offcanvas__contagem button[name='down_c_tendencia'], #adicionar_operacoes_offcanvas__contagem button[name='down_c_pernada'] {width: 50px; color: #dc3545; background-color: #f1bac0; border-color: #ced4da}
+#adicionar_operacoes_offcanvas__contagem button[name='restart_c_tendencia'], #adicionar_operacoes_offcanvas__contagem button[name='restart_c_pernada'] {width: 50px; color: #dc3545; background-color: #fff; border-color: #ced4da}
 /*---------------------------------- Arcabouco Info ----------------------------------*/
 #arcabouco_info {width: 500px}
 #arcabouco_info .arcabouco_info__observacao {font-size: .8em}
