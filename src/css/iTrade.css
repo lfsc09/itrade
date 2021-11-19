@@ -303,6 +303,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #arcabouco_info .arcabouco_info__cenarios_obs table td[name='observacao']{vertical-align: middle}
 #arcabouco_info .arcabouco_info__stats table td code {font-size: .8em; color: #212529}
 #arcabouco_info .arcabouco_info__stats table tr.divider td {padding-top: 15px}
+#arcabouco_info .arcabouco_info__stats table tr td span.media_por_dia {font-size: 12px}
 /*------------------------------------ Lista Ops -------------------------------------*/
 #lista_ops {width: 950px}
 #lista_ops__search .form-label {font-size: 11px}

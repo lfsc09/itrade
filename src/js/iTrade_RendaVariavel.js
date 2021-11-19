@@ -440,6 +440,10 @@ let Renda_variavel = (function(){
 					startDate: data_inicial,
 					endDate: data_final,
 					maxDate: data_final,
+					isInvalidDate: function(date) {
+						//Desabilita os FDS
+						return (date.day() == 0 || date.day() == 6);
+					},
 					locale: {
 						format: 'DD/MM/YYYY',
 						separator: ' - ',
@@ -769,6 +773,10 @@ let Renda_variavel = (function(){
 				startDate: ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : data_inicial,
 				endDate: ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : data_final,
 				maxDate: data_final,
+				isInvalidDate: function(date) {
+					//Desabilita os FDS
+					return (date.day() == 0 || date.day() == 6);
+				},
 				locale: {
 					format: 'DD/MM/YYYY',
 					separator: ' - ',
@@ -1969,14 +1977,17 @@ let Renda_variavel = (function(){
 			stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento].total++;
 			//Por Cenario no Gerenciamento
 			if (!(_lista__operacoes.operacoes[id_arcabouco][o].cenario in stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario']))
-				stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario] = 0;
-			stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario]++;
+				stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario] = { total: 0, por_dia: 0 };
+			stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario].total++;
 			//Por Ativo
 			if (!(_lista__operacoes.operacoes[id_arcabouco][o].ativo in stats.por_ativo))
 				stats.por_ativo[_lista__operacoes.operacoes[id_arcabouco][o].ativo] = 0;
 			stats.por_ativo[_lista__operacoes.operacoes[id_arcabouco][o].ativo]++;
 		}
 		stats.dias = Object.keys(temp.data_unica).length;
+		for (let g in stats.por_gerenciamento)
+			for (let c in stats.por_gerenciamento[g]['cenario'])
+				stats.por_gerenciamento[g]['cenario'][c].por_dia = stats.por_gerenciamento[g]['cenario'][c].total / stats.dias;
 		return stats;
 	}
 	/*
@@ -2023,7 +2034,7 @@ let Renda_variavel = (function(){
 			for (let gerenciamento in stats_data.por_gerenciamento){
 				html += `<tr ${((first_tr_block++ === 0) ? `class="divider"` : ``)}><td class="fw-bold"><span class="text-small"><code>${gerenciamento}</code></span></td><td class="text-end fw-bold"><span class="text-small"><code>${stats_data.por_gerenciamento[gerenciamento].total}</code></span></td></tr>`;
 				for (let cenario in stats_data['por_gerenciamento'][gerenciamento]['cenario'])
-					html += `<tr><td><span class="text-small"><code>&nbsp;&nbsp;&nbsp;${cenario}</code></span></td><td class="text-end"><span class="text-small"><code>${stats_data.por_gerenciamento[gerenciamento]['cenario'][cenario]}</code></span></td></tr>`;
+					html += `<tr><td><span class="text-small"><code>&nbsp;&nbsp;&nbsp;${cenario}</code></span></td><td class="text-end"><span class="text-small media_por_dia fst-italic me-1"><code>(~${stats_data.por_gerenciamento[gerenciamento]['cenario'][cenario].por_dia.toFixed(2)})</code></span><span class="text-small"><code>${stats_data.por_gerenciamento[gerenciamento]['cenario'][cenario].total}</code></span></td></tr>`;
 			}
 			//Quantidade de operações por Ativo
 			first_tr_block = 0;
