@@ -260,7 +260,7 @@ let RV_Statistics = (function(){
 			ativo: ('ativo' in filters) ? filters.ativo : [],
 			gerenciamento: ('gerenciamento' in filters) ? filters.gerenciamento : null,
 			cenario: ('cenario' in filters) ? filters.cenario : {},
-			observacoes_query_union: ('observacoes_query_union' in filters) ? filters.observacoes_query_union : 'OR'
+			observacoes_query_union: ('observacoes_query_union' in filters) ? filters.observacoes_query_union : 'AND'
 		};
 		let _simulation = {
 			periodo_calc: ('periodo_calc' in simulation) ? simulation.periodo_calc : '1',
@@ -606,10 +606,11 @@ let RV_Statistics = (function(){
 		//////////////////////////////////
 		//Gráfico de Resultados por Hora
 		//////////////////////////////////
-		for (let h in _temp__table_stats['horas__unicas']){
-			_dashboard_ops__chart_data['resultado_por_hora']['labels'].push(h);
-			_dashboard_ops__chart_data['resultado_por_hora']['data_result'].push(_temp__table_stats['horas__unicas'][h]['result']);
-			_dashboard_ops__chart_data['resultado_por_hora']['data_qtd'].push(_temp__table_stats['horas__unicas'][h]['qtd']);
+		let sorted_horas__unicas = Object.keys(_temp__table_stats['horas__unicas']).sort();
+		for (let h = 0; h < sorted_horas__unicas.length; h++){
+			_dashboard_ops__chart_data['resultado_por_hora']['labels'].push(sorted_horas__unicas[h]);
+			_dashboard_ops__chart_data['resultado_por_hora']['data_result'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[h]]['result']);
+			_dashboard_ops__chart_data['resultado_por_hora']['data_qtd'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[h]]['qtd']);
 		}
 		/*------------------------------- Retorno dos Dados ------------------------------*/
 		return {

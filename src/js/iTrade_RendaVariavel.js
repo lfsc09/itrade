@@ -382,7 +382,7 @@ let Renda_variavel = (function(){
 			{name: 'tipo', orderable: false, render: _arcabouco__table_DT_ext.tipo_render},
 			{name: 'nome', orderable: true},
 			{name: 'data_criacao', orderable: true, type: 'br-date'},
-			{name: 'data_atualizacao', orderable: true, type: 'br-date'},
+			{name: 'data_atualizacao', orderable: true, type: 'br-datetime'},
 			{name: 'qtd_ops', orderable: true},
 			{name: 'usuarios', orderable: false},
 			{name: 'editar', orderable: false},
@@ -749,7 +749,21 @@ let Renda_variavel = (function(){
 				dashboard_ops__search = $(document.getElementById('dashboard_ops__search')),
 				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
 				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations');
+				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				ativos_in_operacoes = {},
+				gerenciamento_in_operacoes = {},
+				cenarios_in_operacoes = {},
+				cenarios_by_nome = {},
+				select_options_html = '';
+			//Monta uma lista de cenarios usando o nome como chave
+			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
+				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
+			//Captura dados das operações para montar os filtros
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
+				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
+				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
+			}
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
@@ -816,13 +830,6 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro do Ativo
 			//////////////////////////////////
-			let ativos_in_operacoes = {},
-				gerenciamento_in_operacoes = {},
-				select_options_html = '';
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
-				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
-			}
 			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
 			me.filters.ativo = dashboard_ops__search.find('select[name="ativo"]');
 			me.filters.ativo.append(select_options_html).promise().then(function (){
@@ -858,8 +865,18 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro de Cenario
 			//////////////////////////////////
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + `<option value="${c.id}" ${(('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${c.nome}</option>`, '');
+			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
 			me.filters.cenario = dashboard_ops__search.find('select[name="cenario"]');
+			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
+				let localStorage_data = {
+					[cenarios_in_operacoes__lista[0]]: {
+						id: cenarios_by_nome[cenarios_in_operacoes__lista[0]],
+						observacoes: {}
+					}
+				}
+				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data, rebuildSection = false);
+			}
 			me.filters.cenario.append(select_options_html).promise().then(function (){
 				me.filters.cenario.selectpicker({
 					title: 'Cenários',
@@ -881,14 +898,14 @@ let Renda_variavel = (function(){
 						}
 					});
 					_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data);
-					rebuildSelect_Observacoes__content(_dashboard_ops__search.filters.observacoes, _lista__instancias_arcabouco.getSelected('id'));
+					rebuildSelect_Observacoes__content(_lista__instancias_arcabouco.getSelected('id'));
 				});
 			});
 			//////////////////////////////////
 			//Filtro de Observacoes
 			//////////////////////////////////
 			me.filters.observacoes = dashboard_ops__search.find('div[name="observacoes"]');
-			rebuildSelect_Observacoes__content(me.filters.observacoes, selected_inst_arcabouco);
+			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
 			//////////////////////////////////
 			//Simulação de Periodo de Calculo
 			//////////////////////////////////
@@ -965,7 +982,20 @@ let Renda_variavel = (function(){
 			let me = this,
 				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
 				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations');
+				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				ativos_in_operacoes = {},
+				gerenciamento_in_operacoes = {},
+				cenarios_in_operacoes = {},
+				cenarios_by_nome = {},
+				select_options_html = '';
+			//Monta uma lista de cenarios usando o nome como chave
+			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
+				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
+				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
+				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
+			}
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
@@ -984,13 +1014,6 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro do Ativo
 			//////////////////////////////////
-			let ativos_in_operacoes = {},
-				gerenciamento_in_operacoes = {},
-				select_options_html = '';
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
-				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
-			}
 			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
 			me.filters.ativo.empty().append(select_options_html).promise().then(function (){
 				me.filters.ativo.selectpicker('refresh');
@@ -1009,14 +1032,24 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro de Cenario
 			//////////////////////////////////
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + `<option value="${c.id}" ${(('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario']) ? 'selected' : '' )}>${c.nome}</option>`, '');
+			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
+			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
+				let localStorage_data = {
+					[cenarios_in_operacoes__lista[0]]: {
+						id: cenarios_by_nome[cenarios_in_operacoes__lista[0]],
+						observacoes: {}
+					}
+				}
+				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data, rebuildSection = false);
+			}
 			me.filters.cenario.empty().append(select_options_html).promise().then(function (){
 				me.filters.cenario.selectpicker('refresh');
 			});
 			//////////////////////////////////
 			//Filtro de Observacoes
 			//////////////////////////////////
-			rebuildSelect_Observacoes__content(me.filters.observacoes, selected_inst_arcabouco);
+			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
 			//////////////////////////////////
 			//Simulação de Periodo de Calculo
 			//////////////////////////////////
@@ -1071,7 +1104,7 @@ let Renda_variavel = (function(){
 		},
 		ext: {
 			color: function (){
-				return (ctx) => { return (ctx.parsed.y > 0) ? '#198754' : ((ctx.parsed.y < 0) ? '#dc3545' : '#ced4da'); }
+				return (ctx) => { return ('parsed' in ctx && ctx.parsed.y > 0) ? '#198754' : (('parsed' in ctx && ctx.parsed.y < 0) ? '#dc3545' : '#ced4da'); }
 			}
 		}
 	}
@@ -2577,10 +2610,10 @@ let Renda_variavel = (function(){
 	/*
 		Reconstroi a lista de 'observações', usada nos selects dos mesmos em 'filters'.
 	*/
-	function rebuildSelect_Observacoes__content(el, id_arcabouco){
+	function rebuildSelect_Observacoes__content(id_arcabouco){
 		let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
 			selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			el_name = el.attr('name'),
+			el_name = _dashboard_ops__search.filters.observacoes.attr('name'),
 			placeholder = {'observacoes': 'Observações'},
 			qtd_selected = 0,
 			options_html = '';
@@ -2591,7 +2624,7 @@ let Renda_variavel = (function(){
 						let select_query_union_name = `${el_name}_query_union`,
 							or_selected = !(select_query_union_name in dashboard_filters) || (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'OR'),
 							and_selected = (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'AND');
-						options_html += `<li><div class="input-group px-2"><select class="iSelectKami form-select form-select-sm" name="${el_name}_query_union"><option value="OR" ${((or_selected) ? 'selected' : '')}>OR</option><option value="AND" ${((and_selected) ? 'selected' : '')}>AND</option></select><button type="button" class="iSelectKami btn btn-sm btn-outline-secondary" name="tira_tudo">Nenhum</button></div></li>`;
+						options_html += `<li><div class="input-group px-2"><select class="iSelectKami form-select form-select-sm" name="${el_name}_query_union"><option value="AND" ${((and_selected) ? 'selected' : '')}>AND</option><option value="OR" ${((or_selected) ? 'selected' : '')}>OR</option></select><button type="button" class="iSelectKami btn btn-sm btn-outline-secondary" name="tira_tudo">Nenhum</button></div></li>`;
 					}
 					else
 						options_html += `<li><hr class="dropdown-divider"></li>`;
@@ -2606,8 +2639,8 @@ let Renda_variavel = (function(){
 				}
 			}
 		}
-		el.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[el_name]}`)));
-		el.find('ul.dropdown-menu').empty().append(options_html);
+		_dashboard_ops__search.filters.observacoes.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[el_name]}`)));
+		_dashboard_ops__search.filters.observacoes.find('ul.dropdown-menu').empty().append(options_html);
 	}
 	/*
 		Retorna o html de uma linha usada em 'dashboard_ops__table_stats__byCenario', separando se é para o 'tbody' ou 'tfoot'.

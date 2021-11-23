@@ -265,26 +265,33 @@ let Global = (function(){
  			let _a = a.replace(/<[^<>]*>/g, '');
  			_a = (_a === '') ? 0 : ((_a.indexOf(',') !== -1) ? parseFloat(_a.replace(/\./g, '').replace(/,/, '.')) : parseFloat(_a.replace(/\./g, '')));
  			return _a;
-	    },
-	    'dot-thousand-asc': function (a, b){
-	    	return ((a < b) ? -1 : ((a > b) ? 1 : 0));
-	    },
-	    'dot-thousand-desc': function (a, b){
-	    	return ((a < b) ? 1 : ((a > b) ? -1 : 0));
-	    },
-	    'br-date-pre': function (a){
-	    	let _a = a.replace(/<[^<>]*>/g, '');
-	    	if (_a === '') return _a;
-	    	_a = _a.split('/');
-	    	return _a[2] + '-' + _a[1] + '-' + _a[0];
-	    },
-	    'n_viagens-pre': function (a){
-	    	let _a = a.replace(/<[^<>]*>/g, '');
-	    	if (_a === '') return 0;
-	    	_a = _a.replace(/\(.*\)/, '');
-	    	return parseInt(_a);
-	    }
-	});
+ 		},
+ 		'dot-thousand-asc': function (a, b){
+ 			return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+ 		},
+ 		'dot-thousand-desc': function (a, b){
+ 			return ((a < b) ? 1 : ((a > b) ? -1 : 0));
+ 		},
+ 		'br-date-pre': function (a){
+ 			let _a = a.replace(/<[^<>]*>/g, '');
+ 			if (_a === '') return _a;
+ 			_a = _a.split('/');
+ 			return `${_a[2]}-${_a[1]}-${_a[0]}`;
+ 		},
+ 		'br-datetime-pre': function (dt){
+ 			let _dt = dt.replace(/<[^<>]*>/g, '');
+ 			if (_dt === '') return _dt;
+ 			_dt = _dt.split(' ');
+ 			let _a = _dt[0].split('/');
+ 			return `${_a[2]}-${_a[1]}-${_a[0]} ${_dt[1]}`;
+ 		},
+ 		'n_viagens-pre': function (a){
+ 			let _a = a.replace(/<[^<>]*>/g, '');
+ 			if (_a === '') return 0;
+ 			_a = _a.replace(/\(.*\)/, '');
+ 			return parseInt(_a);
+ 		}
+ 	});
  	$.fn.dataTable.ext.search.push(
  		function(settings, searchData, index, rowData){
  			//Se for a tabela 'lista_ops__table'
