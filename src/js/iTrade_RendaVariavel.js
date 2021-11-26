@@ -113,9 +113,9 @@ let Renda_variavel = (function(){
 		instancias: [],
 		//Lista de cores para cada instancia na lista
 		colors: {
-			class: ['--bs-blue', '--bs-red', '--bs-green', '--bs-orange', '--bs-indigo'],
-			code: ['#0d6efd', '#dc3545', '#198754', '#fd7e14', '#6610f2'],
-			code_transparent: ['rgba(13, 110, 253, 0.1)', 'rgba(220, 53, 69, 0.2)', 'rgba(25, 135, 84, 0.2)', 'rgba(253, 126, 20, 0.2)', 'rgba(102, 16, 242, 0.2)']
+			class: ['--bs-blue', '--bs-indigo', '--bs-green', '--bs-orange', '--bs-yellow'],
+			code: ['#0d6efd', '#6610f2', '#198754', '#fd7e14', '#ffc107'],
+			code_transparent: ['rgba(13, 110, 253, 0.1)', 'rgba(102, 16, 242, 0.2)', 'rgba(25, 135, 84, 0.2)', 'rgba(253, 126, 20, 0.2)', 'rgba(255, 193, 7, 0.2)']
 		},
 		/*
 			Inicia a lista de instancias:
@@ -1260,8 +1260,8 @@ let Renda_variavel = (function(){
 								},
 								{
 									label: 'Média',
-									backgroundColor: '#6610f2',
-	      							borderColor: '#6610f2',
+									backgroundColor: '#212529',
+	      							borderColor: '#212529',
 	      							borderWidth: 1,
 	      							borderDash: [5, 5],
 	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_media']
@@ -1356,8 +1356,8 @@ let Renda_variavel = (function(){
 						},
 						{
 							label: 'Média',
-							backgroundColor: '#6610f2',
-  							borderColor: '#6610f2',
+							backgroundColor: '#212529',
+  							borderColor: '#212529',
   							borderWidth: 1,
   							borderDash: [5, 5],
   							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_media']
@@ -2662,13 +2662,13 @@ let Renda_variavel = (function(){
 					`<td class="text-center"><span name="result__lucro_R" class="data-small">${((line_data.result__lucro_R !== '--') ? `${line_data.result__lucro_R.toFixed(3)}R` : line_data.result__lucro_R )}</span></td>`+
 					`<td class="text-center"><span name="result__lucro_perc" class="data-small">${((line_data.result__lucro_perc !== '--') ? `${line_data.result__lucro_perc.toFixed(2)}%` : line_data.result__lucro_perc)}</span></td>`+
 					//R:G
-					`<td class="text-center divider"><span name="stats__rrMedio" class="data-small">${line_data.stats__rrMedio.toFixed(2)}</span></td>`+
-					`<td class="text-center"><span name="result__mediaGain_R" class="data-small text-success">${((line_data.result__mediaGain_R !== '--') ? `${line_data.result__mediaGain_R.toFixed(3)}R` : line_data.result__mediaGain_R )}</span><span name="result__mediaGain_brl" class="data-tiny text-success ms-2">R$ ${line_data.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="data-tiny text-success ms-2">${((line_data.result__mediaGain_perc !== '--') ? `${line_data.result__mediaGain_perc.toFixed(2)}%` : line_data.result__mediaGain_perc )}</span></td>`+
-					`<td class="text-center"><span name="result__mediaLoss_R" class="data-small text-danger">${((line_data.result__mediaLoss_R !== '--') ? `${line_data.result__mediaLoss_R.toFixed(3)}R` : line_data.result__mediaLoss_R )}</span><span name="result__mediaLoss_brl" class="data-tiny text-danger ms-2">R$ ${line_data.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="data-tiny text-danger ms-2">${((line_data.result__mediaLoss_perc !== '--') ? `${line_data.result__mediaLoss_perc.toFixed(2)}%` : line_data.result__mediaLoss_perc )}</span></td>`+
+					`<td class="text-center divider"><span name="stats__rrMedio" class="data-tiny">${line_data.stats__rrMedio.toFixed(2)}</span></td>`+
+					`<td class="text-center"><span name="result__mediaGain_R" class="data-tiny text-success">${((line_data.result__mediaGain_R !== '--') ? `${line_data.result__mediaGain_R.toFixed(3)}R` : line_data.result__mediaGain_R )}</span><span name="result__mediaGain_brl" class="data-tiny text-success ms-2">R$ ${line_data.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="data-tiny text-success ms-2">${((line_data.result__mediaGain_perc !== '--') ? `${line_data.result__mediaGain_perc.toFixed(2)}%` : line_data.result__mediaGain_perc )}</span></td>`+
+					`<td class="text-center"><span name="result__mediaLoss_R" class="data-tiny text-danger">${((line_data.result__mediaLoss_R !== '--') ? `${line_data.result__mediaLoss_R.toFixed(3)}R` : line_data.result__mediaLoss_R )}</span><span name="result__mediaLoss_brl" class="data-tiny text-danger ms-2">R$ ${line_data.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="data-tiny text-danger ms-2">${((line_data.result__mediaLoss_perc !== '--') ? `${line_data.result__mediaLoss_perc.toFixed(2)}%` : line_data.result__mediaLoss_perc )}</span></td>`+
 					//Expect.
-					`<td class="text-center divider"><span name="stats__expect" class="data-small">${((line_data.stats__expect !== '--') ? line_data.stats__expect.toFixed(2) : line_data.stats__expect )}</span></td>`+
+					`<td class="text-center divider"><span name="stats__expect_R" class="data-tiny">${((line_data.stats__expect_R !== '--') ? `${line_data.stats__expect_R.toFixed(3)}R` : line_data.stats__expect_R )}</span><span name="stats__expect_brl" class="data-tiny ms-2">R$ ${line_data.stats__expect_brl.toFixed(2)}</span><span name="stats__expect_perc" class="data-tiny ms-2">${((line_data.stats__expect_perc !== '--') ? `${line_data.stats__expect_perc.toFixed(2)}%` : line_data.stats__expect_perc )}</span></td>`+
 					//DP
-					`<td class="text-center"><span name="stats__dp" class="data-small">${((line_data.stats__dp !== '--') ? line_data.stats__dp.toFixed(2) : line_data.stats__dp )}</span></td>`+
+					`<td class="text-center"><span name="stats__dp_R" class="data-tiny">${((line_data.stats__dp_R !== '--') ? `${line_data.stats__dp_R.toFixed(3)}R` : line_data.stats__dp_R )}</span><span name="stats__dp_brl" class="data-tiny ms-2">R$ ${line_data.stats__dp_brl.toFixed(2)}</span><span name="stats__dp_perc" class="data-tiny ms-2">${((line_data.stats__dp_perc !== '--') ? `${line_data.stats__dp_perc.toFixed(2)}%` : line_data.stats__dp_perc )}</span></td>`+
 					//SQN
 					`<td class="text-center"><span name="stats__sqn" class="data-small">${((line_data.stats__sqn !== '--') ? line_data.stats__sqn.toFixed(2) : line_data.stats__sqn )}</span></td>`+
 					//Edge
@@ -2682,7 +2682,7 @@ let Renda_variavel = (function(){
 					`<td><span name="cenario" class="fw-bold">${cenario}</span></td>`+
 					//Dias
 					//N° Trades
-					`<td class="text-center divider"><span name="trades__total" class="fw-bold">${line_data.trades__total}</span></td>`+
+					`<td class="text-center divider"><span name="trades__total" class="data-small">${line_data.trades__total}</span></td>`+
 					`<td class="text-center"><span name="trades__positivo" class="data-small text-success">${line_data.trades__positivo}</span><span name="trades__positivo_perc" class="data-tiny text-success ms-2">(${line_data.trades__positivo_perc.toFixed(2)}%)</span></td>`+
 					`<td class="text-center"><span name="trades__negativo" class="data-small text-danger">${line_data.trades__negativo}</span><span name="trades__negativo_perc" class="data-tiny text-danger ms-2">(${line_data.trades__negativo_perc.toFixed(2)}%)</span></td>`+
 					`<td class="text-center"><span name="trades__empate" class="data-small text-muted">${line_data.trades__empate}</span><span name="trades__empate_perc" class="data-tiny text-muted ms-2">(${line_data.trades__empate_perc.toFixed(2)}%)</span></td>`+
@@ -2692,13 +2692,13 @@ let Renda_variavel = (function(){
 					`<td class="text-center"><span name="result__lucro_R" class="data-small">${((line_data.result__lucro_R !== '--') ? `${line_data.result__lucro_R.toFixed(3)}R` : line_data.result__lucro_R )}</span></td>`+
 					`<td class="text-center"><span name="result__lucro_perc" class="data-small">${((line_data.result__lucro_perc !== '--') ? `${line_data.result__lucro_perc.toFixed(2)}%` : line_data.result__lucro_perc)}</span></td>`+
 					//R:G
-					`<td class="text-center divider"><span name="stats__rrMedio" class="fw-bold">${line_data.stats__rrMedio.toFixed(2)}</span></td>`+
-					`<td class="text-center"><span name="result__mediaGain_R" class="data-small text-success">${((line_data.result__mediaGain_R !== '--') ? `${line_data.result__mediaGain_R.toFixed(3)}R` : line_data.result__mediaGain_R )}</span><span name="result__mediaGain_brl" class="data-tiny text-success ms-2">R$ ${line_data.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="data-tiny text-success ms-2">${((line_data.result__mediaGain_perc !== '--') ? `${line_data.result__mediaGain_perc.toFixed(2)}%` : line_data.result__mediaGain_perc )}</span></td>`+
-					`<td class="text-center"><span name="result__mediaLoss_R" class="data-small text-danger">${((line_data.result__mediaLoss_R !== '--') ? `${line_data.result__mediaLoss_R.toFixed(3)}R` : line_data.result__mediaLoss_R )}</span><span name="result__mediaLoss_brl" class="data-tiny text-danger ms-2">R$ ${line_data.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="data-tiny text-danger ms-2">${((line_data.result__mediaLoss_perc !== '--') ? `${line_data.result__mediaLoss_perc.toFixed(2)}%` : line_data.result__mediaLoss_perc )}</span></td>`+
+					`<td class="text-center divider"><span name="stats__rrMedio" class="data-tiny">${line_data.stats__rrMedio.toFixed(2)}</span></td>`+
+					`<td class="text-center"><span name="result__mediaGain_R" class="data-tiny text-success">${((line_data.result__mediaGain_R !== '--') ? `${line_data.result__mediaGain_R.toFixed(3)}R` : line_data.result__mediaGain_R )}</span><span name="result__mediaGain_brl" class="data-tiny text-success ms-2">R$ ${line_data.result__mediaGain_brl.toFixed(2)}</span><span name="result__mediaGain_perc" class="data-tiny text-success ms-2">${((line_data.result__mediaGain_perc !== '--') ? `${line_data.result__mediaGain_perc.toFixed(2)}%` : line_data.result__mediaGain_perc )}</span></td>`+
+					`<td class="text-center"><span name="result__mediaLoss_R" class="data-tiny text-danger">${((line_data.result__mediaLoss_R !== '--') ? `${line_data.result__mediaLoss_R.toFixed(3)}R` : line_data.result__mediaLoss_R )}</span><span name="result__mediaLoss_brl" class="data-tiny text-danger ms-2">R$ ${line_data.result__mediaLoss_brl.toFixed(2)}</span><span name="result__mediaLoss_perc" class="data-tiny text-danger ms-2">${((line_data.result__mediaLoss_perc !== '--') ? `${line_data.result__mediaLoss_perc.toFixed(2)}%` : line_data.result__mediaLoss_perc )}</span></td>`+
 					//Expect.
-					`<td class="text-center divider"><span name="stats__expect" class="data-small">${((line_data.stats__expect !== '--') ? line_data.stats__expect.toFixed(2) : line_data.stats__expect )}</span></td>`+
+					`<td class="text-center divider"><span name="stats__expect_R" class="data-tiny">${((line_data.stats__expect_R !== '--') ? `${line_data.stats__expect_R.toFixed(3)}R` : line_data.stats__expect_R )}</span><span name="stats__expect_brl" class="data-tiny ms-2">R$ ${line_data.stats__expect_brl.toFixed(2)}</span><span name="stats__expect_perc" class="data-tiny ms-2">${((line_data.stats__expect_perc !== '--') ? `${line_data.stats__expect_perc.toFixed(2)}%` : line_data.stats__expect_perc )}</span></td>`+
 					//DP
-					`<td class="text-center"><span name="stats__dp" class="data-small">${((line_data.stats__dp !== '--') ? line_data.stats__dp.toFixed(2) : line_data.stats__dp )}</span></td>`+
+					`<td class="text-center"><span name="stats__dp_R" class="data-tiny">${((line_data.stats__dp_R !== '--') ? `${line_data.stats__dp_R.toFixed(3)}R` : line_data.stats__dp_R )}</span><span name="stats__dp_brl" class="data-tiny ms-2">R$ ${line_data.stats__dp_brl.toFixed(2)}</span><span name="stats__dp_perc" class="data-tiny ms-2">${((line_data.stats__dp_perc !== '--') ? `${line_data.stats__dp_perc.toFixed(2)}%` : line_data.stats__dp_perc )}</span></td>`+
 					//SQN
 					`<td class="text-center"><span name="stats__sqn" class="data-small">${((line_data.stats__sqn !== '--') ? line_data.stats__sqn.toFixed(2) : line_data.stats__sqn )}</span></td>`+
 					//Edge
@@ -4270,7 +4270,8 @@ let Renda_variavel = (function(){
 	/*
 		Comanda cliques no menu de renda variavel.
 	*/
-	$('button', document.getElementById('renda_variavel__menu')).click(function (){
+	$('[name]', document.getElementById('renda_variavel__menu')).click(function (e){
+		e.preventDefault();
 		if (this.name === 'arcaboucos')
 			buildArcaboucosModal(firstBuild = false, forceRebuild = false, show = true);
 		else if (this.name === 'ativos')

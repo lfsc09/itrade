@@ -93,14 +93,30 @@
 					<div class="col d-flex">
 						<div class="container-fluid bg-light p-5 pt-3 rounded">
 							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
+								<div class="btn-group me-2" role="group">
+									<div class="btn-group" role="group">
+										<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-2"></i>Dados Instância</button>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="#" name="section_instancia_data"><i class="fas fa-chart-line me-2"></i>Dados Instância</a></li>
+											<li><a class="dropdown-item" href="#" name="section_observacoes_analise"><i class="fas fa-microchip me-2"></i>Análise Observações</a></li>
+										</ul>
+									</div>
+								</div>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
 								<button class="btn btn-sm btn-primary me-2" type="button" name="ativos"><i class="fas fa-euro-sign me-2"></i>Ativos</button>
 								<button class="btn btn-sm btn-primary" type="button" name="gerenciamentos"><i class="fas fa-coins me-2"></i>Gerenciamentos</button>
 								<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="arcabouco_info"><i class="fas fa-info-circle me-2"></i>Info</button>
 								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
-								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</button>
-								<button class="btn btn-sm btn-outline-primary me-2" type="button" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</button>
-								<button class="btn btn-sm btn-outline-primary" type="button" name="adicionar_operacoes"><i class="fab fa-buffer me-2"></i>Adicionar Operações</button>
+								<div class="btn-group" role="group">
+									<button class="btn btn-sm btn-outline-primary" type="button" name="adicionar_operacoes"><i class="fab fa-buffer me-2"></i>Adicionar Operações</button>
+									<div class="btn-group" role="group">
+										<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"></button>
+										<ul class="dropdown-menu">
+											<li><a class="dropdown-item" href="#" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</a></li>
+											<li><a class="dropdown-item" href="#" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</a></li>
+										</ul>
+									</div>
+								</div>
 							</div>
 							<div class="row mb-4">
 								<div class="col" id="renda_variavel__instancias"></div>
@@ -853,7 +869,7 @@
 							</div>
 							<div class="col-4">
 								<div class="row">
-									<div class="col-12 p-0">
+									<div class="col-12 ps-0">
 										<div class="card rounded-3 shadow-sm">
 											<div class="card-body">
 												<div class="container-fluid d-flex justify-content-end px-0">
@@ -883,7 +899,7 @@
 									</div>
 								</div>
 								<div class="row mt-2">
-									<div class="col-12 p-0">
+									<div class="col-12 ps-0">
 										<div class="card rounded-3 shadow-sm">
 											<div class="card-body">
 												<div id="adicionar_operacoes__extraDados">
