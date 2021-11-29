@@ -95,10 +95,10 @@
 							<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
 								<div class="btn-group me-2" role="group">
 									<div class="btn-group" role="group">
-										<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-2"></i>Dados Instância</button>
+										<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-2"></i>Dados Instância </button>
 										<ul class="dropdown-menu">
-											<li><a class="dropdown-item" href="#" name="section_instancia_data"><i class="fas fa-chart-line me-2"></i>Dados Instância</a></li>
-											<li><a class="dropdown-item" href="#" name="section_observacoes_analise"><i class="fas fa-microchip me-2"></i>Análise Observações</a></li>
+											<li><a class="dropdown-item" href="#" name="section_dashboard_ops"><i class="fas fa-chart-line me-2"></i>Dados Instância </a></li>
+											<li><a class="dropdown-item" href="#" name="section_analise_obs"><i class="fas fa-microchip me-2"></i>Análise Observações </a></li>
 										</ul>
 									</div>
 								</div>
@@ -122,7 +122,7 @@
 								<div class="col" id="renda_variavel__instancias"></div>
 							</div>
 							<div class="row">
-								<div class="col" id="dashboard_ops__search">
+								<div class="col" id="renda_variavel__search">
 									<div class="row">
 										<div class="col">
 											<div class="card mb-2 rounded-3 shadow-sm">
@@ -254,6 +254,38 @@
 										<div class="card mb-2 rounded-3 shadow-sm">
 											<div class="card-body">
 												<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</div>
+											</div>
+										</div>
+									</div>
+									<div class="d-none" target="building">
+										<div class="card mb-2 rounded-3 shadow-sm">
+											<div class="card-body">
+												<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cog fa-spin me-2"></i>Construindo..</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="col d-none" id="analise_obs__section">
+									<div class="d-none" target="data">
+										<div class="row">
+											<!-- Tabela Resultado por Grupo -->
+											<div class="col">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body" id="analise_obs__table_result"></div>
+												</div>
+											</div>
+											<!-- Grafico Dispersão por Grupo -->
+											<div class="col-6">
+												<div class="card rounded-3 shadow-sm">
+													<div class="card-body" id="analise_obs__chart_dispersaoGrupo"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div class="" target="empty">
+										<div class="card mb-2 rounded-3 shadow-sm">
+											<div class="card-body">
+												<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cookie-bite me-2"></i>Nada a analisar</div>
 											</div>
 										</div>
 									</div>

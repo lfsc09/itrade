@@ -163,6 +163,17 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*---------------------------------- RENDA VARIÁVEL ----------------------------------*/
 /*------------------------------------------------------------------------------------*/
 #renda_variavel__instancias span {cursor: pointer}
+#renda_variavel__search .form-label {font-size: 11px}
+#renda_variavel__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
+#renda_variavel__search input[name='data'] {width: 175px}
+#renda_variavel__search div[name='ativo'] {width: 190px}
+#renda_variavel__search div[name='cenario'] {width: 190px}
+#renda_variavel__search div[name='observacoes'] {width: 190px}
+#renda_variavel__search div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
+#renda_variavel__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
+#renda_variavel__search input[name='vol'] {width: 80px}
+#renda_variavel__search select[name='tipo_cts'] {width: 115px}
+#renda_variavel__search select[name='ativo'].init, #renda_variavel__search select[name='gerenciamento'].init, #renda_variavel__search select[name='cenario'].init {height: 30px}
 /*------------------------------------ Arcabouço -------------------------------------*/
 @keyframes pulse {
 	0% {
@@ -329,17 +340,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #lista_ops__table_wrapper input {font-size: 11px}
 #lista_ops__table_filter {display: none}
 /*---------------------------------- Dashboard Ops -----------------------------------*/
-#dashboard_ops__search .form-label {font-size: 11px}
-#dashboard_ops__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
-#dashboard_ops__search input[name='data'] {width: 175px}
-#dashboard_ops__search div[name='ativo'] {width: 190px}
-#dashboard_ops__search div[name='cenario'] {width: 190px}
-#dashboard_ops__search div[name='observacoes'] {width: 190px}
-#dashboard_ops__search div[name='observacoes'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
-#dashboard_ops__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
-#dashboard_ops__search input[name='vol'] {width: 80px}
-#dashboard_ops__search select[name='tipo_cts'] {width: 115px}
-#dashboard_ops__search select[name='ativo'].init, #dashboard_ops__search select[name='gerenciamento'].init, #dashboard_ops__search select[name='cenario'].init {height: 30px}
 #dashboard_ops__table_stats__byCenario {font-size: 12px}
 #dashboard_ops__table_stats__byCenario span.data-small {font-weight: bold; font-size: 11px}
 #dashboard_ops__table_stats__byCenario span.data-tiny {font-weight: bold; font-size: 9px}

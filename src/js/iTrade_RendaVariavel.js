@@ -2,8 +2,10 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------------ VARS --------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
-	/*----------------------------- Section Arcabouço --------------------------------*/
+	/*-------------------------------- Renda Variavel --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	//Controla qual section esta sendo mostrada: 'dashboard_ops__section', 'analise_obs__section'
+	let _renda_variavel__section = 'dashboard_ops__section';
 	//////////////////////////////////
 	//Usuários
 	//////////////////////////////////
@@ -159,10 +161,14 @@ let Renda_variavel = (function(){
 						//Inicia o arcabouço section com os cenarios e operações que vieram.
 						_lista__cenarios.create(allData['cenarios']);
 						_lista__operacoes.update(allData['operacoes']);
-						//Inicia o 'dashboard_ops__search' com os 'filters' e 'simulations'
-						if (_dashboard_ops__search.init()){
-							//Constroi o arcabouço section
-							rebuildArcaboucoSection(rebuildSearch = false);
+						//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
+						if (_renda_variavel__search.init()){
+							//Constroi o dashboard_ops section
+							if (_renda_variavel__section === 'dashboard_ops__section')
+								rebuildDashboard_ops();
+							//Ou constroi o analise_ops section
+							else if (_renda_variavel__section === 'analise_obs__section')
+								rebuildAnalise_obs();
 						}
 					}
 					else{
@@ -173,10 +179,14 @@ let Renda_variavel = (function(){
 									//Inicia o arcabouço section com os cenarios e operações que vieram.
 									_lista__cenarios.create(result.data['cenarios']);
 									_lista__operacoes.update(result.data['operacoes']);
-									//Inicia o 'dashboard_ops__search' com os 'filters' e 'simulations'
-									if (_dashboard_ops__search.init()){
-										//Constroi o arcabouço section
-										rebuildArcaboucoSection(rebuildSearch = false);
+									//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
+									if (_renda_variavel__search.init()){
+										//Constroi o dashboard_ops section
+										if (_renda_variavel__section === 'dashboard_ops__section')
+											rebuildDashboard_ops();
+										//Ou constroi o analise_ops section
+										else if (_renda_variavel__section === 'analise_obs__section')
+											rebuildAnalise_obs();
 									}
 								}
 								else
@@ -205,10 +215,14 @@ let Renda_variavel = (function(){
 				//Inicia o arcabouço section com os cenarios e operações desse arcabouço.
 				_lista__cenarios.create(allData['cenarios']);
 				_lista__operacoes.update(allData['operacoes']);
-				//Inicia o 'dashboard_ops__search' com os 'filters' e 'simulations'
-				if (_dashboard_ops__search.init()){
-					//Constroi o arcabouço section
-					rebuildArcaboucoSection(rebuildSearch = false);
+				//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
+				if (_renda_variavel__search.init()){
+					//Constroi o dashboard_ops section
+					if (_renda_variavel__section === 'dashboard_ops__section')
+						rebuildDashboard_ops();
+					//Ou constroi o analise_ops section
+					else if (_renda_variavel__section === 'analise_obs__section')
+						rebuildAnalise_obs();
 				}
 			}
 		},
@@ -269,9 +283,14 @@ let Renda_variavel = (function(){
 						delete this.instancias[i]['filters'][key];
 				}
 			}
-			//Constroi o arcabouço section
-			if (rebuildSection)
-				rebuildArcaboucoSection(rebuildSearch = false);
+			if (rebuildSection){
+				//Constroi o dashboard_ops section
+				if (_renda_variavel__section === 'dashboard_ops__section')
+					rebuildDashboard_ops();
+				//Ou constroi o analise_ops section
+				else if (_renda_variavel__section === 'analise_obs__section')
+					rebuildAnalise_obs();
+			}
 			Global.browserStorage__Sync.set('instancias', this.instancias, 'localStorage');
 		},
 		//Atualiza os 'simulations' da instancia selecionada
@@ -285,9 +304,14 @@ let Renda_variavel = (function(){
 					break;
 				}
 			}
-			//Constroi o arcabouço section
-			if (rebuildSection)
-				rebuildArcaboucoSection(rebuildSearch = false);
+			if (rebuildSection){
+				//Constroi o dashboard_ops section
+				if (_renda_variavel__section === 'dashboard_ops__section')
+					rebuildDashboard_ops();
+				//Ou constroi o analise_ops section
+				else if (_renda_variavel__section === 'analise_obs__section')
+					rebuildAnalise_obs();
+			}
 			Global.browserStorage__Sync.set('instancias', this.instancias, 'localStorage');
 		},
 		//Atualiza todas as instancias de um arcabouço da lista
@@ -341,6 +365,373 @@ let Renda_variavel = (function(){
 				return true;
 			}
 			return false;
+		}
+	}
+	//Possui os 'filters' e 'simulation' usados em 'renda_variavel__search'
+	let _renda_variavel__search = {
+		filters: {
+			data: null,
+			hora: null,
+			ativo: null,
+			gerenciamento: null,
+			cenario: null,
+			observacoes: null
+		},
+		simulations: {
+			periodo_calc: null,
+			tipo_cts: null,
+			cts: null,
+			usa_custo: null,
+			ignora_erro: null,
+			valor_inicial: null,
+			R: null
+		},
+		init: function (){
+			let me = this,
+				renda_variavel__search = $(document.getElementById('renda_variavel__search')),
+				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
+				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				ativos_in_operacoes = {},
+				gerenciamento_in_operacoes = {},
+				cenarios_in_operacoes = {},
+				cenarios_by_nome = {},
+				select_options_html = '';
+			//Monta uma lista de cenarios usando o nome como chave
+			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
+				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
+			//Captura dados das operações para montar os filtros
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
+				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
+				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
+			}
+			//////////////////////////////////
+			//Filtro da Data
+			//////////////////////////////////
+			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
+				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial;
+			me.filters.data = renda_variavel__search.find('input[name="data"]');
+			me.filters.data.on('apply.daterangepicker', function (ev, picker){
+				//Apaga o filter de Data se a data for todo o periodo
+				if (picker.startDate.isSame(picker.minDate) && picker.endDate.isSame(picker.maxDate)){
+					_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', '');
+					_lista__instancias_arcabouco.updateInstancia_Filters('data_final', '');
+				}
+				else{
+					_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', picker.startDate.format('DD/MM/YYYY'));
+					_lista__instancias_arcabouco.updateInstancia_Filters('data_final', picker.endDate.format('DD/MM/YYYY'));
+				}
+			});
+			me.filters.data.daterangepicker({
+				showDropdowns: true,
+				minDate: data_inicial,
+				startDate: ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : data_inicial,
+				endDate: ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : data_final,
+				maxDate: data_final,
+				isInvalidDate: function(date) {
+					//Desabilita os FDS
+					return (date.day() == 0 || date.day() == 6);
+				},
+				locale: {
+					format: 'DD/MM/YYYY',
+					separator: ' - ',
+					applyLabel: 'Aplicar',
+					cancelLabel: 'Cancelar',
+					fromLabel: 'De',
+					toLabel: 'Até',
+					customRangeLabel: 'Custom',
+					weekLabel: 'S',
+					daysOfWeek: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
+					monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+				}
+			});
+			//////////////////////////////////
+			//Filtro da Hora
+			//////////////////////////////////
+			me.filters.hora = renda_variavel__search.find('div[name="hora"]');
+			noUiSlider.create(me.filters.hora[0], {
+				connect: true,
+				range: {
+					'min': new Date('2000-01-01 09:00:00').getTime(),
+					'max': new Date('2000-01-01 18:00:00').getTime()
+				},
+				step: 60 * 60 * 1000,
+				start: [
+					('hora_inicial' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_inicial']}`).getTime() : new Date('2000-01-01 09:00:00').getTime(),
+					('hora_final' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_final']}`).getTime() : new Date('2000-01-01 18:00:00').getTime()
+				],
+				tooltips: {
+					to: ((value) => moment(value).format('HH:mm'))
+				}
+			});
+			me.filters.hora[0].noUiSlider.on('change', function (values, handle, unencoded, isTap, positions){
+				let handle_dic = ['hora_inicial', 'hora_final'];
+				_lista__instancias_arcabouco.updateInstancia_Filters(handle_dic[handle], moment(parseInt(values[handle])).format('HH:mm'));
+			});
+			//////////////////////////////////
+			//Filtro do Ativo
+			//////////////////////////////////
+			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
+			me.filters.ativo = renda_variavel__search.find('select[name="ativo"]');
+			me.filters.ativo.append(select_options_html).promise().then(function (){
+				me.filters.ativo.selectpicker({
+					title: 'Ativo',
+					selectedTextFormat: 'count > 1',
+					actionsBox: true,
+					deselectAllText: 'Nenhum',
+					selectAllText: 'Todos',
+					style: '',
+					styleBase: 'form-control form-control-sm'
+				}).on('loaded.bs.select', function (){
+					me.filters.ativo.parent().addClass('form-control');
+				}).on('changed.bs.select', function (){
+					_lista__instancias_arcabouco.updateInstancia_Filters('ativo', $(this).val());
+				});
+			});
+			//////////////////////////////////
+			//Filtro do Gerenciamento
+			//////////////////////////////////
+			let gerenciamento_in_operacoes__lista = Object.keys(gerenciamento_in_operacoes);
+			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
+			me.filters.gerenciamento = renda_variavel__search.find('select[name="gerenciamento"]');
+			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
+				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
+			me.filters.gerenciamento.append(select_options_html).promise().then(function (){
+				if ('gerenciamento' in dashboard_filters)
+					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
+			});
+			me.filters.gerenciamento.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', $(this).val());
+			});
+			//////////////////////////////////
+			//Filtro de Cenario
+			//////////////////////////////////
+			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
+			me.filters.cenario = renda_variavel__search.find('select[name="cenario"]');
+			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
+				let localStorage_data = {
+					[cenarios_in_operacoes__lista[0]]: {
+						id: cenarios_by_nome[cenarios_in_operacoes__lista[0]],
+						observacoes: {}
+					}
+				}
+				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data, rebuildSection = false);
+			}
+			me.filters.cenario.append(select_options_html).promise().then(function (){
+				me.filters.cenario.selectpicker({
+					title: 'Cenários',
+					selectedTextFormat: 'count > 2',
+					actionsBox: true,
+					deselectAllText: 'Nenhum',
+					selectAllText: 'Todos',
+					style: '',
+					styleBase: 'form-control form-control-sm'
+				}).on('loaded.bs.select', function (){
+					me.filters.cenario.parent().addClass('form-control');
+				}).on('changed.bs.select', function (){
+					let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
+						localStorage_data = {};
+					$(this).find('option:selected').each(function (i, el){
+						localStorage_data[el.innerText] = {
+							id: this.value,
+							observacoes: ('cenario' in dashboard_filters && el.innerText in dashboard_filters['cenario']) ? dashboard_filters['cenario'][el.innerText]['observacoes'] : {}
+						}
+					});
+					_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data);
+					rebuildSelect_Observacoes__content(_lista__instancias_arcabouco.getSelected('id'));
+				});
+			});
+			//////////////////////////////////
+			//Filtro de Observacoes
+			//////////////////////////////////
+			me.filters.observacoes = renda_variavel__search.find('div[name="observacoes"]');
+			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
+			//////////////////////////////////
+			//Simulação de Periodo de Calculo
+			//////////////////////////////////
+			me.simulations.periodo_calc = renda_variavel__search.find('select[name="periodo_calc"]');
+			me.simulations.periodo_calc.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			});
+			if ('periodo_calc' in dashboard_simulations)
+				me.simulations.periodo_calc.val(dashboard_simulations['periodo_calc']);
+			//////////////////////////////////
+			//Simulação de Tipo Cts e Cts
+			//////////////////////////////////
+			me.simulations.tipo_cts = renda_variavel__search.find('select[name="tipo_cts"]');
+			me.simulations.tipo_cts.change(function (){
+				let value = $(this).val();
+				if (value === '1' || value === '3'){
+					me.simulations.cts.val('').prop('disabled', true);
+					_lista__instancias_arcabouco.updateInstancia_Simulations('cts', '');
+				}
+				else
+					me.simulations.cts.prop('disabled', false);
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
+			});
+			me.simulations.cts = renda_variavel__search.find('input[name="cts"]');
+			me.simulations.cts.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			});
+			if ('tipo_cts' in dashboard_simulations)
+				me.simulations.tipo_cts.val(dashboard_simulations['tipo_cts']);
+			if ('cts' in dashboard_simulations)
+				me.simulations.cts.val(dashboard_simulations['cts']);
+			me.simulations.cts.inputmask({alias: 'numeric', digitsOptional: false, digits: 0, rightAlign: false, placeholder: '0'});
+			//////////////////////////////////
+			//Simulação de Usa Custos
+			//////////////////////////////////
+			me.simulations.usa_custo = renda_variavel__search.find('select[name="usa_custo"]');
+			me.simulations.usa_custo.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			});
+			if ('usa_custo' in dashboard_simulations)
+				me.simulations.usa_custo.val(dashboard_simulations['usa_custo']);
+			//////////////////////////////////
+			//Simulação de Ignora Erros
+			//////////////////////////////////
+			me.simulations.ignora_erro = renda_variavel__search.find('select[name="ignora_erro"]');
+			me.simulations.ignora_erro.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			});
+			if ('ignora_erro' in dashboard_simulations)
+				me.simulations.ignora_erro.val(dashboard_simulations['ignora_erro']);
+			//////////////////////////////////
+			//Simulação de Simular Capital
+			//////////////////////////////////
+			me.simulations.valor_inicial = renda_variavel__search.find('input[name="valor_inicial"]');
+			me.simulations.valor_inicial.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			});
+			if ('valor_inicial' in dashboard_simulations)
+				me.simulations.valor_inicial.val(dashboard_simulations['valor_inicial']);
+			me.simulations.valor_inicial.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			//////////////////////////////////
+			//Simulação de Simular R
+			//////////////////////////////////
+			me.simulations.R = renda_variavel__search.find('input[name="R"]');
+			me.simulations.R.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			});
+			if ('R' in dashboard_simulations)
+				me.simulations.R.val(dashboard_simulations['R']);
+			me.simulations.R.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			return true;
+		},
+		update: function (){
+			let me = this,
+				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
+				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				ativos_in_operacoes = {},
+				gerenciamento_in_operacoes = {},
+				cenarios_in_operacoes = {},
+				cenarios_by_nome = {},
+				select_options_html = '';
+			//Monta uma lista de cenarios usando o nome como chave
+			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
+				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
+				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
+				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
+			}
+			//////////////////////////////////
+			//Filtro da Data
+			//////////////////////////////////
+			let	data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY')),
+				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial);
+			me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
+			me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
+			me.filters.data.data('daterangepicker').setStartDate(data_inicial);
+			me.filters.data.data('daterangepicker').setEndDate(data_final);
+			//////////////////////////////////
+			//Filtro da Hora
+			//////////////////////////////////
+			let hora_inicial = ('hora_inicial' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_inicial']}`).getTime() : new Date('2000-01-01 09:00:00').getTime(),
+				hora_final = ('hora_final' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_final']}`).getTime() : new Date('2000-01-01 18:00:00').getTime();
+			me.filters.hora[0].noUiSlider.set([hora_inicial, hora_final]);
+			//////////////////////////////////
+			//Filtro do Ativo
+			//////////////////////////////////
+			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
+			me.filters.ativo.empty().append(select_options_html).promise().then(function (){
+				me.filters.ativo.selectpicker('refresh');
+			});
+			//////////////////////////////////
+			//Filtro do Gerenciamento
+			//////////////////////////////////
+			let gerenciamento_in_operacoes__lista = Object.keys(gerenciamento_in_operacoes);
+			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
+			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
+				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
+			me.filters.gerenciamento.empty().append(select_options_html).promise().then(function (){
+				if ('gerenciamento' in dashboard_filters)
+					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
+			});
+			//////////////////////////////////
+			//Filtro de Cenario
+			//////////////////////////////////
+			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
+			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
+			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
+				let localStorage_data = {
+					[cenarios_in_operacoes__lista[0]]: {
+						id: cenarios_by_nome[cenarios_in_operacoes__lista[0]],
+						observacoes: {}
+					}
+				}
+				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data, rebuildSection = false);
+			}
+			me.filters.cenario.empty().append(select_options_html).promise().then(function (){
+				me.filters.cenario.selectpicker('refresh');
+			});
+			//////////////////////////////////
+			//Filtro de Observacoes
+			//////////////////////////////////
+			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
+			//////////////////////////////////
+			//Simulação de Periodo de Calculo
+			//////////////////////////////////
+			if ('periodo_calc' in dashboard_simulations)
+				me.simulations.periodo_calc.val(dashboard_simulations['periodo_calc']);
+			else
+				me.simulations.periodo_calc[0].selectedIndex = 0;
+			//////////////////////////////////
+			//Simulação de Tipo Cts e Cts
+			//////////////////////////////////
+			if ('tipo_cts' in dashboard_simulations)
+				me.simulations.tipo_cts.val(dashboard_simulations['tipo_cts']);
+			else
+				me.simulations.tipo_cts[0].selectedIndex = 0;
+			if ('cts' in dashboard_simulations)
+				me.simulations.cts.val(dashboard_simulations['cts']).prop('disabled', false);
+			else
+				me.simulations.cts.val('').prop('disabled', true);
+			//////////////////////////////////
+			//Simulação de Usa Custos
+			//////////////////////////////////
+			if ('usa_custo' in dashboard_simulations)
+				me.simulations.usa_custo.val(dashboard_simulations['usa_custo']);
+			else
+				me.simulations.usa_custo[0].selectedIndex = 0;
+			//////////////////////////////////
+			//Simulação de Ignora Erros
+			//////////////////////////////////
+			if ('ignora_erro' in dashboard_simulations)
+				me.simulations.ignora_erro.val(dashboard_simulations['ignora_erro']);
+			else
+				me.simulations.ignora_erro[0].selectedIndex = 0;
+			//////////////////////////////////
+			//Simulação de Simular Capital
+			//////////////////////////////////
+			me.simulations.valor_inicial.val((('valor_inicial' in dashboard_simulations) ? dashboard_simulations['valor_inicial'] : ''));
+			//////////////////////////////////
+			//Simulação de Simular R
+			//////////////////////////////////
+			me.simulations.R.val((('R' in dashboard_simulations) ? dashboard_simulations['R'] : ''));
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////
@@ -588,7 +979,7 @@ let Renda_variavel = (function(){
 		pagingType: 'input'
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*-------------------------- Section Operações Upload ----------------------------*/
+	/*------------------------------- Operações Upload -------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Realiza a abertura e leitura do arquivo csv. (Importar operações)
@@ -705,12 +1096,12 @@ let Renda_variavel = (function(){
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------ Section Operações Adicionar ---------------------------*/
+	/*------------------------------ Operações Adicionar -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	//Informa qual tipo de bloco deve construir seguindo o inicial: (Com ações do gerenciamento) | (Sem ações do gerenciamento)
 	let _new_bloco__type__com_acoes = null;
 	////////////////////////////////////////////////////////////////////////////////////
-	/*-------------------------------- Dashboard Ops ---------------------------------*/
+	/*---------------------------- Section Dashboard Ops -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	//Informa se o 'dashboard_ops' precisa ser reconstruido
 	let _dashboard_ops__needRebuild = false;
@@ -723,373 +1114,6 @@ let Renda_variavel = (function(){
 					$(this).toggleClass('d-none', this.getAttribute('target') !== section_target);
 				});
 			}
-		}
-	}
-	//Possui os 'filters' e 'simulation' usados em 'dashboard_ops__search'
-	let _dashboard_ops__search = {
-		filters: {
-			data: null,
-			hora: null,
-			ativo: null,
-			gerenciamento: null,
-			cenario: null,
-			observacoes: null
-		},
-		simulations: {
-			periodo_calc: null,
-			tipo_cts: null,
-			cts: null,
-			usa_custo: null,
-			ignora_erro: null,
-			valor_inicial: null,
-			R: null
-		},
-		init: function (){
-			let me = this,
-				dashboard_ops__search = $(document.getElementById('dashboard_ops__search')),
-				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
-				ativos_in_operacoes = {},
-				gerenciamento_in_operacoes = {},
-				cenarios_in_operacoes = {},
-				cenarios_by_nome = {},
-				select_options_html = '';
-			//Monta uma lista de cenarios usando o nome como chave
-			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
-				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
-			//Captura dados das operações para montar os filtros
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
-				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
-				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
-			}
-			//////////////////////////////////
-			//Filtro da Data
-			//////////////////////////////////
-			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
-				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial;
-			me.filters.data = dashboard_ops__search.find('input[name="data"]');
-			me.filters.data.on('apply.daterangepicker', function (ev, picker){
-				//Apaga o filter de Data se a data for todo o periodo
-				if (picker.startDate.isSame(picker.minDate) && picker.endDate.isSame(picker.maxDate)){
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', '');
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_final', '');
-				}
-				else{
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', picker.startDate.format('DD/MM/YYYY'));
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_final', picker.endDate.format('DD/MM/YYYY'));
-				}
-			});
-			me.filters.data.daterangepicker({
-				showDropdowns: true,
-				minDate: data_inicial,
-				startDate: ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : data_inicial,
-				endDate: ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : data_final,
-				maxDate: data_final,
-				isInvalidDate: function(date) {
-					//Desabilita os FDS
-					return (date.day() == 0 || date.day() == 6);
-				},
-				locale: {
-					format: 'DD/MM/YYYY',
-					separator: ' - ',
-					applyLabel: 'Aplicar',
-					cancelLabel: 'Cancelar',
-					fromLabel: 'De',
-					toLabel: 'Até',
-					customRangeLabel: 'Custom',
-					weekLabel: 'S',
-					daysOfWeek: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
-					monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-				}
-			});
-			//////////////////////////////////
-			//Filtro da Hora
-			//////////////////////////////////
-			me.filters.hora = dashboard_ops__search.find('div[name="hora"]');
-			noUiSlider.create(me.filters.hora[0], {
-				connect: true,
-				range: {
-					'min': new Date('2000-01-01 09:00:00').getTime(),
-					'max': new Date('2000-01-01 18:00:00').getTime()
-				},
-				step: 60 * 60 * 1000,
-				start: [
-					('hora_inicial' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_inicial']}`).getTime() : new Date('2000-01-01 09:00:00').getTime(),
-					('hora_final' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_final']}`).getTime() : new Date('2000-01-01 18:00:00').getTime()
-				],
-				tooltips: {
-					to: ((value) => moment(value).format('HH:mm'))
-				}
-			});
-			me.filters.hora[0].noUiSlider.on('change', function (values, handle, unencoded, isTap, positions){
-				let handle_dic = ['hora_inicial', 'hora_final'];
-				_lista__instancias_arcabouco.updateInstancia_Filters(handle_dic[handle], moment(parseInt(values[handle])).format('HH:mm'));
-			});
-			//////////////////////////////////
-			//Filtro do Ativo
-			//////////////////////////////////
-			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
-			me.filters.ativo = dashboard_ops__search.find('select[name="ativo"]');
-			me.filters.ativo.append(select_options_html).promise().then(function (){
-				me.filters.ativo.selectpicker({
-					title: 'Ativo',
-					selectedTextFormat: 'count > 1',
-					actionsBox: true,
-					deselectAllText: 'Nenhum',
-					selectAllText: 'Todos',
-					style: '',
-					styleBase: 'form-control form-control-sm'
-				}).on('loaded.bs.select', function (){
-					me.filters.ativo.parent().addClass('form-control');
-				}).on('changed.bs.select', function (){
-					_lista__instancias_arcabouco.updateInstancia_Filters('ativo', $(this).val());
-				});
-			});
-			//////////////////////////////////
-			//Filtro do Gerenciamento
-			//////////////////////////////////
-			let gerenciamento_in_operacoes__lista = Object.keys(gerenciamento_in_operacoes);
-			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
-			me.filters.gerenciamento = dashboard_ops__search.find('select[name="gerenciamento"]');
-			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
-				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
-			me.filters.gerenciamento.append(select_options_html).promise().then(function (){
-				if ('gerenciamento' in dashboard_filters)
-					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
-			});
-			me.filters.gerenciamento.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', $(this).val());
-			});
-			//////////////////////////////////
-			//Filtro de Cenario
-			//////////////////////////////////
-			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
-			me.filters.cenario = dashboard_ops__search.find('select[name="cenario"]');
-			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
-				let localStorage_data = {
-					[cenarios_in_operacoes__lista[0]]: {
-						id: cenarios_by_nome[cenarios_in_operacoes__lista[0]],
-						observacoes: {}
-					}
-				}
-				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data, rebuildSection = false);
-			}
-			me.filters.cenario.append(select_options_html).promise().then(function (){
-				me.filters.cenario.selectpicker({
-					title: 'Cenários',
-					selectedTextFormat: 'count > 2',
-					actionsBox: true,
-					deselectAllText: 'Nenhum',
-					selectAllText: 'Todos',
-					style: '',
-					styleBase: 'form-control form-control-sm'
-				}).on('loaded.bs.select', function (){
-					me.filters.cenario.parent().addClass('form-control');
-				}).on('changed.bs.select', function (){
-					let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-						localStorage_data = {};
-					$(this).find('option:selected').each(function (i, el){
-						localStorage_data[el.innerText] = {
-							id: this.value,
-							observacoes: ('cenario' in dashboard_filters && el.innerText in dashboard_filters['cenario']) ? dashboard_filters['cenario'][el.innerText]['observacoes'] : {}
-						}
-					});
-					_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data);
-					rebuildSelect_Observacoes__content(_lista__instancias_arcabouco.getSelected('id'));
-				});
-			});
-			//////////////////////////////////
-			//Filtro de Observacoes
-			//////////////////////////////////
-			me.filters.observacoes = dashboard_ops__search.find('div[name="observacoes"]');
-			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
-			//////////////////////////////////
-			//Simulação de Periodo de Calculo
-			//////////////////////////////////
-			me.simulations.periodo_calc = dashboard_ops__search.find('select[name="periodo_calc"]');
-			me.simulations.periodo_calc.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			});
-			if ('periodo_calc' in dashboard_simulations)
-				me.simulations.periodo_calc.val(dashboard_simulations['periodo_calc']);
-			//////////////////////////////////
-			//Simulação de Tipo Cts e Cts
-			//////////////////////////////////
-			me.simulations.tipo_cts = dashboard_ops__search.find('select[name="tipo_cts"]');
-			me.simulations.tipo_cts.change(function (){
-				let value = $(this).val();
-				if (value === '1' || value === '3'){
-					me.simulations.cts.val('').prop('disabled', true);
-					_lista__instancias_arcabouco.updateInstancia_Simulations('cts', '');
-				}
-				else
-					me.simulations.cts.prop('disabled', false);
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
-			});
-			me.simulations.cts = dashboard_ops__search.find('input[name="cts"]');
-			me.simulations.cts.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			});
-			if ('tipo_cts' in dashboard_simulations)
-				me.simulations.tipo_cts.val(dashboard_simulations['tipo_cts']);
-			if ('cts' in dashboard_simulations)
-				me.simulations.cts.val(dashboard_simulations['cts']);
-			me.simulations.cts.inputmask({alias: 'numeric', digitsOptional: false, digits: 0, rightAlign: false, placeholder: '0'});
-			//////////////////////////////////
-			//Simulação de Usa Custos
-			//////////////////////////////////
-			me.simulations.usa_custo = dashboard_ops__search.find('select[name="usa_custo"]');
-			me.simulations.usa_custo.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			});
-			if ('usa_custo' in dashboard_simulations)
-				me.simulations.usa_custo.val(dashboard_simulations['usa_custo']);
-			//////////////////////////////////
-			//Simulação de Ignora Erros
-			//////////////////////////////////
-			me.simulations.ignora_erro = dashboard_ops__search.find('select[name="ignora_erro"]');
-			me.simulations.ignora_erro.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			});
-			if ('ignora_erro' in dashboard_simulations)
-				me.simulations.ignora_erro.val(dashboard_simulations['ignora_erro']);
-			//////////////////////////////////
-			//Simulação de Simular Capital
-			//////////////////////////////////
-			me.simulations.valor_inicial = dashboard_ops__search.find('input[name="valor_inicial"]');
-			me.simulations.valor_inicial.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			});
-			if ('valor_inicial' in dashboard_simulations)
-				me.simulations.valor_inicial.val(dashboard_simulations['valor_inicial']);
-			me.simulations.valor_inicial.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
-			//////////////////////////////////
-			//Simulação de Simular R
-			//////////////////////////////////
-			me.simulations.R = dashboard_ops__search.find('input[name="R"]');
-			me.simulations.R.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			});
-			if ('R' in dashboard_simulations)
-				me.simulations.R.val(dashboard_simulations['R']);
-			me.simulations.R.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
-			return true;
-		},
-		update: function (){
-			let me = this,
-				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
-				ativos_in_operacoes = {},
-				gerenciamento_in_operacoes = {},
-				cenarios_in_operacoes = {},
-				cenarios_by_nome = {},
-				select_options_html = '';
-			//Monta uma lista de cenarios usando o nome como chave
-			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
-				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
-				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
-				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
-			}
-			//////////////////////////////////
-			//Filtro da Data
-			//////////////////////////////////
-			let	data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY')),
-				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial);
-			me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
-			me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
-			me.filters.data.data('daterangepicker').setStartDate(data_inicial);
-			me.filters.data.data('daterangepicker').setEndDate(data_final);
-			//////////////////////////////////
-			//Filtro da Hora
-			//////////////////////////////////
-			let hora_inicial = ('hora_inicial' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_inicial']}`).getTime() : new Date('2000-01-01 09:00:00').getTime(),
-				hora_final = ('hora_final' in dashboard_filters) ? new Date(`2000-01-01 ${dashboard_filters['hora_final']}`).getTime() : new Date('2000-01-01 18:00:00').getTime();
-			me.filters.hora[0].noUiSlider.set([hora_inicial, hora_final]);
-			//////////////////////////////////
-			//Filtro do Ativo
-			//////////////////////////////////
-			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}" ${(('ativo' in dashboard_filters && dashboard_filters['ativo'].includes(c)) ? 'selected' : '' )}>${c}</option>`, '');
-			me.filters.ativo.empty().append(select_options_html).promise().then(function (){
-				me.filters.ativo.selectpicker('refresh');
-			});
-			//////////////////////////////////
-			//Filtro do Gerenciamento
-			//////////////////////////////////
-			let gerenciamento_in_operacoes__lista = Object.keys(gerenciamento_in_operacoes);
-			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
-			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
-				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
-			me.filters.gerenciamento.empty().append(select_options_html).promise().then(function (){
-				if ('gerenciamento' in dashboard_filters)
-					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
-			});
-			//////////////////////////////////
-			//Filtro de Cenario
-			//////////////////////////////////
-			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
-			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
-				let localStorage_data = {
-					[cenarios_in_operacoes__lista[0]]: {
-						id: cenarios_by_nome[cenarios_in_operacoes__lista[0]],
-						observacoes: {}
-					}
-				}
-				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', localStorage_data, rebuildSection = false);
-			}
-			me.filters.cenario.empty().append(select_options_html).promise().then(function (){
-				me.filters.cenario.selectpicker('refresh');
-			});
-			//////////////////////////////////
-			//Filtro de Observacoes
-			//////////////////////////////////
-			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
-			//////////////////////////////////
-			//Simulação de Periodo de Calculo
-			//////////////////////////////////
-			if ('periodo_calc' in dashboard_simulations)
-				me.simulations.periodo_calc.val(dashboard_simulations['periodo_calc']);
-			else
-				me.simulations.periodo_calc[0].selectedIndex = 0;
-			//////////////////////////////////
-			//Simulação de Tipo Cts e Cts
-			//////////////////////////////////
-			if ('tipo_cts' in dashboard_simulations)
-				me.simulations.tipo_cts.val(dashboard_simulations['tipo_cts']);
-			else
-				me.simulations.tipo_cts[0].selectedIndex = 0;
-			if ('cts' in dashboard_simulations)
-				me.simulations.cts.val(dashboard_simulations['cts']).prop('disabled', false);
-			else
-				me.simulations.cts.val('').prop('disabled', true);
-			//////////////////////////////////
-			//Simulação de Usa Custos
-			//////////////////////////////////
-			if ('usa_custo' in dashboard_simulations)
-				me.simulations.usa_custo.val(dashboard_simulations['usa_custo']);
-			else
-				me.simulations.usa_custo[0].selectedIndex = 0;
-			//////////////////////////////////
-			//Simulação de Ignora Erros
-			//////////////////////////////////
-			if ('ignora_erro' in dashboard_simulations)
-				me.simulations.ignora_erro.val(dashboard_simulations['ignora_erro']);
-			else
-				me.simulations.ignora_erro[0].selectedIndex = 0;
-			//////////////////////////////////
-			//Simulação de Simular Capital
-			//////////////////////////////////
-			me.simulations.valor_inicial.val((('valor_inicial' in dashboard_simulations) ? dashboard_simulations['valor_inicial'] : ''));
-			//////////////////////////////////
-			//Simulação de Simular R
-			//////////////////////////////////
-			me.simulations.R.val((('R' in dashboard_simulations) ? dashboard_simulations['R'] : ''));
 		}
 	}
 	let _dashboard_ops__elements = {
@@ -1152,10 +1176,49 @@ let Renda_variavel = (function(){
 		pagingType: 'input'
 	}
 	////////////////////////////////////////////////////////////////////////////////////
+	/*----------------------------- Section Analise Obs ------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	//Informa se o 'analise_obs' precisa ser reconstruido
+	let _analise_obs__needRebuild = false;
+	//Controla qual seção do analise_obs mostrar 'data', 'empty' ou 'building'
+	let _analise_obs__section = {
+		sections: {'data': 2, 'empty': 0, 'building': 0},
+		show: function (section_target, step = 0){
+			if (step === this.sections[section_target]){
+				$(document.getElementById('analise_obs__section')).find('> div[target]').each(function (){
+					$(this).toggleClass('d-none', this.getAttribute('target') !== section_target);
+				});
+			}
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
-	/*----------------------------- Section Arcabouço --------------------------------*/
+	/*------------------------------- Renda Variavel ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Altera a seção visivel entre 'dashboard_ops__section', 'analise_obs__section'
+	*/
+	function changeSection__Renda_variavel(section){
+		let renda_variavel = $(document.getElementById('renda_variavel'));
+		_renda_variavel__section = section;
+		if (_renda_variavel__section === 'dashboard_ops__section'){
+			renda_variavel.find('#analise_obs__section').addClass('d-none');
+			renda_variavel.find('#dashboard_ops__section').removeClass('d-none');
+			if (_analise_obs__needRebuild){
+				_analise_obs__needRebuild = false;
+				rebuildAnalise_obs();
+			}
+		}
+		else if (_renda_variavel__section === 'analise_obs__section'){
+			renda_variavel.find('#dashboard_ops__section').addClass('d-none');
+			renda_variavel.find('#analise_obs__section').removeClass('d-none');
+			if (_dashboard_ops__needRebuild){
+				_dashboard_ops__needRebuild = false;
+				rebuildDashboard_ops();
+			}
+		}
+	}
 	/*
 		Reconstroi a lista de instacia em 'renda_variavel__instancias'.
 	*/
@@ -1164,460 +1227,6 @@ let Renda_variavel = (function(){
 		for (let i in _lista__instancias_arcabouco.instancias)
 			html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? 'ms-2' : '')}" style="background-color: var(${_lista__instancias_arcabouco.instancias[i].color}) !important" instancia="${_lista__instancias_arcabouco.instancias[i].instancia}">${((_lista__instancias_arcabouco.instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : '')}${_lista__instancias_arcabouco.instancias[i].nome}</span>`;
 		$(document.getElementById('renda_variavel__instancias')).empty().append(html);
-	}
-	/*
-		Inicia ou reinicia a seção de 'filters' e 'simulation' em 'dashboard_ops__search' de acordo com a instancia de arcabouço selecionada.
-		Inicia ou reinicia a seção de 'dashboard_ops' ou 'lista_ops' da instancia de arcabouço selecionada.
-	*/
-	function rebuildArcaboucoSection(rebuildSearch = false){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			html = ``;
-		//////////////////////////////////
-		//Seção de 'filters' e 'simulations'
-		//////////////////////////////////
-		if (rebuildSearch)
-			_dashboard_ops__search.update();
-		//////////////////////////////////
-		//Seção de 'dashboard_ops'
-		//////////////////////////////////
-		_dashboard_ops__section.show('building');
-		if (selected_inst_arcabouco in _lista__operacoes.operacoes && _lista__operacoes.operacoes[selected_inst_arcabouco].length > 0){
-			let finish_building = 0,
-				dashboard_data = RV_Statistics.generate(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), _lista__instancias_arcabouco.getSelected('simulations'));
-			//////////////////////////////////
-			//Info Estatistica (Total + Por Cenário)
-			//////////////////////////////////
-			if (_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'] === null){
-				html = `<table class="table m-0" id="dashboard_ops__table_stats__byCenario">`+
-						`<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario)}</tbody>`+
-						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats)}</tfoot>`+
-						`</table>`;
-				$(document.getElementById('dashboard_ops__table_stats__byCenario__place')).append(html).promise().then(function (){
-					_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'] = $(document.getElementById('dashboard_ops__table_stats__byCenario'));
-					_dashboard_ops__section.show('data', ++finish_building);
-				});
-			}
-			else{
-				html = `<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario)}</tbody>`+
-						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats)}</tfoot>`;
-				_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'].empty().append(html).promise().then(function (){
-					_dashboard_ops__section.show('data', ++finish_building);
-				});
-			}
-			//////////////////////////////////
-			//Tabela de Resultados dos Trades
-			//////////////////////////////////
-			if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] === null){
-				html = `<table class="table m-0" id="dashboard_ops__table_trades">`+
-						`<thead>${rebuildDashboardOps__Table_Trades('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades)}</tbody>`+
-						`</table>`;
-				$(document.getElementById('dashboard_ops__table_trades__place')).append(html).promise().then(function (){
-					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
-					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
-					_dashboard_ops__section.show('data', ++finish_building);
-				});
-			}
-			else{
-				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().clear().rows.add(rebuildDashboardOps__Table_Trades('dataOnly', dashboard_data.dashboard_ops__table_trades)).draw();
-				_dashboard_ops__section.show('data', ++finish_building);
-			}
-			//////////////////////////////////
-			//Gráfico de Resultados Normalizados
-			//////////////////////////////////
-			let linha_risco = {};
-			if (dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['risco'] !== null){
-				linha_risco = [{
-					type: 'line',
-					scaleID: 'y',
-					value: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['risco'],
-					borderColor: '#dc3545',
-					borderWidth: 1,
-					label: {
-						backgroundColor: '#dc3545',
-						font: {size: 10},
-						content: `R`,
-						enabled: true
-					}
-				}];
-			}
-			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'] === null){
-				$(document.getElementById('dashboard_ops__chart_resultadoNormalizado')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
-					_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoNormalizado').querySelector('canvas'), {
-						type: 'line',
-						data: {
-							labels: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['labels'],
-							datasets: [
-								{
-									label: 'Desvio Padrão (Sup)',
-									backgroundColor: '#212529',
-	      							borderColor: '#212529',
-	      							borderWidth: 1,
-	      							borderDash: [5, 5],
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_superior']
-								},
-								{
-									label: 'Média',
-									backgroundColor: '#212529',
-	      							borderColor: '#212529',
-	      							borderWidth: 1,
-	      							borderDash: [5, 5],
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_media']
-								},
-								{
-									label: 'Desvio Padrão (Inf)',
-									backgroundColor: '#212529',
-	      							borderColor: '#212529',
-	      							borderWidth: 1,
-	      							borderDash: [5, 5],
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_inferior']
-								},
-								{
-									label: _lista__instancias_arcabouco.getSelected('nome'),
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['data'],
-	      							stack: 'combined',
-	      							type: 'bar'
-								}
-							]
-						},
-						options: {
-							elements: {
-								point: {
-									radius: 0
-								},
-								bar: {
-									backgroundColor: _dashboard_ops__elements['ext'].color(),
-									borderColor: _dashboard_ops__elements['ext'].color()
-								}
-							},
-							interaction: {
-								mode: 'index',
-								intersect: false
-							},
-							plugins: {
-								title: {
-									display: true,
-									text: 'Resultados por Trade'
-								},
-								legend: {
-									display: true,
-									labels: {
-										filter: function (item, chart){
-											if (item.text === _lista__instancias_arcabouco.getSelected('nome'))
-												item.fillStyle = _lista__instancias_arcabouco.getSelected('chartColor');
-											return (!item.text.includes('Desvio Padrão (Sup)') && !item.text.includes('Desvio Padrão (Inf)'));
-										}
-									},
-									onClick: function (e, legendItem){
-										let dataset_name = legendItem.text,
-											index = legendItem.datasetIndex,
-											me = this.chart.getDatasetMeta(index);
-										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome'))
-											me.hidden = (me.hidden === null) ? true : null;
-										else if (dataset_name === 'Média'){
-											if (me.hidden === null){
-												this.chart.getDatasetMeta(index - 1).hidden = true;
-												me.hidden = true;
-												this.chart.getDatasetMeta(index + 1).hidden = true;
-											}
-											else{
-												this.chart.getDatasetMeta(index - 1).hidden = null;
-												me.hidden = null;
-												this.chart.getDatasetMeta(index + 1).hidden = null;
-											}
-										}
-										this.chart.update();
-									}
-								},
-								annotation: {
-									annotations: linha_risco
-								}
-							},
-							scales: {
-								y: { beginAtZero: true }
-							}
-						}
-					});
-				});
-			}
-			else{
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].data = {
-					labels: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['labels'],
-					datasets: [
-						{
-							label: 'Desvio Padrão (Sup)',
-							backgroundColor: '#212529',
-  							borderColor: '#212529',
-  							borderWidth: 1,
-  							borderDash: [5, 5],
-  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_superior']
-						},
-						{
-							label: 'Média',
-							backgroundColor: '#212529',
-  							borderColor: '#212529',
-  							borderWidth: 1,
-  							borderDash: [5, 5],
-  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_media']
-						},
-						{
-							label: 'Desvio Padrão (Inf)',
-							backgroundColor: '#212529',
-  							borderColor: '#212529',
-  							borderWidth: 1,
-  							borderDash: [5, 5],
-  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_inferior']
-						},
-						{
-							label: _lista__instancias_arcabouco.getSelected('nome'),
-  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['data'],
-  							stack: 'combined',
-  							type: 'bar'
-						}
-					]
-				}
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].options.plugins.annotation.annotations = linha_risco;
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].update();
-			}
-			//////////////////////////////////
-			//Gráfico de Resultados por Hora
-			//////////////////////////////////
-			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] === null){
-				$(document.getElementById('dashboard_ops__chart_resultadoPorHorario')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
-					_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoPorHorario').querySelector('canvas'), {
-						type: 'bar',
-						data: {
-							labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
-							datasets: [
-								{
-									label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
-									backgroundColor: '#6c757d',
-	      							borderColor: '#6c757d',
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
-	      							stack: _lista__instancias_arcabouco.getSelected('nome')
-								},
-								{
-									label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
-	      							stack: _lista__instancias_arcabouco.getSelected('nome')
-								}
-							]
-						},
-						options: {
-							interaction: {
-								mode: 'index',
-								intersect: false
-							},
-							plugins: {
-								title: {
-									display: true,
-									text: 'Resultados por Hora'
-								},
-								legend: {
-									display: true,
-									labels: {
-										filter: function (item, chart){
-											return item.datasetIndex % 2 === 1;
-										}
-									},
-									onClick: function (e, legendItem){
-										let index = legendItem.datasetIndex,
-											me = this.chart.getDatasetMeta(index);
-										if (me.hidden === null){
-											me.hidden = true;
-											this.chart.getDatasetMeta(index - 1).hidden = true;
-										}
-										else{
-											me.hidden = null;
-											this.chart.getDatasetMeta(index - 1).hidden = null;
-										}
-										this.chart.update();
-									}
-								}
-							},
-							scales: {
-								x: {
-									stacked: true
-								},
-								y: {
-									stacked: false
-								}
-							}
-						}
-					});
-				});
-			}
-			else{
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].data = {
-					labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
-					datasets: [
-						{
-							label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
-							backgroundColor: '#6c757d',
-  							borderColor: '#6c757d',
-  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
-  							stack: _lista__instancias_arcabouco.getSelected('nome')
-						},
-						{
-							label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
-  							stack: _lista__instancias_arcabouco.getSelected('nome')
-						}
-					]
-				}
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].update();
-			}
-			//////////////////////////////////
-			//Gráfico de Evolução Patrimonial
-			//////////////////////////////////
-			let linha_zero = [{
-				type: 'line',
-				scaleID: 'y',
-				value: 0,
-				borderColor: '#212529',
-				borderWidth: 0.5,
-				label: { enabled: false }
-			}];
-			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'] === null){
-				$(document.getElementById('dashboard_ops__chart_evolucaoPatrimonial')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
-					_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'] = new Chart(document.getElementById('dashboard_ops__chart_evolucaoPatrimonial').querySelector('canvas'), {
-						type: 'line',
-						data: {
-							labels: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['labels'],
-							datasets: [
-								{
-									label: _lista__instancias_arcabouco.getSelected('nome'),
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderWidth: 1,
-	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
-								},
-								{
-									label: 'SMA20',
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderWidth: 1,
-	      							borderDash: [5, 5],
-	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
-								},
-								{
-									label: 'Desvio Padrão (Sup)',
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-									borderWidth: 0,
-									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
-								},
-								{
-									label: 'Desvio Padrão (Inf)',
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-									borderWidth: 0,
-									fill: '-1',
-									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
-								}
-							]
-						},
-						options: {
-							elements: {
-								point: {
-									radius: 0
-								}
-							},
-							interaction: {
-								mode: 'index',
-								intersect: false
-							},
-							plugins: {
-								title: {
-									display: true,
-									text: 'Evolução Patrimonial'
-								},
-								legend: {
-									display: true,
-									labels: {
-										filter: function (item, chart){
-											return (!item.text.includes('Desvio Padrão (Sup)') && !item.text.includes('Desvio Padrão (Inf)'));
-										}
-									},
-									onClick: function (e, legendItem){
-										let dataset_name = legendItem.text,
-											index = legendItem.datasetIndex,
-											me = this.chart.getDatasetMeta(index);
-										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome')){
-											if (me.hidden === null){
-												me.hidden = true;
-												this.chart.getDatasetMeta(index + 2).hidden = true;
-												this.chart.getDatasetMeta(index + 3).hidden = true;
-											}
-											else{
-												me.hidden = null;
-												this.chart.getDatasetMeta(index + 2).hidden = null;
-												this.chart.getDatasetMeta(index + 3).hidden = null;
-											}
-										}
-										else
-											me.hidden = (me.hidden === null) ? true : null;
-										this.chart.update();
-									}
-								},
-								annotation: {
-									annotations: linha_zero
-								}
-							},
-							scales: {
-								y: { beginAtZero: true }
-							}
-						}
-					});
-				});
-			}
-			else{
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'].data = {
-					labels: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['labels'],
-					datasets: [
-						{
-							label: _lista__instancias_arcabouco.getSelected('nome'),
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-							borderWidth: 1,
-							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
-						},
-						{
-							label: 'SMA20',
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-							borderWidth: 1,
-							borderDash: [5, 5],
-							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
-						},
-						{
-							label: 'Desvio Padrão (Sup)',
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-							borderWidth: 0,
-							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
-						},
-						{
-							label: 'Desvio Padrão (Inf)',
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-							borderWidth: 0,
-							fill: '-1',
-							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
-						}
-					]
-				};
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'].update();
-			}
-		}
-		else
-			_dashboard_ops__section.show('empty');
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Lista Arcabouços --------------------------------*/
@@ -2084,7 +1693,7 @@ let Renda_variavel = (function(){
 		$(document.getElementById('arcabouco_info')).offcanvas('show');
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------------ Section Cenarios --------------------------------*/
+	/*-------------------------------- Lista Cenarios --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Faz a reordenacao das linhas da tabela com base nas prioridades.
@@ -2369,7 +1978,7 @@ let Renda_variavel = (function(){
 		return html;
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*-------------------------- Section Operações Upload ----------------------------*/
+	/*------------------------------- Operações Upload -------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Constroi o modal de Upload de Operações.
@@ -2490,7 +2099,7 @@ let Renda_variavel = (function(){
 		});
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------ Section Operações Adicionar ---------------------------*/
+	/*------------------------------ Operações Adicionar -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Reseta a table 'table_adicionar_operacoes'.
@@ -2605,15 +2214,460 @@ let Renda_variavel = (function(){
 		$(document.getElementById('adicionar_operacoes__extraDados')).empty().append(html);
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*-------------------------------- Dashboard Ops ---------------------------------*/
+	/*--------------------------- Section Dashboard Ops ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Inicia ou reinicia a seção de 'dashboard_ops' da instancia de arcabouço selecionada.
+	*/
+	function rebuildDashboard_ops(){
+		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			html = ``;
+		_dashboard_ops__section.show('building');
+		if (selected_inst_arcabouco in _lista__operacoes.operacoes && _lista__operacoes.operacoes[selected_inst_arcabouco].length > 0){
+			let finish_building = 0,
+				dashboard_data = RV_Statistics.generate__DashboardOps(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), _lista__instancias_arcabouco.getSelected('simulations'));
+			//////////////////////////////////
+			//Info Estatistica (Total + Por Cenário)
+			//////////////////////////////////
+			if (_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'] === null){
+				html = `<table class="table m-0" id="dashboard_ops__table_stats__byCenario">`+
+						`<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario)}</tbody>`+
+						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats)}</tfoot>`+
+						`</table>`;
+				$(document.getElementById('dashboard_ops__table_stats__byCenario__place')).append(html).promise().then(function (){
+					_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'] = $(document.getElementById('dashboard_ops__table_stats__byCenario'));
+					_dashboard_ops__section.show('data', ++finish_building);
+				});
+			}
+			else{
+				html = `<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario)}</tbody>`+
+						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats)}</tfoot>`;
+				_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'].empty().append(html).promise().then(function (){
+					_dashboard_ops__section.show('data', ++finish_building);
+				});
+			}
+			//////////////////////////////////
+			//Tabela de Resultados dos Trades
+			//////////////////////////////////
+			if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] === null){
+				html = `<table class="table m-0" id="dashboard_ops__table_trades">`+
+						`<thead>${rebuildDashboardOps__Table_Trades('thead')}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades)}</tbody>`+
+						`</table>`;
+				$(document.getElementById('dashboard_ops__table_trades__place')).append(html).promise().then(function (){
+					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
+					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
+					_dashboard_ops__section.show('data', ++finish_building);
+				});
+			}
+			else{
+				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().clear().rows.add(rebuildDashboardOps__Table_Trades('dataOnly', dashboard_data.dashboard_ops__table_trades)).draw();
+				_dashboard_ops__section.show('data', ++finish_building);
+			}
+			//////////////////////////////////
+			//Gráfico de Resultados Normalizados
+			//////////////////////////////////
+			let linha_risco = {};
+			if (dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['risco'] !== null){
+				linha_risco = [{
+					type: 'line',
+					scaleID: 'y',
+					value: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['risco'],
+					borderColor: '#dc3545',
+					borderWidth: 1,
+					label: {
+						backgroundColor: '#dc3545',
+						font: {size: 10},
+						content: `R`,
+						enabled: true
+					}
+				}];
+			}
+			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'] === null){
+				$(document.getElementById('dashboard_ops__chart_resultadoNormalizado')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
+					_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoNormalizado').querySelector('canvas'), {
+						type: 'line',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['labels'],
+							datasets: [
+								{
+									label: 'Desvio Padrão (Sup)',
+									backgroundColor: '#212529',
+	      							borderColor: '#212529',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_superior']
+								},
+								{
+									label: 'Média',
+									backgroundColor: '#212529',
+	      							borderColor: '#212529',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_media']
+								},
+								{
+									label: 'Desvio Padrão (Inf)',
+									backgroundColor: '#212529',
+	      							borderColor: '#212529',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_inferior']
+								},
+								{
+									label: _lista__instancias_arcabouco.getSelected('nome'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['data'],
+	      							stack: 'combined',
+	      							type: 'bar'
+								}
+							]
+						},
+						options: {
+							elements: {
+								point: {
+									radius: 0
+								},
+								bar: {
+									backgroundColor: _dashboard_ops__elements['ext'].color(),
+									borderColor: _dashboard_ops__elements['ext'].color()
+								}
+							},
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: 'Resultados por Trade'
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											if (item.text === _lista__instancias_arcabouco.getSelected('nome'))
+												item.fillStyle = _lista__instancias_arcabouco.getSelected('chartColor');
+											return (!item.text.includes('Desvio Padrão (Sup)') && !item.text.includes('Desvio Padrão (Inf)'));
+										}
+									},
+									onClick: function (e, legendItem){
+										let dataset_name = legendItem.text,
+											index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome'))
+											me.hidden = (me.hidden === null) ? true : null;
+										else if (dataset_name === 'Média'){
+											if (me.hidden === null){
+												this.chart.getDatasetMeta(index - 1).hidden = true;
+												me.hidden = true;
+												this.chart.getDatasetMeta(index + 1).hidden = true;
+											}
+											else{
+												this.chart.getDatasetMeta(index - 1).hidden = null;
+												me.hidden = null;
+												this.chart.getDatasetMeta(index + 1).hidden = null;
+											}
+										}
+										this.chart.update();
+									}
+								},
+								annotation: {
+									annotations: linha_risco
+								}
+							},
+							scales: {
+								y: { beginAtZero: true }
+							}
+						}
+					});
+				});
+			}
+			else{
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].data = {
+					labels: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['labels'],
+					datasets: [
+						{
+							label: 'Desvio Padrão (Sup)',
+							backgroundColor: '#212529',
+  							borderColor: '#212529',
+  							borderWidth: 1,
+  							borderDash: [5, 5],
+  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_superior']
+						},
+						{
+							label: 'Média',
+							backgroundColor: '#212529',
+  							borderColor: '#212529',
+  							borderWidth: 1,
+  							borderDash: [5, 5],
+  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_media']
+						},
+						{
+							label: 'Desvio Padrão (Inf)',
+							backgroundColor: '#212529',
+  							borderColor: '#212529',
+  							borderWidth: 1,
+  							borderDash: [5, 5],
+  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_inferior']
+						},
+						{
+							label: _lista__instancias_arcabouco.getSelected('nome'),
+  							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['data'],
+  							stack: 'combined',
+  							type: 'bar'
+						}
+					]
+				}
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].options.plugins.annotation.annotations = linha_risco;
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].update();
+			}
+			//////////////////////////////////
+			//Gráfico de Resultados por Hora
+			//////////////////////////////////
+			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] === null){
+				$(document.getElementById('dashboard_ops__chart_resultadoPorHorario')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
+					_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoPorHorario').querySelector('canvas'), {
+						type: 'bar',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
+							datasets: [
+								{
+									label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
+									backgroundColor: '#6c757d',
+	      							borderColor: '#6c757d',
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
+	      							stack: _lista__instancias_arcabouco.getSelected('nome')
+								},
+								{
+									label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
+	      							stack: _lista__instancias_arcabouco.getSelected('nome')
+								}
+							]
+						},
+						options: {
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: 'Resultados por Hora'
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											return item.datasetIndex % 2 === 1;
+										}
+									},
+									onClick: function (e, legendItem){
+										let index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (me.hidden === null){
+											me.hidden = true;
+											this.chart.getDatasetMeta(index - 1).hidden = true;
+										}
+										else{
+											me.hidden = null;
+											this.chart.getDatasetMeta(index - 1).hidden = null;
+										}
+										this.chart.update();
+									}
+								}
+							},
+							scales: {
+								x: {
+									stacked: true
+								},
+								y: {
+									stacked: false
+								}
+							}
+						}
+					});
+				});
+			}
+			else{
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].data = {
+					labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
+					datasets: [
+						{
+							label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
+							backgroundColor: '#6c757d',
+  							borderColor: '#6c757d',
+  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
+  							stack: _lista__instancias_arcabouco.getSelected('nome')
+						},
+						{
+							label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
+  							stack: _lista__instancias_arcabouco.getSelected('nome')
+						}
+					]
+				}
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].update();
+			}
+			//////////////////////////////////
+			//Gráfico de Evolução Patrimonial
+			//////////////////////////////////
+			let linha_zero = [{
+				type: 'line',
+				scaleID: 'y',
+				value: 0,
+				borderColor: '#212529',
+				borderWidth: 0.5,
+				label: { enabled: false }
+			}];
+			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'] === null){
+				$(document.getElementById('dashboard_ops__chart_evolucaoPatrimonial')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
+					_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'] = new Chart(document.getElementById('dashboard_ops__chart_evolucaoPatrimonial').querySelector('canvas'), {
+						type: 'line',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['labels'],
+							datasets: [
+								{
+									label: _lista__instancias_arcabouco.getSelected('nome'),
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							borderWidth: 1,
+	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
+								},
+								{
+									label: 'SMA20',
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
+								},
+								{
+									label: 'Desvio Padrão (Sup)',
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderWidth: 0,
+									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
+								},
+								{
+									label: 'Desvio Padrão (Inf)',
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									borderWidth: 0,
+									fill: '-1',
+									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
+								}
+							]
+						},
+						options: {
+							elements: {
+								point: {
+									radius: 0
+								}
+							},
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: 'Evolução Patrimonial'
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											return (!item.text.includes('Desvio Padrão (Sup)') && !item.text.includes('Desvio Padrão (Inf)'));
+										}
+									},
+									onClick: function (e, legendItem){
+										let dataset_name = legendItem.text,
+											index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome')){
+											if (me.hidden === null){
+												me.hidden = true;
+												this.chart.getDatasetMeta(index + 2).hidden = true;
+												this.chart.getDatasetMeta(index + 3).hidden = true;
+											}
+											else{
+												me.hidden = null;
+												this.chart.getDatasetMeta(index + 2).hidden = null;
+												this.chart.getDatasetMeta(index + 3).hidden = null;
+											}
+										}
+										else
+											me.hidden = (me.hidden === null) ? true : null;
+										this.chart.update();
+									}
+								},
+								annotation: {
+									annotations: linha_zero
+								}
+							},
+							scales: {
+								y: { beginAtZero: true }
+							}
+						}
+					});
+				});
+			}
+			else{
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'].data = {
+					labels: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['labels'],
+					datasets: [
+						{
+							label: _lista__instancias_arcabouco.getSelected('nome'),
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							borderWidth: 1,
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
+						},
+						{
+							label: 'SMA20',
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							borderWidth: 1,
+							borderDash: [5, 5],
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
+						},
+						{
+							label: 'Desvio Padrão (Sup)',
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderWidth: 0,
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
+						},
+						{
+							label: 'Desvio Padrão (Inf)',
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							borderWidth: 0,
+							fill: '-1',
+							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
+						}
+					]
+				};
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'].update();
+			}
+		}
+		else
+			_dashboard_ops__section.show('empty');
+	}
 	/*
 		Reconstroi a lista de 'observações', usada nos selects dos mesmos em 'filters'.
 	*/
 	function rebuildSelect_Observacoes__content(id_arcabouco){
 		let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
 			selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			el_name = _dashboard_ops__search.filters.observacoes.attr('name'),
+			el_name = _renda_variavel__search.filters.observacoes.attr('name'),
 			placeholder = {'observacoes': 'Observações'},
 			qtd_selected = 0,
 			options_html = '';
@@ -2639,8 +2693,8 @@ let Renda_variavel = (function(){
 				}
 			}
 		}
-		_dashboard_ops__search.filters.observacoes.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[el_name]}`)));
-		_dashboard_ops__search.filters.observacoes.find('ul.dropdown-menu').empty().append(options_html);
+		_renda_variavel__search.filters.observacoes.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[el_name]}`)));
+		_renda_variavel__search.filters.observacoes.find('ul.dropdown-menu').empty().append(options_html);
 	}
 	/*
 		Retorna o html de uma linha usada em 'dashboard_ops__table_stats__byCenario', separando se é para o 'tbody' ou 'tfoot'.
@@ -2796,9 +2850,36 @@ let Renda_variavel = (function(){
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
+	/*----------------------------- Section Analise Obs ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
-	/*----------------------------- Section Arcabouço --------------------------------*/
+	/*
+		Inicia ou reinicia a seção de 'analise_obs' da instancia de arcabouço selecionada.
+		** (Apenas se houver 1 cenário selecionado ou filtrado) **
+	*/
+	function rebuildAnalise_obs(){
+		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			html = ``;
+		_analise_obs__section.show('building');
+		if (selected_inst_arcabouco in _lista__operacoes.operacoes && _lista__operacoes.operacoes[selected_inst_arcabouco].length > 0){
+			let finish_building = 0,
+				analise_por_grupo_data = RV_Statistics.generate(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), _lista__instancias_arcabouco.getSelected('simulations'));
+			//////////////////////////////////
+			//Info Melhores e Piores Estatisticas (Por Grupo)
+			//////////////////////////////////
+
+			//////////////////////////////////
+			//Tabela de Resultados de todos os grupos gerados
+			//////////////////////////////////
+
+			//////////////////////////////////
+			//Gráfico de Resultados disperso (Por Grupo)
+			//////////////////////////////////
+		}
+		else
+			_analise_obs__section.show('empty');
+	}
+	////////////////////////////////////////////////////////////////////////////////////
+	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Lista Arcabouços --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -2806,9 +2887,21 @@ let Renda_variavel = (function(){
 		Processa o fechamento do modal 'arcaboucos_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('arcaboucos_modal')).on('hidden.bs.modal', function (){
-		if (_dashboard_ops__needRebuild){
-			_dashboard_ops__needRebuild = false;
-			rebuildArcaboucoSection(rebuildSearch = true);
+		if (_renda_variavel__section === 'dashboard_ops__section'){
+			if (_dashboard_ops__needRebuild){
+				_dashboard_ops__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildDashboard_ops();
+			}
+		}
+		else if (_renda_variavel__section === 'analise_obs__section'){
+			if (_analise_obs__needRebuild){
+				_analise_obs__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildAnalise_obs();
+			}
 		}
 	});
 	/*
@@ -2837,6 +2930,7 @@ let Renda_variavel = (function(){
 				//Se a instancia foi adicionada na lista
 				if (_lista__instancias_arcabouco.add({id: id_arcabouco, nome: _lista__arcaboucos.arcaboucos[id_arcabouco].nome, selected: true})){
 					_dashboard_ops__needRebuild = true;
+					_analise_obs__needRebuild = true;
 					_list_ops__needRebuild = true;
 					_arcabouco_info__needRebuild = true;
 					if (!(id_arcabouco in _lista__operacoes.operacoes)){
@@ -2886,6 +2980,7 @@ let Renda_variavel = (function(){
 				if (result.status){
 					if (_lista__arcaboucos.remove(id_arcabouco)){
 						_dashboard_ops__needRebuild = true;
+						_analise_obs__needRebuild = true;
 						_list_ops__needRebuild = true;
 						_arcabouco_info__needRebuild = true;
 					}
@@ -3219,15 +3314,27 @@ let Renda_variavel = (function(){
 		});
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------------ Section Cenarios --------------------------------*/
+	/*-------------------------------- Lista Cenarios --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Processa o fechamento do modal 'cenarios_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('cenarios_modal')).on('hidden.bs.modal', function (){
-		if (_dashboard_ops__needRebuild){
-			_dashboard_ops__needRebuild = false;
-			rebuildArcaboucoSection(rebuildSearch = true);
+		if (_renda_variavel__section === 'dashboard_ops__section'){
+			if (_dashboard_ops__needRebuild){
+				_dashboard_ops__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildDashboard_ops();
+			}
+		}
+		else if (_renda_variavel__section === 'analise_obs__section'){
+			if (_analise_obs__needRebuild){
+				_analise_obs__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildAnalise_obs();
+			}
 		}
 	});
 	/*
@@ -3300,6 +3407,7 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
+							_analise_obs__needRebuild = true;
 							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Removido.', delay: 4000});
@@ -3395,6 +3503,7 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
+							_analise_obs__needRebuild = true;
 							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Adicionado.', delay: 4000});
@@ -3418,6 +3527,7 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
+							_analise_obs__needRebuild = true;
 							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Atualizado.', delay: 4000});
@@ -3529,7 +3639,12 @@ let Renda_variavel = (function(){
 						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
 						buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
 						buildOperacoesOffcanvas(forceRebuild = true);
-						rebuildArcaboucoSection(rebuildSearch = true);
+						//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+						_renda_variavel__search.update();
+						if (_renda_variavel__section === 'dashboard_ops__section')
+							rebuildDashboard_ops();
+						else if (_renda_variavel__section === 'analise_obs__section')
+							rebuildAnalise_obs();
 					}
 					else
 						Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'danger', body: result.error, delay: 4000});
@@ -3538,16 +3653,29 @@ let Renda_variavel = (function(){
 		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*-------------------------- Section Operações Upload ----------------------------*/
+	/*-------------------------------- Operações Upload ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Processa o fechamento do modal 'upload_operacoes_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('upload_operacoes_modal')).on('hidden.bs.modal', function (){
-		if (_dashboard_ops__needRebuild){
-			_dashboard_ops__needRebuild = false;
-			rebuildArcaboucoSection(rebuildSearch = true);
-			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+		if (_renda_variavel__section === 'dashboard_ops__section'){
+			if (_dashboard_ops__needRebuild){
+				_dashboard_ops__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildDashboard_ops();
+				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+			}
+		}
+		else if (_renda_variavel__section === 'analise_obs__section'){
+			if (_analise_obs__needRebuild){
+				_analise_obs__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildAnalise_obs();
+				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+			}
 		}
 	});
 	/*
@@ -3622,6 +3750,7 @@ let Renda_variavel = (function(){
 				success: function (result){
 					if (result.status){
 						_dashboard_ops__needRebuild = true;
+						_analise_obs__needRebuild = true;
 						_list_ops__needRebuild = true;
 						_arcabouco_info__needRebuild = true;
 						_lista__operacoes.update(result['data']['operacoes']);
@@ -3650,7 +3779,7 @@ let Renda_variavel = (function(){
 		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------ Section Operações Adicionar ---------------------------*/
+	/*------------------------------- Operações Adicionar ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Corrige bug no bootstrap que não mostra o offcanvas na 1 vez que abre.	
@@ -3659,10 +3788,23 @@ let Renda_variavel = (function(){
 	$(document.getElementById('adicionar_operacoes_offcanvas')).on('shown.bs.offcanvas', function (){
 		$(this).show();
 	}).on('hidden.bs.offcanvas', function (){
-		if (_dashboard_ops__needRebuild){
-			_dashboard_ops__needRebuild = false;
-			rebuildArcaboucoSection(rebuildSearch = true);
-			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+		if (_renda_variavel__section === 'dashboard_ops__section'){
+			if (_dashboard_ops__needRebuild){
+				_dashboard_ops__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildDashboard_ops();
+				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+			}
+		}
+		else if (_renda_variavel__section === 'analise_obs__section'){
+			if (_analise_obs__needRebuild){
+				_analise_obs__needRebuild = false;
+				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+				_renda_variavel__search.update();
+				rebuildAnalise_obs();
+				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+			}
 		}
 	});
 	/*
@@ -4138,6 +4280,7 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
+							_analise_obs__needRebuild = true;
 							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							_lista__operacoes.update(result['data']['operacoes']);
@@ -4169,7 +4312,7 @@ let Renda_variavel = (function(){
 			fixTDBlocos__Table();
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------------- Dashboard Ops ----------------------------------*/
+	/*----------------------------- Section Dashboard Ops ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Processa um clique nas instancias de arcabouço.
@@ -4193,22 +4336,33 @@ let Renda_variavel = (function(){
 							if (result.status){
 								_lista__cenarios.create(result.data['cenarios']);
 								_lista__operacoes.update(result.data['operacoes']);
-								rebuildArcaboucoSection(rebuildSearch = true);
+								//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+								_renda_variavel__search.update();
+								if (_renda_variavel__section === 'dashboard_ops__section')
+									rebuildDashboard_ops();
+								else if (_renda_variavel__section === 'analise_obs__section')
+									rebuildAnalise_obs();
 							}
 							else
 								Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
 						}
 					});
 				}
-				else
-					rebuildArcaboucoSection(rebuildSearch = true);
+				else{
+					//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+					_renda_variavel__search.update();
+					if (_renda_variavel__section === 'dashboard_ops__section')
+						rebuildDashboard_ops();
+					else if (_renda_variavel__section === 'analise_obs__section')
+						rebuildAnalise_obs();
+				}
 			}
 		}
 	});
 	/*
 		Processa as seleções de observações em 'filters'.
 	*/
-	$(document.getElementById('dashboard_ops__search')).on('click', 'div.iSelectKami[name] ul li button.dropdown-item', function (e){
+	$(document.getElementById('renda_variavel__search')).on('click', 'div.iSelectKami[name] ul li button.dropdown-item', function (e){
 		let me = $(this),
 			cenario_nome = me.attr('pertence'),
 			div_holder = me.parent().parent().parent(),
@@ -4243,7 +4397,7 @@ let Renda_variavel = (function(){
 	/*
 		Processa a de-seleção de todos os valores no select de observações.
 	*/
-	$(document.getElementById('dashboard_ops__search')).on('click', 'div.iSelectKami[name] ul li button[name="tira_tudo"]', function (){
+	$(document.getElementById('renda_variavel__search')).on('click', 'div.iSelectKami[name] ul li button[name="tira_tudo"]', function (){
 		let div_holder = $(this).parent().parent().parent().parent(),
 			select_name = div_holder.attr('name'),
 			placeholder = {'observacoes': 'Observações'},
@@ -4261,9 +4415,13 @@ let Renda_variavel = (function(){
 	/*
 		Processa no select de observações, mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
 	*/
-	$(document.getElementById('dashboard_ops__search')).on('change', 'div.iSelectKami[name] ul li select.iSelectKami', function (){
+	$(document.getElementById('renda_variavel__search')).on('change', 'div.iSelectKami[name] ul li select.iSelectKami', function (){
 		_lista__instancias_arcabouco.updateInstancia_Filters(this.name, $(this).val());
 	});
+	////////////////////////////////////////////////////////////////////////////////////
+	/*----------------------------- Section Analise Obs ------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -4288,6 +4446,14 @@ let Renda_variavel = (function(){
 			buildUploadOperacoesModal();
 		else if (this.name === 'adicionar_operacoes')
 			buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = false, show = true);
+		else if (this.name === 'section_dashboard_ops'){
+			$(this).parentsUntil('#renda_variavel__menu').last().find('button').html(this.innerHTML);
+			changeSection__Renda_variavel('dashboard_ops__section');
+		}
+		else if (this.name === 'section_analise_obs'){
+			$(this).parentsUntil('#renda_variavel__menu').last().find('button').html(this.innerHTML);
+			changeSection__Renda_variavel('analise_obs__section');
+		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
