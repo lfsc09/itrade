@@ -1807,7 +1807,7 @@ let Renda_variavel = (function(){
 				`${excluir_cenario}`+
 				`${salvar_cenario}`+
 				`</div>`+
-				`<div class="card-body py-1">`+
+				`<div class="card-body py-1 ${((!new_cenario) ? 'd-none' : '')}">`+
 				`<table class="table m-0 me-3">`+
 				`<thead>${html.thead}</thead>`+
 				`<tbody>${html.tbody}</tbody>`+
@@ -3384,6 +3384,23 @@ let Renda_variavel = (function(){
 				});
 			});
 			$(document.getElementById('cenarios_modal__cenarios')).find('div[empty]').remove().end().prepend(buildCenario(copy_data, true));
+		}
+	});
+	/*
+		Processa o clique na barra header do cenário, para mostrar ou esconder suas observações.
+	*/
+	$(document.getElementById('cenarios_modal__cenarios')).on('click', 'div.card-header', function (e){
+		if (Global.hasClass(e.target, 'card-header')){
+			let current_card_body = $(this).parent().find('div.card-body');
+			if (current_card_body.hasClass('d-none')){
+				//Fecha cenarios que estão abertos (Novos para criar não)
+				$(document.getElementById('cenarios_modal__cenarios')).find('div.card-body').filter(function (){ return !this.parentElement.hasAttribute('new_cenario'); }).addClass('d-none');
+				current_card_body.removeClass('d-none');
+				if ($(document.getElementById('cenarios_modal')).find('div.modal-body').scrollTop() != 0)
+					this.scrollIntoView();
+			}
+			else
+				$(document.getElementById('cenarios_modal__cenarios')).find('div.card-body').filter(function (){ return !this.parentElement.hasAttribute('new_cenario'); }).addClass('d-none');
 		}
 	});
 	/*

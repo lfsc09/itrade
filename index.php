@@ -685,7 +685,7 @@
 			</div>
 			<div class="modal fade" id="cenarios_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
-					<div class="modal-content">
+					<div class="modal-content h-100">
 						<div class="modal-header">
 							<h5 class="modal-title">Controle de Cenários</h5>
 							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -707,7 +707,7 @@
 										</div>
 									</div>
 								</div>
-								<div class="row">
+								<div class="row mt-3">
 									<div class="col" id="cenarios_modal__cenarios"></div>
 								</div>
 							</div>

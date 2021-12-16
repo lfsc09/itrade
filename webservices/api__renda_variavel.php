@@ -606,8 +606,8 @@
 				//Arruma o Cenario e Refs de Observações nas operações do arcabouço
 				if (!empty($cenarios_change__nome) || !empty($cenarios_obs_remove__ref) || !empty($cenarios_obs_change__ref)){
 					//Pega todas as operações do arcabouço
-					$stmt = $mysqli->prepare("SELECT id,cenario,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
-				 	$stmt->bind_param('i', $params['id_arcabouco']);
+					$stmt = $mysqli->prepare("SELECT id,cenario,observacoes FROM rv__operacoes WHERE id_arcabouco=? AND id_cenario=?");
+				 	$stmt->bind_param('ii', $params['id_arcabouco'], $params['id_cenario']);
 				 	$stmt->execute();
 				 	$result_raw = $stmt->get_result();
 				 	$arcabouco_operacoes = [];

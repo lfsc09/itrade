@@ -238,7 +238,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*------------------------------------- Cenarios -------------------------------------*/
 #cenarios_modal__cenarios div.card {border-left: 3px solid #0d6efd !important; border-radius: 0}
 #cenarios_modal__cenarios div.card[new_cenario] {border-left: 3px solid #ffc107 !important}
-#cenarios_modal__cenarios div.card-body {overflow: auto; max-height: 250px; background-color: #fdfdfd}
+#cenarios_modal__cenarios div.card-body {background-color: #fdfdfd}
 #cenarios_modal__cenarios button {font-size: 12px}
 #cenarios_modal__cenarios input{font-size: 12px}
 #cenarios_modal__cenarios table {font-size: 12px}
