@@ -2671,22 +2671,28 @@ let Renda_variavel = (function(){
 			placeholder = {'observacoes': 'Observações'},
 			qtd_selected = 0,
 			options_html = '';
+		//Se existe filtros de cenário selecionados
 		if ('cenario' in dashboard_filters){
-			for (let cenario_nome in dashboard_filters['cenario']){
-				if (_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][cenario_nome].id][el_name].length){
+			let ordered_cenarios = (Object.keys(dashboard_filters['cenario'])).sort();
+			//Percorre todos os cenários selecionadas no filtro
+			for (let cn=0; cn<ordered_cenarios.length; cn++){
+				//Se esse cenário possui observações cadastradas
+				if (_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name].length){
+					//Inicia o select com o subfiltro de 'OR' e 'AND'
 					if (options_html === ''){
 						let select_query_union_name = `${el_name}_query_union`,
-							or_selected = !(select_query_union_name in dashboard_filters) || (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'OR'),
-							and_selected = (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'AND');
+							or_selected = (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'OR'),
+							and_selected = !(select_query_union_name in dashboard_filters) || (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'AND');
 						options_html += `<li><div class="input-group px-2"><select class="iSelectKami form-select form-select-sm" name="${el_name}_query_union"><option value="AND" ${((and_selected) ? 'selected' : '')}>AND</option><option value="OR" ${((or_selected) ? 'selected' : '')}>OR</option></select><button type="button" class="iSelectKami btn btn-sm btn-outline-secondary" name="tira_tudo">Nenhum</button></div></li>`;
 					}
 					else
 						options_html += `<li><hr class="dropdown-divider"></li>`;
-					options_html += `<li><h6 class="dropdown-header">${cenario_nome}</h6></li>`;
-					for (let o in _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][cenario_nome].id][el_name]){
-						let is_selected = _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][cenario_nome].id][el_name][o].ref in dashboard_filters['cenario'][cenario_nome][el_name],
-							negar_checked = (is_selected) ? dashboard_filters['cenario'][cenario_nome][el_name][_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][cenario_nome].id][el_name][o].ref] === 1 : false;
-						options_html += `<li><button class="dropdown-item" type="button" value="${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][cenario_nome].id][el_name][o].ref}" cenario="${dashboard_filters['cenario'][cenario_nome].id}" pertence="${cenario_nome}" ${((is_selected) ? 'selected' : '' )}><input class="form-check-input me-3" type="checkbox" name="negar_valor" ${((negar_checked) ? 'checked' : '' )}>${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][cenario_nome].id][el_name][o].nome}</button>`;
+					options_html += `<li><h6 class="dropdown-header">${ordered_cenarios[cn]}</h6></li>`;
+					//Insere as observações do cenário sendo verificado
+					for (let o in _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name]){
+						let is_selected = _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref in dashboard_filters['cenario'][ordered_cenarios[cn]][el_name],
+							negar_checked = (is_selected) ? dashboard_filters['cenario'][ordered_cenarios[cn]][el_name][_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref] === 1 : false;
+						options_html += `<li><button class="dropdown-item" type="button" value="${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref}" cenario="${dashboard_filters['cenario'][ordered_cenarios[cn]].id}" pertence="${ordered_cenarios[cn]}" ${((is_selected) ? 'selected' : '' )}><input class="form-check-input me-3" type="checkbox" name="negar_valor" ${((negar_checked) ? 'checked' : '' )}>${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].nome}</button>`;
 						if (is_selected)
 							qtd_selected++;
 					}
@@ -2788,8 +2794,9 @@ let Renda_variavel = (function(){
 					`<th class="text-center subheader">Loss</th>`+
 					`</tr>`;
 		else if (section === 'tbody'){
-			for (let cenario in stats)
-				html += dashboardOps__Table_Stats__byCenario__newLine(cenario, stats[cenario], section);
+			let ordered_cenarios = (Object.keys(stats)).sort();
+			for (let cn=0; cn<ordered_cenarios.length; cn++)
+				html += dashboardOps__Table_Stats__byCenario__newLine(ordered_cenarios[cn], stats[ordered_cenarios[cn]], section);
 		}
 		else if (section === 'tfoot')
 			html += dashboardOps__Table_Stats__byCenario__newLine('Total', stats, section);
