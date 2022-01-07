@@ -209,6 +209,63 @@
 				else
 					die(json_encode(['status' => 0, 'error' => 'Action not found']));
 				break;
+			/*------------------------------ CONTROLE FINANCEIRO ------------------------------*/
+			case 'controle_financeiro':
+				include_once 'api__controle_financeiro.php';
+				if ($action === 'get_data'){
+					$return_data = [];
+					$status = ControleFinanceiro::get_contas(null, $_SESSION['id']);
+					if ($status['status'])
+						$return_data['contas'] = $status['data'];
+					// $status = ControleFinanceiro::get_gerenciamentos(null, $_SESSION['id']);
+					// if ($status['status'])
+					// 	$return_data['gerenciamentos'] = $status['data'];
+					// $status = ControleFinanceiro::get_arcaboucos([], $_SESSION['id']);
+					// if ($status['status']){
+					// 	$return_data['arcaboucos'] = $status['data'];
+					// 	if (!empty($return_data['arcaboucos']))
+					// 		$params_data['id_arcabouco'] = $return_data['arcaboucos'][0]['id'];
+					// }
+					// $status = RendaVariavel::get_cenarios($params_data, $_SESSION['id']);
+					// if ($status['status'])
+					// 	$return_data['cenarios'] = $status['data'];
+					// $status = RendaVariavel::get_operacoes($params_data, $_SESSION['id']);
+					// if ($status['status'])
+					// 	$return_data['operacoes'] = $status['data'];
+					echo json_encode(['status' => 1, 'data' => $return_data]);
+				}
+				/*------------------------------------ Contas -------------------------------------*/
+				else if ($action === 'insert_contas'){
+					if (!empty($params_data)){
+						$status = ControleFinanceiro::insert_contas($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = ControleFinanceiro::get_contas(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'update_contas'){
+					if (!empty($params_data)){
+						$status = ControleFinanceiro::update_contas($params_data, $params_data['id'], $_SESSION['id']);
+						if ($status['status'])
+							$status = ControleFinanceiro::get_contas(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'remove_contas'){
+					if (!empty($params_data)){
+						$status = ControleFinanceiro::remove_contas($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = ControleFinanceiro::get_contas(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				break;
 			/*------------------------------------ LOGOUT -------------------------------------*/
 			case 'login':
 				include 'api__login.php';

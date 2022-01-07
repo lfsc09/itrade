@@ -33,14 +33,57 @@ let iTrade = (function(){
 			if (elem.id === me){
 				if (elem.id === 'renda_variavel'){
 					if (typeof Renda_variavel === 'undefined'){
-						Global.request('src/js/iTrade_RendaVariavel_Statistics.js');
-						Global.request('src/js/iTrade_RendaVariavel.js');
+						Global.request([
+							{
+								filename: 'src/html/iTrade_RendaVariavel.php',
+								cache: true,
+								dataType: 'html',
+								target: $(document.getElementById('renda_variavel'))
+							},
+							{
+								filename: 'src/js/iTrade_RendaVariavel_Statistics.js',
+								cache: true,
+								dataType: 'script'
+							},
+							{
+								filename: 'src/js/iTrade_RendaVariavel.js',
+								cache: true,
+								dataType: 'script'
+							}
+						]).done(function(){
+							$(elem).show();
+							_active_section = elem.id;
+						});
 					}
-					else
-						Renda_variavel.rebuildArcaboucoSection();
+					else{
+						$(elem).show();
+						_active_section = elem.id;
+					}
 				}
-				$(elem).show();
-				_active_section = elem.id;
+				else if (elem.id === 'controle_financeiro'){
+					if (typeof Controle_financeiro === 'undefined'){
+						Global.request([
+							{
+								filename: 'src/html/iTrade_ControleFinanceiro.php',
+								cache: true,
+								dataType: 'html',
+								target: $(document.getElementById('controle_financeiro'))
+							},
+							{
+								filename: 'src/js/iTrade_ControleFinanceiro.js',
+								cache: true,
+								dataType: 'script'
+							}
+						]).done(function(){
+							$(elem).show();
+							_active_section = elem.id;
+						});
+					}
+					else{
+						$(elem).show();
+						_active_section = elem.id;
+					}
+				}
 			}
 			else
 				$(elem).hide();

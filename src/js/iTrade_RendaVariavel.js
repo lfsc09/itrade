@@ -383,6 +383,8 @@ let Renda_variavel = (function(){
 			cts: null,
 			usa_custo: null,
 			ignora_erro: null,
+			tipo_parada: null,
+			valor_parada: null,
 			valor_inicial: null,
 			R: null
 		},
@@ -578,7 +580,7 @@ let Renda_variavel = (function(){
 			if ('tipo_cts' in dashboard_simulations)
 				me.simulations.tipo_cts.val(dashboard_simulations['tipo_cts']);
 			if ('cts' in dashboard_simulations)
-				me.simulations.cts.val(dashboard_simulations['cts']);
+				me.simulations.cts.val(dashboard_simulations['cts']).prop('disabled', false);
 			me.simulations.cts.inputmask({alias: 'numeric', digitsOptional: false, digits: 0, rightAlign: false, placeholder: '0'});
 			//////////////////////////////////
 			//Simulação de Usa Custos
@@ -598,6 +600,29 @@ let Renda_variavel = (function(){
 			});
 			if ('ignora_erro' in dashboard_simulations)
 				me.simulations.ignora_erro.val(dashboard_simulations['ignora_erro']);
+			/////////////////////////////////////////////
+			//Simulação de Tipo Parada e Valor Parada
+			/////////////////////////////////////////////
+			me.simulations.tipo_parada = renda_variavel__search.find('select[name="tipo_parada"]');
+			me.simulations.tipo_parada.change(function (){
+				let value = $(this).val();
+				if (value === '0'){
+					me.simulations.valor_parada.val('').prop('disabled', true);
+					_lista__instancias_arcabouco.updateInstancia_Simulations('valor_parada', '');
+				}
+				else
+					me.simulations.valor_parada.prop('disabled', false);
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
+			});
+			me.simulations.valor_parada = renda_variavel__search.find('input[name="valor_parada"]');
+			me.simulations.valor_parada.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			});
+			if ('tipo_parada' in dashboard_simulations)
+				me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
+			if ('valor_parada' in dashboard_simulations)
+				me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
+			me.simulations.valor_parada.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
 			//////////////////////////////////
 			//Simulação de Simular Capital
 			//////////////////////////////////
@@ -724,6 +749,17 @@ let Renda_variavel = (function(){
 				me.simulations.ignora_erro.val(dashboard_simulations['ignora_erro']);
 			else
 				me.simulations.ignora_erro[0].selectedIndex = 0;
+			/////////////////////////////////////////////
+			//Simulação de Tipo Parada e Valor Parada
+			/////////////////////////////////////////////
+			if ('tipo_parada' in dashboard_simulations)
+				me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
+			else
+				me.simulations.tipo_parada[0].selectedIndex = 0;
+			if ('valor_parada' in dashboard_simulations)
+				me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
+			else
+				me.simulations.valor_parada.val('').prop('disabled', true);
 			//////////////////////////////////
 			//Simulação de Simular Capital
 			//////////////////////////////////
@@ -924,7 +960,7 @@ let Renda_variavel = (function(){
 				me.filters.gerenciamento = lista_ops__search.find('select[name="gerenciamento"]');
 				me.filters.gerenciamento.append(select_options_html).promise().then(function (){
 					me.filters.gerenciamento.selectpicker({
-						title: 'Ativo',
+						title: 'Gerenciamento',
 						selectedTextFormat: 'count > 1',
 						actionsBox: true,
 						deselectAllText: 'Nenhum',
@@ -1297,7 +1333,7 @@ let Renda_variavel = (function(){
 			let usuarios_html = ``;
 			for (let usu in _lista__arcaboucos.arcaboucos[ar]['usuarios'])
 				usuarios_html += `<span class="badge ${((_lista__arcaboucos.arcaboucos[ar]['usuarios'][usu].criador == 1) ? 'bg-primary' : 'bg-secondary')} ${((usu !== 0) ? 'ms-1' : '')} my-1">${_lista__arcaboucos.arcaboucos[ar]['usuarios'][usu].usuario}</span>`;
-			html += `<tr arcabouco="${_lista__arcaboucos.arcaboucos[ar].id}" ${((_lista__arcaboucos.arcaboucos[ar].id == _lista__instancias_arcabouco.getSelected('id')) ? 'selected' : '')}>`+
+			html += `<tr arcabouco="${_lista__arcaboucos.arcaboucos[ar].id}">`+
 					`<td name="situacao" class="fw-bold">${_lista__arcaboucos.arcaboucos[ar].situacao}</td>`+
 					`<td name="tipo" class="fw-bold">${_lista__arcaboucos.arcaboucos[ar].tipo}</td>`+
 					`<td name="nome" class="fw-bold">${_lista__arcaboucos.arcaboucos[ar].nome}</td>`+
@@ -2373,6 +2409,13 @@ let Renda_variavel = (function(){
 										this.chart.update();
 									}
 								},
+								tooltip: {
+									callbacks: {
+										title: function (tooltipItems){
+											return `${dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['date'][tooltipItems[0].dataIndex]}  (${tooltipItems[0].label})`;
+										}
+									}
+								},
 								annotation: {
 									annotations: linha_risco
 								}
@@ -2606,6 +2649,13 @@ let Renda_variavel = (function(){
 										else
 											me.hidden = (me.hidden === null) ? true : null;
 										this.chart.update();
+									}
+								},
+								tooltip: {
+									callbacks: {
+										title: function (tooltipItems){
+											return `${dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['date'][tooltipItems[0].dataIndex]}  (${tooltipItems[0].label})`;
+										}
 									}
 								},
 								annotation: {
@@ -2925,7 +2975,6 @@ let Renda_variavel = (function(){
 	});
 	/*
 		Processa os cliques em 'table_arcaboucos'.
-			 - Clicar na linha: Muda o arcabouço principal/(selecionado) na lista de instancias de arcabouço.
 			 - Clicar + (Ctrl): Inclui esse arcabouço na lista de instancias de arcabouço.
 	*/
 	$(document.getElementById('table_arcaboucos')).on('click', 'tbody tr', function (e){

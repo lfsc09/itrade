@@ -68,10 +68,38 @@ let Global = (function(){
 		}
 	}
 	/*
-		Requisita scripts js.
+		Requisita scripts html e js.
+		 - files[]: {
+			'filename': String
+			'cache': Bool (Default: True)
+			'dataType': String
+			'target': JQuery Obj
+		 }
 	*/
-	let request = function (filename){
-		$.getScript(location.href+filename);
+	let request = function (files){
+		let _files = $.map(files, function(file){
+			if (file.dataType === 'html'){
+				return $.ajax({
+					cache: file.cache,
+					url: location.href + file.filename,
+					dataType: file.dataType,
+					success: function (response){
+						file.target.append(response);
+					}
+				});
+			}
+			else{
+				return $.ajax({
+					cache: file.cache,
+					url: location.href + file.filename,
+					dataType: file.dataType
+				});
+			}
+		});
+		_files.push($.Deferred(function(deferred){
+			$(deferred.resolve);
+		}));
+		return $.when.apply($, _files);
 	}
 	/*
 		Sincroniza dados com o localStorage ou sessionStorage.

@@ -80,7 +80,7 @@ let RV_Statistics = (function(){
 			return simulation.cts;
 		//Calcula o numero maximo de Cts a partir do 'R' e do 'Maior Stop' da operacao
 		else if (simulation.tipo_cts === '3')
-			return Math.floor(divide(simulation.R, stopBrl));
+			return Math.floor(divide(simulation.R, stopBrl)); //<------ Dividir esse resultado pela 'escalada máx que da no gerenciamento' Math.floor(..., opEscalada), para achar quantos contratos por Escalada deve ser usado (Caso tenha escalado)
 	}
 	/*
 		Aplica os 'filters' na operacao passada.
@@ -134,7 +134,7 @@ let RV_Statistics = (function(){
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
 					let cts_usado = findCts_toUse(list[e]['cts'], op_resultBruto_Unitario['stop']['brl'], simulation);
 					//Calcula o resultado bruto aplicando o numero de contratos
-					let resultBruto_operacao = op_resultBruto_Unitario['result']['brl'] * cts_usado;
+					let resultBruto_operacao = op_resultBruto_Unitario['result']['brl'] * cts_usado; //<------ Multiplicar ainda pela escalada da operação (Caso a operação tenha sido escalada)
 					//Usa o custo da operação a ser aplicada no resultado 'Resultado Líquido'
 					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e]['ativo_custo']) : 0.0 );
 					//Calcula o resultado liquido aplicando os custos
@@ -174,7 +174,7 @@ let RV_Statistics = (function(){
 				maior_alvo__gerenciamento = Math.max(...op.gerenciamento_acoes);
 			return {
 				//Resultado com apenas 1 contrato
-				result: { brl: (op.resultado / op.cts) },
+				result: { brl: (op.resultado / op.cts) }, // <--- Fazer (op.cts / op.escaladas) para descobrir a quantidade de contratos por mão (Sem escalada)
 				stop: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_stop__gerenciamento) },
 				alvo: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_alvo__gerenciamento) }
 			}
@@ -276,6 +276,8 @@ let RV_Statistics = (function(){
 			cts: ('cts' in simulation) ? simulation.cts : null,
 			usa_custo: ('usa_custo' in simulation) ? simulation.usa_custo == 1 : true,
 			ignora_erro: ('ignora_erro' in simulation) ? simulation.ignora_erro == 1 : false,
+			tipo_parada: ('tipo_parada' in simulation) ? simulation.tipo_parada : '0',
+			valor_parada: ('valor_parada' in simulation) ? simulation.valor_parada : null,
 			valor_inicial: ('valor_inicial' in simulation) ? simulation.valor_inicial : null,
 			R: ('R' in simulation && simulation.R != 0) ? simulation.R : null
 		};
@@ -362,6 +364,7 @@ let RV_Statistics = (function(){
 				banda_media: [],
 				banda_superior: [],
 				banda_inferior: [],
+				date: [],
 				risco: (_simulation.R !== null) ? _simulation.R * (-1) : null
 			},
 			evolucao_patrimonial: {
@@ -371,6 +374,7 @@ let RV_Statistics = (function(){
 				banda_media: [],
 				banda_superior: [],
 				banda_inferior: [],
+				date: []
 			},
 			resultado_por_hora: {
 				labels: [],
@@ -463,9 +467,11 @@ let RV_Statistics = (function(){
 				//Para o gráfico de Resultados por Trade
 				_dashboard_ops__chart_data['resultados_normalizado']['labels'].push(parseInt(o) + 1);
 				_dashboard_ops__chart_data['resultados_normalizado']['data'].push(_ops[o].result_liquido['brl']);
+				_dashboard_ops__chart_data['resultados_normalizado']['date'].push(`${Global.convertDate(_ops[o].data)} ${_ops[o].hora}`);
 				//Para o gráfico de Evolução Patrimonial
 				_dashboard_ops__chart_data['evolucao_patrimonial']['labels'].push(parseInt(o) + 1);
 				_dashboard_ops__chart_data['evolucao_patrimonial']['data'].push(_temp__table_stats['lucro_corrente']['brl']);
+				_dashboard_ops__chart_data['evolucao_patrimonial']['date'].push(`${Global.convertDate(_ops[o].data)} ${_ops[o].hora}`);
 			}
 			//////////////////////////////////
 			//Estatisticas por Cenario

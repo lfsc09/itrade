@@ -173,6 +173,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #renda_variavel__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
 #renda_variavel__search input[name='vol'] {width: 80px}
 #renda_variavel__search select[name='tipo_cts'] {width: 115px}
+#renda_variavel__search select[name='tipo_parada'] {width: 180px}
 #renda_variavel__search select[name='ativo'].init, #renda_variavel__search select[name='gerenciamento'].init, #renda_variavel__search select[name='cenario'].init {height: 30px}
 /*------------------------------------ Arcabouço -------------------------------------*/
 @keyframes pulse {
@@ -371,3 +372,25 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_trades_filter input, #dashboard_ops__table_trades_paginate input {font-size: 12px}
 #dashboard_ops__table_trades tbody td{vertical-align: middle}
 #dashboard_ops__table_trades tbody td[name='trade__custo'] {font-size: 10px}
+/*------------------------------------------------------------------------------------*/
+/*------------------------------- CONTROLE FINANCEIRO --------------------------------*/
+/*------------------------------------------------------------------------------------*/
+#controle_financeiro__search .form-label {font-size: 11px}
+#controle_financeiro__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
+#controle_financeiro__search input[name='data'] {width: 175px}
+#controle_financeiro__search div[name='conta'] {width: 190px}
+#controle_financeiro__search div[name='cartao'] {width: 190px}
+#controle_financeiro__search div[name='categorias'] {width: 190px}
+#controle_financeiro__search div[name='categorias'] ul.dropdown-menu {max-height: 500px; font-size: 13px}
+#controle_financeiro__search div[name='categorias'] ul li button[selected] {background-color: #dbddde}
+#controle_financeiro__search input[name='vol'] {width: 80px}
+#controle_financeiro__search select[name='tipo_cts'] {width: 115px}
+#controle_financeiro__search select[name='tipo_parada'] {width: 180px}
+#controle_financeiro__search select[name='conta'].init, #controle_financeiro__search select[name='cartao'].init {height: 30px}
+/*-------------------------------------- Conta ---------------------------------------*/
+#contas_modal_form .form-label {font-size: 12px}
+#contas_modal_form .form-control-color {padding: .25rem 0.5rem}
+#table_contas {font-size: .80em}
+#table_contas tbody td{vertical-align: middle}
+#table_contas tbody td[name='editar'] {width: 4%}
+#table_contas tbody td[name='remover'] {width: 4%}
