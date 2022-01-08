@@ -334,7 +334,8 @@
 				$result[] = [
 					'id' => $row['id'],
 					'nome' => $row['nome'],
-					'acoes' => json_decode($row['acoes'], true)
+					'acoes' => json_decode($row['acoes'], true),
+					'escaladas' => json_decode($row['escaladas'], true)
 				];
 			}
 			$result_raw->free();
@@ -348,8 +349,8 @@
 			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
-			$stmt = $mysqli->prepare("INSERT INTO rv__gerenciamento (id_usuario,nome,acoes) VALUES (?,?,?)");
-		 	$stmt->bind_param('iss', $id_usuario, $params['nome'], $params['acoes']);
+			$stmt = $mysqli->prepare("INSERT INTO rv__gerenciamento (id_usuario,nome,acoes,escaladas) VALUES (?,?,?,?)");
+		 	$stmt->bind_param('isss', $id_usuario, $params['nome'], $params['acoes'], $params['escaladas']);
 		 	if ($stmt->execute()){
 		 		$mysqli->close();
 		 		return ['status' => 1];
@@ -377,7 +378,7 @@
 				if ($data_name === 'id')
 					continue;
 				$update_data['wildcards'] .= (($update_data['wildcards'] !== '') ? ',' : '') . "{$data_name}=?";
-				$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'acoes') ? 's' : 'd';
+				$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'acoes' || $data_name === 'escaladas') ? 's' : 'd';
 				$update_data['values'][] = $new_data_value;
 			}
 			$update_data['bind'] .= 'i';
@@ -723,6 +724,7 @@
 					'vol' => (float) $row['vol'],
 					'cts' => (int) $row['cts'],
 					'hora' => $row['hora'],
+					'escalada' => (int) $row['escalada'],
 					'resultado' => (float) $row['resultado'],
 					'cenario' => $row['cenario'],
 					'observacoes' => $row['observacoes'],
@@ -772,7 +774,7 @@
 		 				//Se fechou o bloco
 		 				if ($block_i === $block_size){
 		 					//Faz a inserção do Bloco
-		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
+		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,escalada,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
 							$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 							$stmt->execute();
 							//Reseta o Bloco de inserção
@@ -781,13 +783,14 @@
 		 				}
 		 				$find_by_key = "{$operacao['gerenciamento']}{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['resultado'], '.') !== false ? rtrim($operacao['resultado'], '0') : $operacao['resultado']), '.') . "{$operacao['cenario']}{$operacao['observacoes']}";
 				 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
-				 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
-					 		$insert_data['bind'] .= 'iiisssisisisssssss';
+				 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+					 		$insert_data['bind'] .= 'iiisissisisisssssss';
 					 		$insert_data['values'] = array_merge($insert_data['values'], [
 					 			$params['id_arcabouco'],
 					 			$id_usuario,
 					 			$ult_seq,
 					 			$operacao['gerenciamento'],
+					 			$operacao['escalada'],
 					 			$operacao['data'],
 					 			$operacao['ativo'],
 					 			$operacao['op'],
@@ -811,7 +814,7 @@
 		 			}
 			 		//Insere caso não tenha fechado o bloco
 			 		if ($block_i > 0){
-			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
+			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,escalada,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
 						$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 						$stmt->execute();
 			 		}

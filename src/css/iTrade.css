@@ -233,6 +233,8 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_gerenciamentos tbody td[name='acoes'] button.btn-danger {color: #212529; background-color: #f1bac0; border-color: #fff}
 #table_gerenciamentos tbody td[name='editar'] {width: 4%}
 #table_gerenciamentos tbody td[name='remover'] {width: 4%}
+#gerenciamentos_modal_form .tips {font-size: .8em}
+#gerenciamentos_modal_form .tips i {font-size: .9em}
 #gerenciamentos_modal_form__acoes button {font-weight: 600}
 #gerenciamentos_modal_form__acoes button.btn-success {color: #212529; background-color: #bce1d0; border-color: #fff}
 #gerenciamentos_modal_form__acoes button.btn-danger {color: #212529; background-color: #f1bac0; border-color: #fff}
@@ -268,7 +270,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_upload_operacoes td[name='observacoes'] {width: 15%}
 #table_upload_operacoes td[name='erro'] {width: 2%; text-align: center}
 /*-------------------------------- Adicionar Operações -------------------------------*/
-#adicionar_operacoes_offcanvas {width: 1600px}
+#adicionar_operacoes_offcanvas {width: 1750px}
 #adicionar_operacoes_offcanvas__form_default .form-label {font-size: 11px}
 #adicionar_operacoes_offcanvas__form_default select[name='hoje'].init, #adicionar_operacoes_offcanvas__form_default select[name='gerenciamento'].init {height: 30px}
 #adicionar_operacoes_offcanvas__form_default div[name='hoje'] {width: 135px}
@@ -287,10 +289,11 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_adicionar_operacoes tbody td[name='barra'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='vol'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='cts'] {width: 4%}
-#table_adicionar_operacoes tbody td[name='ger_acoes'] {width: 15%}
+#table_adicionar_operacoes tbody td[name='ger_acoes'] {width: 17%}
 #table_adicionar_operacoes tbody td[name='ger_acoes'] button {font-size: 10px; font-weight: 600}
 #table_adicionar_operacoes tbody td[name='ger_acoes'] button.btn-success {color: #212529; background-color: #bce1d0; border-color: #fff}
 #table_adicionar_operacoes tbody td[name='ger_acoes'] button.btn-danger {color: #212529; background-color: #f1bac0; border-color: #fff}
+#table_adicionar_operacoes tbody td[name='escalada'] {width: 4%}
 #table_adicionar_operacoes tbody td[name='resultado'] {width: 6%}
 #table_adicionar_operacoes tbody td[name='cenario'] {width: 6%}
 #table_adicionar_operacoes tbody td[name='observacoes'] {width: 10%}

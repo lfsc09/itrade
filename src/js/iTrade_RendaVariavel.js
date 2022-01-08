@@ -1597,12 +1597,8 @@ let Renda_variavel = (function(){
 		//Constroi tabela de gerenciamentos
 		for (let g in _lista__gerenciamentos.gerenciamentos){
 			let acoes = ``;
-			for (let ac in _lista__gerenciamentos.gerenciamentos[g].acoes){
-				if (parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]) < 0)
-					acoes += `<button type="button" class="btn btn-sm btn-danger flex-fill">${Math.abs(parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]))}S</button>`;
-				else
-					acoes += `<button type="button" class="btn btn-sm btn-success flex-fill">${Math.abs(parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]))}S</button>`;
-			}
+			for (let ac=0; ac < _lista__gerenciamentos.gerenciamentos[g]['acoes'].length; ac++)
+				acoes += `<button type="button" class="btn btn-sm ${((parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]) < 0) ? 'btn-danger' : 'btn-success')} flex-fill">${Math.abs(parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]))}S${((_lista__gerenciamentos.gerenciamentos[g]['escaladas'][ac] != 0) ? ` E${_lista__gerenciamentos.gerenciamentos[g]['escaladas'][ac]}` : ``)}</button>`;
 			if (acoes !== '')
 				acoes = `<div class="input-group d-flex">${acoes}</div>`;
 			html += `<tr gerenciamento="${_lista__gerenciamentos.gerenciamentos[g].id}">`+
@@ -3229,17 +3225,23 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('gerenciamentos_modal_form')).find('button[name]').on('click', function (){
 		let html = ``,
-			scalp_value = $(this).parent().find('input[name]').val();
+			parent = $(this).parent(),
+			scalp_value = parent.find('input[name][scalp_value]').val(),
+			scalp_escalada = parent.find('input[name][scalp_escalada]').val();
 		if (scalp_value !== '' && !isNaN(scalp_value)){
 			let form__acoes = document.getElementById('gerenciamentos_modal_form__acoes');
+			if (scalp_escalada !== '' && !isNaN(scalp_escalada))
+				scalp_escalada = Math.abs(parseFloat(scalp_escalada));
+			else
+				scalp_escalada = 0;
 			scalp_value = Math.abs(parseFloat(scalp_value));
 			if (this.name === 's_gain'){
-				html = `<button type="button" class="btn btn-sm btn-success flex-fill" value="${scalp_value}">${scalp_value}S</button>`;
-				$(this).parent().find('input[name]').focus();
+				html = `<button type="button" class="btn btn-sm btn-success flex-fill" value="${scalp_value}" escalada="${scalp_escalada}">${scalp_value}S${((scalp_escalada !== 0) ? ` E${scalp_escalada}` : ``)}</button>`;
+				parent.find('input[name][scalp_value]').focus();
 			}
 			else if (this.name === 's_loss'){
-				html = `<button type="button" class="btn btn-sm btn-danger flex-fill" value="${scalp_value * -1.0}">${scalp_value}S</button>`;
-				$(this).parent().find('input[name]').focus();
+				html = `<button type="button" class="btn btn-sm btn-danger flex-fill" value="${scalp_value * -1.0}" escalada="${scalp_escalada}">${scalp_value}S${((scalp_escalada !== 0) ? ` E${scalp_escalada}` : ``)}</button>`;
+				parent.find('input[name][scalp_value]').focus();
 			}
 			$(form__acoes).append(html).promise().then(function (){
 				[].slice.call(form__acoes.children).sort(function(a, b) {
@@ -3251,7 +3253,7 @@ let Renda_variavel = (function(){
 				});
 			});
 		}
-		$(this).parent().find('input[name]').val('');
+		parent.find('input[name]').val('');
 	});
 	/*
 		Processa a remoção de ações de scalp de Gain e Loss.
@@ -3269,7 +3271,8 @@ let Renda_variavel = (function(){
 			form = $(document.getElementById('gerenciamentos_modal_form'));
 		for (let g in _lista__gerenciamentos.gerenciamentos){
 			if (_lista__gerenciamentos.gerenciamentos[g].id == id_gerenciamento){
-				acoes_btn = _lista__gerenciamentos.gerenciamentos[g]['acoes'].reduce((p, c) => p + ((c < 0) ? `<button type="button" class="btn btn-sm btn-danger flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>` : `<button type="button" class="btn btn-sm btn-success flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>`), '');
+				for (let ac=0; ac < _lista__gerenciamentos.gerenciamentos[g]['acoes'].length; ac++)
+					acoes_btn += `<button type="button" class="btn btn-sm ${((parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]) < 0) ? 'btn-danger' : 'btn-success')} flex-fill" value="${_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]}" escalada="${_lista__gerenciamentos.gerenciamentos[g]['escaladas'][ac]}">${Math.abs(parseFloat(_lista__gerenciamentos.gerenciamentos[g]['acoes'][ac]))}S${((_lista__gerenciamentos.gerenciamentos[g]['escaladas'][ac] != 0) ? ` E${_lista__gerenciamentos.gerenciamentos[g]['escaladas'][ac]}` : ``)}</button>`;
 				form.find('input[name="nome"]').val(_lista__gerenciamentos.gerenciamentos[g].nome);
 				form.find('#gerenciamentos_modal_form__acoes').empty().append(acoes_btn);
 				form.attr('id_gerenciamento', id_gerenciamento);
@@ -3308,12 +3311,15 @@ let Renda_variavel = (function(){
 			id_gerenciamento = form.attr('id_gerenciamento'),
 			data = {
 				nome: form.find('input[name="nome"]').val(),
-				acoes: []
+				acoes: [],
+				escaladas: []
 			};
 		form.find('#gerenciamentos_modal_form__acoes button[value]').each(function (i, elem){
 			data['acoes'].push(elem.getAttribute('value'));
+			data['escaladas'].push(elem.getAttribute('escalada'));
 		});
 		data['acoes'] = JSON.stringify(data['acoes']);
+		data['escaladas'] = JSON.stringify(data['escaladas']);
 		if (!('nome' in data) || data['nome'] === ''){
 			Global.toast.create({location: document.getElementById('gerenciamentos_modal_toasts'), color: 'warning', body: 'Nome inválido.', delay: 4000});
 			return;
@@ -3999,6 +4005,7 @@ let Renda_variavel = (function(){
 				gerenciamentos_a_criar.push({
 					nome: _lista__gerenciamentos['gerenciamentos'][g]['nome'],
 					acoes: _lista__gerenciamentos['gerenciamentos'][g]['acoes'],
+					escaladas: _lista__gerenciamentos['gerenciamentos'][g]['escaladas'],
 					acoes_text: JSON.stringify(_lista__gerenciamentos['gerenciamentos'][g]['acoes'])
 				});
 			}
@@ -4027,6 +4034,7 @@ let Renda_variavel = (function(){
 						`<th>Vol</th>`+
 						`<th>Cts</th>`+
 						((_new_bloco__type__com_acoes) ? `<th>Res. Ações</th>` : ``)+
+						`<th>Esc.</th>`+
 						`<th>Resultado</th>`+
 						`<th>Cenário</th>`+
 						`<th>Observações</th>`+
@@ -4035,7 +4043,11 @@ let Renda_variavel = (function(){
 		}
 		for (let q=0; q<3; q++){
 			for (let i=0; i<gerenciamentos_a_criar.length; i++){
-				let acoes = ((_new_bloco__type__com_acoes) ? gerenciamentos_a_criar[i]['acoes'].reduce((p, c) => p + ((c < 0) ? `<button type="button" class="btn btn-sm btn-danger flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>` : `<button type="button" class="btn btn-sm btn-success flex-fill" value="${c}">${Math.abs(parseFloat(c))}S</button>`), '') : '');
+				let acoes = ``;
+				if (_new_bloco__type__com_acoes){
+					for (let ac=0; ac < gerenciamentos_a_criar[i]['acoes'].length; ac++)
+						acoes += `<button type="button" class="btn btn-sm ${((parseFloat(gerenciamentos_a_criar[i]['acoes'][ac]) < 0) ? 'btn-danger' : 'btn-success')} flex-fill" value="${gerenciamentos_a_criar[i]['acoes'][ac]}" escalada="${gerenciamentos_a_criar[i]['escaladas'][ac]}">${Math.abs(parseFloat(gerenciamentos_a_criar[i]['acoes'][ac]))}S${((gerenciamentos_a_criar[i]['escaladas'][ac] != 0) ? ` E${gerenciamentos_a_criar[i]['escaladas'][ac]}` : ``)}</button>`;
+				}
 				html_body += `<tr sequencia="${ult_seq++}" bloco="${ult_bloco}" ${((i === gerenciamentos_a_criar.length-1) ? `class="tr_separator"` : ``)}>`+
 						((i === 0) ? `<td rowspan="${gerenciamentos_a_criar.length}" name="bloco" class="fw-bold text-center">${ult_bloco}</td>` : ``)+
 						`<td name="data"><input type="text" name="data" class="form-control form-control-sm text-center" value="${default_data}" onclick="this.select()" ${((default_data !== '') ? 'disabled' : '')}></td>`+
@@ -4044,8 +4056,9 @@ let Renda_variavel = (function(){
 						`<td name="op"><input type="text" name="op" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="barra"><input type="text" name="barra" hora="" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
 						`<td name="vol"><input type="text" name="vol" class="form-control form-control-sm text-center" onclick="this.select()"></td>`+
-						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm text-center" onclick="this.select()" value="${default_cts}" ${((default_cts !== '') ? 'disabled' : '')}></td>`+
+						`<td name="cts"><input type="text" name="cts" class="form-control form-control-sm text-center" onclick="this.select()" value="${default_cts}" mao="${default_cts}" ${((default_cts !== '') ? 'disabled' : '')}></td>`+
 						((_new_bloco__type__com_acoes) ? `<td name="ger_acoes"><div class="input-group d-flex">${acoes}</div></td>` : ``)+
+						`<td name="escalada"><input type="text" name="escalada" class="form-control form-control-sm text-center" ${((_new_bloco__type__com_acoes) ? 'disabled' : '')}></td>`+
 						`<td name="resultado"><input type="text" name="resultado" class="form-control form-control-sm text-center"></td>`+
 						`<td name="cenario"><input type="text" name="cenario" class="form-control form-control-sm text-center" onclick="this.select()" value="${default_cenario}" ${((default_cenario !== '') ? 'disabled' : '')}></td>`+
 						`<td name="observacoes"><input type="text" name="observacoes" class="form-control form-control-sm text-center"></td>`+
@@ -4094,7 +4107,7 @@ let Renda_variavel = (function(){
 	$(document.getElementById('table_adicionar_operacoes')).on('change', 'input[name]', function (){
 		if (this.hasAttribute('disabled'))
 			return true;
-		let inputs_validate = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'resultado', 'cenario', 'observacoes', 'erro'],
+		let inputs_validate = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'escalada', 'resultado', 'cenario', 'observacoes', 'erro'],
 			inputs_copy = ['data', 'ativo', 'op', 'barra', 'vol', 'cts', 'cenario', 'observacoes', 'erro'],
 			inputs_check_riscoMax = ['ativo', 'vol', 'cts'],
 			tr = $(this).parentsUntil('tbody').last(),
@@ -4140,9 +4153,33 @@ let Renda_variavel = (function(){
 					this.setAttribute('hora', hora);
 				}
 			}
-			//Valida a Vol e Cts
-			if ((this.name === 'vol' || this.name === 'cts') && (isNaN(this.value) || this.value == 0))
+			//Valida a Vol
+			if (this.name === 'vol' && (isNaN(this.value) || this.value == 0))
 				this.value = '';
+			//Valida o Cts
+			if (this.name === 'cts'){
+				if (isNaN(this.value) || this.value == 0){
+					this.value = '';
+					this.setAttribute('mao', '');
+				}
+				else
+					this.setAttribute('mao', this.value);
+			}
+			//Valida a Escalada
+			if (this.name === 'escalada'){
+				let gerenciamento_value = tr.find('input[name="gerenciamento"]').val(),
+					gerenciamento_index = -1;
+				for (let g in _lista__gerenciamentos['gerenciamentos']){
+					if (gerenciamento_value.localeCompare(_lista__gerenciamentos['gerenciamentos'][g]['nome'], undefined, {sensitivity: 'base'}) === 0)
+						gerenciamento_index = g;
+				}
+				if (gerenciamento_index !== -1 && _lista__gerenciamentos['gerenciamentos'][gerenciamento_index]['escaladas'].indexOf(this.value) !== -1){
+					let cts_input = tr.find('input[name="cts"]');
+					cts_input.val(parseFloat(cts_input.val()) * (parseInt(this.value)) + 1);
+				}
+				else
+					this.value = '';
+			}
 			//Valida o Resultado
 			if (this.name === 'resultado'){
 				if ((isNaN(this.value) || this.value == 0))
@@ -4182,6 +4219,10 @@ let Renda_variavel = (function(){
 			else if (this.name === 'barra'){
 				let hora = tr.find('input[name="barra"]').attr('hora');
 				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).removeClass('border-danger').val(this.value).attr('hora', hora);
+			}
+			else if (this.name === 'cts'){
+				let mao = tr.find('input[name="cts"]').attr('mao');
+				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).removeClass('border-danger').val(this.value).attr('mao', mao);
 			}
 			else
 				tr.parent().find(`tr[bloco="${bloco}"] input[name="${this.name}"]`).removeClass('border-danger').val(this.value);
@@ -4237,11 +4278,18 @@ let Renda_variavel = (function(){
 		let tr = $(this).parentsUntil('tbody').last(),
 			valor_tick = tr.find('input[name="ativo"]').attr('valor_tick'),
 			vol = tr.find('input[name="vol"]').val(),
-			cts = tr.find('input[name="cts"]').val(),
+			mao = tr.find('input[name="cts"]').attr('mao'),
+			novo_cts = mao,
+			gerenciamento_value = this.getAttribute('value'),
+			gerenciamento_escalada = this.getAttribute('escalada'),
 			resultado = '';
-		if (valor_tick !== '' && vol !== '' && cts !== '')
-			resultado = parseFloat(vol) * parseFloat(valor_tick) * parseInt(cts) * parseFloat(this.getAttribute('value'));
+		if (valor_tick !== '' && vol !== '' && mao !== ''){
+			novo_cts = parseInt(novo_cts) * (parseFloat(gerenciamento_escalada) + 1);
+			resultado = parseFloat(vol) * parseFloat(valor_tick) * parseInt(mao) * parseFloat(gerenciamento_value);
+		}
+		tr.find('input[name="escalada"]').val(gerenciamento_escalada);
 		tr.find('input[name="resultado"]').removeClass('border-danger').val(resultado);
+		tr.find('input[name="cts"]').removeClass('border-danger').val(novo_cts);
 	});
 	/*
 		Processa a remoção de linhas ou blocos em 'table_adicionar_operacoes'
@@ -4288,6 +4336,7 @@ let Renda_variavel = (function(){
 				barra = tr.find('input[name="barra"]'),
 				vol = tr.find('input[name="vol"]'),
 				cts = tr.find('input[name="cts"]'),
+				escalada = tr.find('input[name="escalada"]'),
 				resultado = tr.find('input[name="resultado"]'),
 				cenario = tr.find('input[name="cenario"]'),
 				observacoes = tr.find('input[name="observacoes"]'),
@@ -4331,6 +4380,7 @@ let Renda_variavel = (function(){
 					data: Global.convertDate(data.val()),
 					ativo: ativo.val(),
 					gerenciamento: gerenciamento.val(),
+					escalada: escalada.val(),
 					op: ((op.val() === 'c') ? 1 : 2),
 					hora: barra.attr('hora'),
 					vol: vol.val(),

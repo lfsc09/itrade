@@ -496,14 +496,16 @@
 											<div class="col-6">
 												<label class="form-label m-1 text-muted fw-bold">Scalps de Gain</label>
 												<div class="input-group">
-													<input type="text" name="s_gain" class="form-control form-control-sm" onclick="this.select()">
+													<input type="text" name="s_gain" class="form-control form-control-sm text-center" placeholder="S" onclick="this.select()" scalp_value>
+													<input type="text" name="s_gain" class="form-control form-control-sm text-center" placeholder="Escal." onclick="this.select()" scalp_escalada>
 													<button class="btn btn-outline-secondary" type="button" name="s_gain"><i class="fas fa-plus"></i></button>
 												</div>
 											</div>
 											<div class="col-6">
 												<label class="form-label m-1 text-muted fw-bold">Scalps de Loss</label>
 												<div class="input-group">
-													<input type="text" name="s_loss" class="form-control form-control-sm" onclick="this.select()">
+													<input type="text" name="s_loss" class="form-control form-control-sm text-center" placeholder="S" onclick="this.select()" scalp_value>
+													<input type="text" name="s_loss" class="form-control form-control-sm text-center" placeholder="Escal." onclick="this.select()" scalp_escalada>
 													<button class="btn btn-outline-secondary" type="button" name="s_loss"><i class="fas fa-plus"></i></button>
 												</div>
 											</div>
@@ -515,6 +517,9 @@
 													<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="gerenciamentos_modal_enviar">Enviar</button></div>
 													<div class="col"><button type="button" class="btn btn-sm btn-danger w-100" id="gerenciamentos_modal_cancelar">Cancelar</button></div>
 												</div>
+											</div>
+											<div class="col-12 mt-3">
+												<p class="text-muted m-0 tips"><i class="fas fa-info-circle me-1"></i>Duplo clique para remover uma Saída do Gerenciamento.</p>
 											</div>
 										</form>
 									</div>
