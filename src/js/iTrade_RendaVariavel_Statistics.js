@@ -71,16 +71,16 @@ let RV_Statistics = (function(){
 	/*
 		Calcula a quantidade de Cts, baseado no 'tipo_cts' passado.
 	*/
-	let findCts_toUse = function (opCts, stopBrl, simulation){
+	let findCts_toUse = function (opCts, stopBrl, opEscalada, simulation){
 		//Usar Cts da operação
 		if (simulation.tipo_cts === '1' || (simulation.tipo_cts === '2' && simulation.cts === null) || (simulation.tipo_cts === '3' && simulation.R === null))
 			return opCts;
 		//Força uma quantidade fixa passada em 'simulation.cts'
 		else if (simulation.tipo_cts === '2' && simulation.cts !== null)
-			return simulation.cts;
+			return simulation.cts * (opEscalada + 1);
 		//Calcula o numero maximo de Cts a partir do 'R' e do 'Maior Stop' da operacao
 		else if (simulation.tipo_cts === '3')
-			return Math.floor(divide(simulation.R, stopBrl)); //<------ Dividir esse resultado pela 'escalada máx que da no gerenciamento' Math.floor(..., opEscalada), para achar quantos contratos por Escalada deve ser usado (Caso tenha escalado)
+			return Math.floor(divide(simulation.R, stopBrl)) * (opEscalada + 1);
 	}
 	/*
 		Aplica os 'filters' na operacao passada.
@@ -132,9 +132,9 @@ let RV_Statistics = (function(){
 				if (okToUse_filterOp(list[e], op_resultBruto_Unitario['stop'].brl, filters, simulation)){
 					//Calcula o resultado bruto da operação com apenas 1 contrato
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
-					let cts_usado = findCts_toUse(list[e]['cts'], op_resultBruto_Unitario['stop']['brl'], simulation);
+					let cts_usado = findCts_toUse(list[e]['cts'], op_resultBruto_Unitario['stop']['brl'], list[e]['escalada'], simulation);
 					//Calcula o resultado bruto aplicando o numero de contratos
-					let resultBruto_operacao = op_resultBruto_Unitario['result']['brl'] * cts_usado; //<------ Multiplicar ainda pela escalada da operação (Caso a operação tenha sido escalada)
+					let resultBruto_operacao = op_resultBruto_Unitario['result']['brl'] * (cts_usado / (list[e]['escalada'] + 1));
 					//Usa o custo da operação a ser aplicada no resultado 'Resultado Líquido'
 					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e]['ativo_custo']) : 0.0 );
 					//Calcula o resultado liquido aplicando os custos
@@ -173,8 +173,8 @@ let RV_Statistics = (function(){
 			let maior_stop__gerenciamento = Math.min(...op.gerenciamento_acoes),
 				maior_alvo__gerenciamento = Math.max(...op.gerenciamento_acoes);
 			return {
-				//Resultado com apenas 1 contrato
-				result: { brl: (op.resultado / op.cts) }, // <--- Fazer (op.cts / op.escaladas) para descobrir a quantidade de contratos por mão (Sem escalada)
+				//Resultado com apenas 1 contrato (Sem escalada)
+				result: { brl: (op.resultado / (op.cts / (op.escalada + 1))) },
 				stop: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_stop__gerenciamento) },
 				alvo: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_alvo__gerenciamento) }
 			}
