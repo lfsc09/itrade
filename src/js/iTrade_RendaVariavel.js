@@ -2257,7 +2257,9 @@ let Renda_variavel = (function(){
 		_dashboard_ops__section.show('building');
 		if (selected_inst_arcabouco in _lista__operacoes.operacoes && _lista__operacoes.operacoes[selected_inst_arcabouco].length > 0){
 			let finish_building = 0,
-				dashboard_data = RV_Statistics.generate__DashboardOps(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), _lista__instancias_arcabouco.getSelected('simulations'));
+				simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				simulation__periodo_calc = ('periodo_calc' in simulations) ? simulations['periodo_calc'] : '1',
+				dashboard_data = RV_Statistics.generate__DashboardOps(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), simulations);
 			//////////////////////////////////
 			//Info Estatistica (Total + Por Cenário)
 			//////////////////////////////////
@@ -2283,19 +2285,27 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Tabela de Resultados dos Trades
 			//////////////////////////////////
-			if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] === null){
-				html = `<table class="table m-0" id="dashboard_ops__table_trades">`+
-						`<thead>${rebuildDashboardOps__Table_Trades('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades)}</tbody>`+
-						`</table>`;
-				$(document.getElementById('dashboard_ops__table_trades__place')).append(html).promise().then(function (){
-					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
-					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
+			if (dashboard_data.dashboard_ops__table_trades.length){
+				if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] === null){
+					html = `<table class="table m-0" id="dashboard_ops__table_trades">`+
+							`<thead>${rebuildDashboardOps__Table_Trades('thead')}</thead>`+
+							`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades)}</tbody>`+
+							`</table>`;
+					$(document.getElementById('dashboard_ops__table_trades__place')).empty().append(html).promise().then(function (){
+						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
+						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
+						_dashboard_ops__section.show('data', ++finish_building);
+					});
+				}
+				else{
+					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().clear().rows.add(rebuildDashboardOps__Table_Trades('dataOnly', dashboard_data.dashboard_ops__table_trades)).draw();
 					_dashboard_ops__section.show('data', ++finish_building);
-				});
+				}
 			}
 			else{
-				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().clear().rows.add(rebuildDashboardOps__Table_Trades('dataOnly', dashboard_data.dashboard_ops__table_trades)).draw();
+				if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] !== null)
+					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().destroy();
+				$(document.getElementById('dashboard_ops__table_trades__place')).empty().append(`<div class="container border shadow-sm rounded h-100 d-flex justify-content-center align-items-center"><i class="fab fa-hive glow"></i></div>`);
 				_dashboard_ops__section.show('data', ++finish_building);
 			}
 			//////////////////////////////////
@@ -2373,7 +2383,7 @@ let Renda_variavel = (function(){
 							plugins: {
 								title: {
 									display: true,
-									text: 'Resultados por Trade'
+									text: ((simulation__periodo_calc === '1') ? 'Resultados por Trade' : ((simulation__periodo_calc === '2') ? 'Resultados por Dia' : 'Resultados por Mês'))
 								},
 								legend: {
 									display: true,
@@ -2408,7 +2418,7 @@ let Renda_variavel = (function(){
 								tooltip: {
 									callbacks: {
 										title: function (tooltipItems){
-											return `${dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['date'][tooltipItems[0].dataIndex]}  (${tooltipItems[0].label})`;
+											return `${tooltipItems[0].label}  ${dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['date'][tooltipItems[0].dataIndex]}`;
 										}
 									}
 								},
@@ -2460,7 +2470,11 @@ let Renda_variavel = (function(){
 					]
 				}
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].options.plugins.annotation.annotations = linha_risco;
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].options.plugins.tooltip.callbacks.title = function (tooltipItems){
+					return `${tooltipItems[0].label}  ${dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['date'][tooltipItems[0].dataIndex]}`;
+				}
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].update();
+
 			}
 			//////////////////////////////////
 			//Gráfico de Resultados por Hora
@@ -2496,7 +2510,7 @@ let Renda_variavel = (function(){
 							plugins: {
 								title: {
 									display: true,
-									text: 'Resultados por Hora'
+									text: ((simulation__periodo_calc === '1') ? 'Resultados por Hora' : ((simulation__periodo_calc === '2') ? 'Resultados por Dia' : 'Resultados por Mês'))
 								},
 								legend: {
 									display: true,
@@ -2650,7 +2664,7 @@ let Renda_variavel = (function(){
 								tooltip: {
 									callbacks: {
 										title: function (tooltipItems){
-											return `${dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['date'][tooltipItems[0].dataIndex]}  (${tooltipItems[0].label})`;
+											return `${tooltipItems[0].label}  ${dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['date'][tooltipItems[0].dataIndex]}`;
 										}
 									}
 								},
@@ -2701,6 +2715,9 @@ let Renda_variavel = (function(){
 						}
 					]
 				};
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'].options.plugins.tooltip.callbacks.title = function (tooltipItems){
+					return `${tooltipItems[0].label}  ${dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['date'][tooltipItems[0].dataIndex]}`;
+				}
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'].update();
 			}
 		}

@@ -107,6 +107,13 @@ div.iSelectKami ul li button:focus {color: #212529; background-color: transparen
 	border-bottom-color: #07d;
 	animation: spinner .8s ease infinite;
 }
+/*---------------------------------- PLACEHOLDER GLOW --------------------------------*/
+i.glow {
+	font-size: 4em;
+    webkit-animation: placeholder-glow 2s ease-in-out infinite;
+    animation: placeholder-glow 2s ease-in-out infinite;
+    opacity: .1
+}
 /*------------------------------------ DATATABLES ------------------------------------*/
 .pagination {align-items: center!important; border-radius: 0}
 .pagination.pagination-demo {margin: 0}

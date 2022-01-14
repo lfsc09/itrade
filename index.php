@@ -94,8 +94,8 @@
 			<div id="controle_financeiro"></div>
 			<footer class="footer mt-auto fixed-bottom py-2 bg-light">
 				<div class="container-fluid d-flex" id="menu_bottom">
-					<button class="btn btn-sm btn-secondary me-2" type="button" name="renda_variavel">Renda Variável</button>
-					<button class="btn btn-sm btn-secondary me-4" type="button" name="controle_financeiro">Controle Financeiro</button>
+					<button class="btn btn-sm btn-secondary me-2" type="button" name="renda_variavel"><i class="fas fa-chart-bar me-2"></i>Renda Variável</button>
+					<button class="btn btn-sm btn-secondary me-4" type="button" name="controle_financeiro"><i class="fas fa-donate me-2"></i>Controle Financeiro</button>
 					<button class="btn btn-sm btn-light ms-auto me-2" type="button" name="logout"><i class="fas fa-sign-out-alt text-danger"></i></button>
 				</div>
 			</footer>
