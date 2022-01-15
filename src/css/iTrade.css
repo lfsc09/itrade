@@ -27,7 +27,8 @@
 }
 /*----------------------------------- iSelectKami ------------------------------------*/
 div.iSelectKami ul li button:active {color: #1e2125; background-color: #e9ecef}
-div.iSelectKami ul li button:focus {color: #212529; background-color: transparent;}
+div.iSelectKami ul li button:focus {color: #212529; background-color: transparent}
+div.iSelectKami ul li.not-selectable {padding: .25rem 1rem; width: 100%; font-weight: 500}
 /*----------------------------------- SelectPicker -----------------------------------*/
 .bs-searchbox input[type='search'] {
 	min-height: calc(1.5em + (.5rem + 2px));
@@ -180,7 +181,9 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #renda_variavel__search div[name='observacoes'] ul li button[selected] {background-color: #dbddde}
 #renda_variavel__search input[name='vol'] {width: 80px}
 #renda_variavel__search select[name='tipo_cts'] {width: 115px}
-#renda_variavel__search select[name='tipo_parada'] {width: 180px}
+#renda_variavel__search div[name='tipo_parada'] {width: 190px}
+#renda_variavel__search div[name='tipo_parada'] ul.dropdown-menu {max-height: 500px; font-size: 13px; min-width: max-content}
+#renda_variavel__search div[name='tipo_parada'] ul li button[selected] {background-color: #dbddde}
 #renda_variavel__search select[name='ativo'].init, #renda_variavel__search select[name='gerenciamento'].init, #renda_variavel__search select[name='cenario'].init {height: 30px}
 /*------------------------------------ Arcabouço -------------------------------------*/
 @keyframes pulse {

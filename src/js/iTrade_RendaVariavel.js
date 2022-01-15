@@ -603,26 +603,27 @@ let Renda_variavel = (function(){
 			/////////////////////////////////////////////
 			//Simulação de Tipo Parada e Valor Parada
 			/////////////////////////////////////////////
-			me.simulations.tipo_parada = renda_variavel__search.find('select[name="tipo_parada"]');
-			me.simulations.tipo_parada.change(function (){
-				let value = $(this).val();
-				if (value === '0'){
-					me.simulations.valor_parada.val('').prop('disabled', true);
-					_lista__instancias_arcabouco.updateInstancia_Simulations('valor_parada', '');
-				}
-				else
-					me.simulations.valor_parada.prop('disabled', false);
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
-			});
-			me.simulations.valor_parada = renda_variavel__search.find('input[name="valor_parada"]');
-			me.simulations.valor_parada.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			});
-			if ('tipo_parada' in dashboard_simulations)
-				me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
-			if ('valor_parada' in dashboard_simulations)
-				me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
-			me.simulations.valor_parada.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			me.simulations.tipo_parada = renda_variavel__search.find('div[name="tipo_parada"]');
+			// me.simulations.tipo_parada = renda_variavel__search.find('select[name="tipo_parada"]');
+			// me.simulations.tipo_parada.change(function (){
+			// 	let value = $(this).val();
+			// 	if (value === '0'){
+			// 		me.simulations.valor_parada.val('').prop('disabled', true);
+			// 		_lista__instancias_arcabouco.updateInstancia_Simulations('valor_parada', '');
+			// 	}
+			// 	else
+			// 		me.simulations.valor_parada.prop('disabled', false);
+			// 	_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
+			// });
+			// me.simulations.valor_parada = renda_variavel__search.find('input[name="valor_parada"]');
+			// me.simulations.valor_parada.change(function (){
+			// 	_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+			// });
+			// if ('tipo_parada' in dashboard_simulations)
+			// 	me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
+			// if ('valor_parada' in dashboard_simulations)
+			// 	me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
+			// me.simulations.valor_parada.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
 			//////////////////////////////////
 			//Simulação de Simular Capital
 			//////////////////////////////////
@@ -752,14 +753,14 @@ let Renda_variavel = (function(){
 			/////////////////////////////////////////////
 			//Simulação de Tipo Parada e Valor Parada
 			/////////////////////////////////////////////
-			if ('tipo_parada' in dashboard_simulations)
-				me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
-			else
-				me.simulations.tipo_parada[0].selectedIndex = 0;
-			if ('valor_parada' in dashboard_simulations)
-				me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
-			else
-				me.simulations.valor_parada.val('').prop('disabled', true);
+			// if ('tipo_parada' in dashboard_simulations)
+			// 	me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
+			// else
+			// 	me.simulations.tipo_parada[0].selectedIndex = 0;
+			// if ('valor_parada' in dashboard_simulations)
+			// 	me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
+			// else
+			// 	me.simulations.valor_parada.val('').prop('disabled', true);
 			//////////////////////////////////
 			//Simulação de Simular Capital
 			//////////////////////////////////
@@ -1289,6 +1290,47 @@ let Renda_variavel = (function(){
 		for (let i in _lista__instancias_arcabouco.instancias)
 			html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? 'ms-2' : '')}" style="background-color: var(${_lista__instancias_arcabouco.instancias[i].color}) !important" instancia="${_lista__instancias_arcabouco.instancias[i].instancia}">${((_lista__instancias_arcabouco.instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : '')}${_lista__instancias_arcabouco.instancias[i].nome}</span>`;
 		$(document.getElementById('renda_variavel__instancias')).empty().append(html);
+	}
+	/*
+		Reconstroi a lista de 'observações', usada nos selects dos mesmos em 'filters'.
+	*/
+	function rebuildSelect_Observacoes__content(id_arcabouco){
+		let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
+			selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			el_name = _renda_variavel__search.filters.observacoes.attr('name'),
+			placeholder = {'observacoes': 'Observações'},
+			qtd_selected = 0,
+			options_html = '';
+		//Se existe filtros de cenário selecionados
+		if ('cenario' in dashboard_filters){
+			let ordered_cenarios = (Object.keys(dashboard_filters['cenario'])).sort();
+			//Percorre todos os cenários selecionadas no filtro
+			for (let cn=0; cn<ordered_cenarios.length; cn++){
+				//Se esse cenário possui observações cadastradas
+				if (_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name].length){
+					//Inicia o select com o subfiltro de 'OR' e 'AND'
+					if (options_html === ''){
+						let select_query_union_name = `${el_name}_query_union`,
+							or_selected = (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'OR'),
+							and_selected = !(select_query_union_name in dashboard_filters) || (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'AND');
+						options_html += `<li><div class="input-group px-2"><select class="iSelectKami form-select form-select-sm" name="${el_name}_query_union"><option value="AND" ${((and_selected) ? 'selected' : '')}>AND</option><option value="OR" ${((or_selected) ? 'selected' : '')}>OR</option></select><button type="button" class="iSelectKami btn btn-sm btn-outline-secondary" name="tira_tudo">Nenhum</button></div></li>`;
+					}
+					else
+						options_html += `<li><hr class="dropdown-divider"></li>`;
+					options_html += `<li><h6 class="dropdown-header">${ordered_cenarios[cn]}</h6></li>`;
+					//Insere as observações do cenário sendo verificado
+					for (let o in _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name]){
+						let is_selected = _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref in dashboard_filters['cenario'][ordered_cenarios[cn]][el_name],
+							negar_checked = (is_selected) ? dashboard_filters['cenario'][ordered_cenarios[cn]][el_name][_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref] === 1 : false;
+						options_html += `<li><button class="dropdown-item" type="button" value="${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref}" cenario="${dashboard_filters['cenario'][ordered_cenarios[cn]].id}" pertence="${ordered_cenarios[cn]}" ${((is_selected) ? 'selected' : '' )}><input class="form-check-input me-3" type="checkbox" name="negar_valor" ${((negar_checked) ? 'checked' : '' )}>${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].nome}</button>`;
+						if (is_selected)
+							qtd_selected++;
+					}
+				}
+			}
+		}
+		_renda_variavel__search.filters.observacoes.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[el_name]}`)));
+		_renda_variavel__search.filters.observacoes.find('ul.dropdown-menu').empty().append(options_html);
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Lista Arcabouços --------------------------------*/
@@ -2769,47 +2811,6 @@ let Renda_variavel = (function(){
 		}
 		else
 			_dashboard_ops__section.show('empty');
-	}
-	/*
-		Reconstroi a lista de 'observações', usada nos selects dos mesmos em 'filters'.
-	*/
-	function rebuildSelect_Observacoes__content(id_arcabouco){
-		let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-			selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			el_name = _renda_variavel__search.filters.observacoes.attr('name'),
-			placeholder = {'observacoes': 'Observações'},
-			qtd_selected = 0,
-			options_html = '';
-		//Se existe filtros de cenário selecionados
-		if ('cenario' in dashboard_filters){
-			let ordered_cenarios = (Object.keys(dashboard_filters['cenario'])).sort();
-			//Percorre todos os cenários selecionadas no filtro
-			for (let cn=0; cn<ordered_cenarios.length; cn++){
-				//Se esse cenário possui observações cadastradas
-				if (_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name].length){
-					//Inicia o select com o subfiltro de 'OR' e 'AND'
-					if (options_html === ''){
-						let select_query_union_name = `${el_name}_query_union`,
-							or_selected = (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'OR'),
-							and_selected = !(select_query_union_name in dashboard_filters) || (select_query_union_name in dashboard_filters && dashboard_filters[select_query_union_name] === 'AND');
-						options_html += `<li><div class="input-group px-2"><select class="iSelectKami form-select form-select-sm" name="${el_name}_query_union"><option value="AND" ${((and_selected) ? 'selected' : '')}>AND</option><option value="OR" ${((or_selected) ? 'selected' : '')}>OR</option></select><button type="button" class="iSelectKami btn btn-sm btn-outline-secondary" name="tira_tudo">Nenhum</button></div></li>`;
-					}
-					else
-						options_html += `<li><hr class="dropdown-divider"></li>`;
-					options_html += `<li><h6 class="dropdown-header">${ordered_cenarios[cn]}</h6></li>`;
-					//Insere as observações do cenário sendo verificado
-					for (let o in _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name]){
-						let is_selected = _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref in dashboard_filters['cenario'][ordered_cenarios[cn]][el_name],
-							negar_checked = (is_selected) ? dashboard_filters['cenario'][ordered_cenarios[cn]][el_name][_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref] === 1 : false;
-						options_html += `<li><button class="dropdown-item" type="button" value="${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref}" cenario="${dashboard_filters['cenario'][ordered_cenarios[cn]].id}" pertence="${ordered_cenarios[cn]}" ${((is_selected) ? 'selected' : '' )}><input class="form-check-input me-3" type="checkbox" name="negar_valor" ${((negar_checked) ? 'checked' : '' )}>${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].nome}</button>`;
-						if (is_selected)
-							qtd_selected++;
-					}
-				}
-			}
-		}
-		_renda_variavel__search.filters.observacoes.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[el_name]}`)));
-		_renda_variavel__search.filters.observacoes.find('ul.dropdown-menu').empty().append(options_html);
 	}
 	/*
 		Retorna o html de uma linha usada em 'dashboard_ops__table_stats__byCenario', separando se é para o 'tbody' ou 'tfoot'.
@@ -4596,7 +4597,7 @@ let Renda_variavel = (function(){
 	/*
 		Processa as seleções de observações em 'filters'.
 	*/
-	$(document.getElementById('renda_variavel__search')).on('click', 'div.iSelectKami[name] ul li button.dropdown-item', function (e){
+	$(document.getElementById('renda_variavel__search')).on('click', 'div.iSelectKami[name="observacoes"] ul li button.dropdown-item', function (e){
 		let me = $(this),
 			cenario_nome = me.attr('pertence'),
 			div_holder = me.parent().parent().parent(),

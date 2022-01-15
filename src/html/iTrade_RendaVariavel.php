@@ -107,19 +107,18 @@
 														<option value="1">Sim</option>
 													</select>
 												</div>
-												<div class="col-auto">
+												<div class="col-auto" name="tipo_parada">
 													<label class="form-label m-0 text-muted fw-bold">Simular Parada</label>
-													<div class="input-group">
-														<select class="form-select form-select-sm" name="tipo_parada">
-															<option value="0">Nenhuma</option>
-															<option value="1">Após N stops (Total)</option>
-															<option value="2">Após N stops (Sequencial)</option>
-															<option value="3">Após X valor no negativo</option>
-															<option value="4">Após X valor de perda bruta</option>
-															<option value="5">Após atingir X R's no negativo</option>
-															<option value="6">Após atingir X R's de perda bruta</option>
-														</select>
-														<input type="text" name="valor_parada" class="form-control form-control-sm" onclick="this.select()" placeholder="Valor" disabled>
+													<div class="iSelectKami dropdown bootstrap-select w-100" name="tipo_parada">
+														<button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Tipos de Parada</button>
+														<ul class="dropdown-menu overflow-auto">
+															<li class="not-selectable">Após N stops (Total)<input class="form-control form-control-sm" type="input" tipo_parada="1" name="valor_parada" onclick="this.select()" placeholder="Qtd"></li>
+															<li class="not-selectable">Após N stops (Sequencial)<input class="form-control form-control-sm" type="input" tipo_parada="2" name="valor_parada" onclick="this.select()" placeholder="Qtd"></li>
+															<li class="not-selectable">Após X valor no negativo<input class="form-control form-control-sm" type="input" tipo_parada="3" name="valor_parada" onclick="this.select()" placeholder="R$"></li>
+															<li class="not-selectable">Após X valor de perda bruta<input class="form-control form-control-sm" type="input" tipo_parada="4" name="valor_parada" onclick="this.select()" placeholder="R$"></li>
+															<li class="not-selectable">Após atingir X R's no negativo<input class="form-control form-control-sm" type="input" tipo_parada="5" name="valor_parada" onclick="this.select()" placeholder="R"></li>
+															<li class="not-selectable">Após atingir X R's de perda bruta<input class="form-control form-control-sm" type="input" tipo_parada="6" name="valor_parada" onclick="this.select()" placeholder="R"></li>
+														</ul>
 													</div>
 												</div>
 												<div class="col-auto">
