@@ -1184,9 +1184,9 @@ let Renda_variavel = (function(){
 			return (type === 'display') ? `<span class="${color}">${rendered_num}</span>` : data;
 		}
 	}
-	//Configuração da tabela de operações em 'lista_ops'
-	let _dashboard_ops__table_trades_DT = {
-		columns: [
+	//Colunas usadas em '_dashboard_ops__table_trades_DT' dependendo do periodo de calculo selecionado
+	let _dashboard_ops__table_trades_DT_columns = {
+		'1': [
 			{name: 'trade__seq', orderable: true},
 			{name: 'trade__data', orderable: true, type: 'br-date'},
 			{name: 'trade__cenario', orderable: true},
@@ -1197,11 +1197,37 @@ let Renda_variavel = (function(){
 			{name: 'result__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
 			{name: 'result__R', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__R}
 		],
+		'2': [
+			{name: 'trade__seq', orderable: true},
+			{name: 'trade__data', orderable: true, type: 'br-date'},
+			{name: 'trade__ops', orderable: true},
+			{name: 'trade__cts', orderable: true},
+			{name: 'result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'result_bruto__R', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__R},
+			{name: 'trade__custo', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
+			{name: 'result__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'result__R', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__R}
+		]
+	}
+	//Configuração da tabela de operações em 'lista_ops'
+	let _dashboard_ops__table_trades_DT = {
+		columns: [],
 		createdRow: function (row, data, index){
-			let classes = ['text-muted fw-bold', 'text-muted fw-bold', 'fw-bold', 'fw-bold', 'fw-bold', 'fw-bold', 'fw-bold text-danger', 'fw-bold', 'fw-bold'];
+			let classes_by_column = {
+				trade__seq: 'text-muted fw-bold',
+				trade__data: 'text-muted fw-bold',
+				trade__cenario: 'fw-bold',
+				trade__ops: 'fw-bold',
+				trade__cts: 'fw-bold',
+				result_bruto__brl: 'fw-bold',
+				result_bruto__R: 'fw-bold',
+				trade__custo: 'fw-bold text-danger',
+				result__brl: 'fw-bold',
+				result__R: 'fw-bold'
+			};
 			for (var i=0; i<_dashboard_ops__table_trades_DT["columns"].length; i++){
 				row.children[i].setAttribute("name", _dashboard_ops__table_trades_DT["columns"][i]["name"]);
-				row.children[i].setAttribute("class", classes[i]);
+				row.children[i].setAttribute("class", classes_by_column[_dashboard_ops__table_trades_DT["columns"][i]["name"]]);
 			}
 		},
 		lengthChange: false,
@@ -2287,24 +2313,44 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			if (dashboard_data.dashboard_ops__table_trades.length){
 				if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] === null){
-					html = `<table class="table m-0" id="dashboard_ops__table_trades">`+
-							`<thead>${rebuildDashboardOps__Table_Trades('thead')}</thead>`+
-							`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades)}</tbody>`+
+					html = `<table class="table m-0" id="dashboard_ops__table_trades" periodo_calc="${simulation__periodo_calc}">`+
+							`<thead>${rebuildDashboardOps__Table_Trades('thead', null, simulation__periodo_calc)}</thead>`+
+							`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades, simulation__periodo_calc)}</tbody>`+
 							`</table>`;
 					$(document.getElementById('dashboard_ops__table_trades__place')).empty().append(html).promise().then(function (){
 						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
+						_dashboard_ops__table_trades_DT['columns'] = _dashboard_ops__table_trades_DT_columns[simulation__periodo_calc];
 						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
 						_dashboard_ops__section.show('data', ++finish_building);
 					});
 				}
 				else{
-					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().clear().rows.add(rebuildDashboardOps__Table_Trades('dataOnly', dashboard_data.dashboard_ops__table_trades)).draw();
-					_dashboard_ops__section.show('data', ++finish_building);
+					//Se mudou o periodo_calc reconstroi a tabela
+					if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].attr('periodo_calc') !== simulation__periodo_calc){
+						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().destroy();
+						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = null;
+						html = `<table class="table m-0" id="dashboard_ops__table_trades" periodo_calc="${simulation__periodo_calc}">`+
+								`<thead>${rebuildDashboardOps__Table_Trades('thead', null, simulation__periodo_calc)}</thead>`+
+								`<tbody>${rebuildDashboardOps__Table_Trades('tbody', dashboard_data.dashboard_ops__table_trades, simulation__periodo_calc)}</tbody>`+
+								`</table>`;
+						$(document.getElementById('dashboard_ops__table_trades__place')).empty().append(html).promise().then(function (){
+							_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
+							_dashboard_ops__table_trades_DT['columns'] = _dashboard_ops__table_trades_DT_columns[simulation__periodo_calc];
+							_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
+							_dashboard_ops__section.show('data', ++finish_building);
+						});
+					}
+					else{
+						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().clear().rows.add(rebuildDashboardOps__Table_Trades('dataOnly', dashboard_data.dashboard_ops__table_trades, simulation__periodo_calc)).draw();
+						_dashboard_ops__section.show('data', ++finish_building);
+					}
 				}
 			}
 			else{
-				if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] !== null)
+				if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] !== null){
 					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().destroy();
+					_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = null;
+				}
 				$(document.getElementById('dashboard_ops__table_trades__place')).empty().append(`<div class="container border shadow-sm rounded h-100 d-flex justify-content-center align-items-center"><i class="fab fa-hive glow"></i></div>`);
 				_dashboard_ops__section.show('data', ++finish_building);
 			}
@@ -2868,53 +2914,101 @@ let Renda_variavel = (function(){
 	/*
 		Retorna o html da seção de 'thead' ou 'tbody' da 'dashboard_ops__table_trades'.
 	*/
-	function rebuildDashboardOps__Table_Trades(section = '', trades = {}){
+	function rebuildDashboardOps__Table_Trades(section = '', trades = {}, periodo_calc = '1'){
 		if (section === 'thead'){
 			let html = ``;
-			html += `<tr>`+
-					`<th>#</th>`+
-					`<th>Data</th>`+
-					`<th>Cenário</th>`+
-					`<th>Cts</th>`+
-					`<th>Bruto BRL</th>`+
-					`<th>Bruto R</th>`+
-					`<th>Custo</th>`+
-					`<th>Líquido BRL</th>`+
-					`<th>Líquido R</th>`+
-					`</tr>`;
+			if (periodo_calc === '1'){
+				html += `<tr>`+
+						`<th>#</th>`+
+						`<th>Data</th>`+
+						`<th>Cenário</th>`+
+						`<th>Cts</th>`+
+						`<th>Bruto BRL</th>`+
+						`<th>Bruto R</th>`+
+						`<th>Custo</th>`+
+						`<th>Líquido BRL</th>`+
+						`<th>Líquido R</th>`+
+						`</tr>`;
+			}
+			else if (periodo_calc === '2'){
+				html += `<tr>`+
+						`<th>#</th>`+
+						`<th>Data</th>`+
+						`<th>Ops</th>`+
+						`<th>Cts</th>`+
+						`<th>Bruto BRL</th>`+
+						`<th>Bruto R</th>`+
+						`<th>Custo</th>`+
+						`<th>Líquido BRL</th>`+
+						`<th>Líquido R</th>`+
+						`</tr>`;
+			}
 			return html;
 		}
 		else if (section === 'tbody'){
 			let html = ``;
-			for (let o in trades){
-				html += `<tr>`+
-						`<td name="trade__seq">${trades[o].trade__seq}</td>`+
-						`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
-						`<td name="trade__cenario">${trades[o].trade__cenario}</td>`+
-						`<td name="trade__cts">${trades[o].trade__cts}</td>`+
-						`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
-						`<td name="result_bruto__R">${trades[o].result_bruto__R}</td>`+
-						`<td name="trade__custo">${trades[o].trade__custo}</td>`+
-						`<td name="result__brl">${trades[o].result__brl}</td>`+
-						`<td name="result__R">${trades[o].result__R}</td>`+
-						`</tr>`;
+			if (periodo_calc === '1'){
+				for (let o in trades){
+					html += `<tr>`+
+							`<td name="trade__seq">${trades[o].trade__seq}</td>`+
+							`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
+							`<td name="trade__cenario">${trades[o].trade__cenario}</td>`+
+							`<td name="trade__cts">${trades[o].trade__cts}</td>`+
+							`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
+							`<td name="result_bruto__R">${trades[o].result_bruto__R}</td>`+
+							`<td name="trade__custo">${trades[o].trade__custo}</td>`+
+							`<td name="result__brl">${trades[o].result__brl}</td>`+
+							`<td name="result__R">${trades[o].result__R}</td>`+
+							`</tr>`;
+				}
+			}
+			else if (periodo_calc === '2'){
+				for (let o in trades){
+					html += `<tr>`+
+							`<td name="trade__seq">${trades[o].trade__seq}</td>`+
+							`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
+							`<td name="trade__ops">${trades[o].trade__ops}</td>`+
+							`<td name="trade__cts">${trades[o].trade__cts}</td>`+
+							`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
+							`<td name="result_bruto__R">${trades[o].result_bruto__R}</td>`+
+							`<td name="trade__custo">${trades[o].trade__custo}</td>`+
+							`<td name="result__brl">${trades[o].result__brl}</td>`+
+							`<td name="result__R">${trades[o].result__R}</td>`+
+							`</tr>`;
+				}
 			}
 			return html;
 		}
 		else if (section === 'dataOnly'){
 			let data = [];
-			for (let o in trades){
-				data.push([
-					trades[o].trade__seq,
-					Global.convertDate(trades[o].trade__data),
-					trades[o].trade__cenario,
-					trades[o].trade__cts,
-					trades[o].result_bruto__brl,
-					trades[o].result_bruto__R,
-					trades[o].trade__custo,
-					trades[o].result__brl,
-					trades[o].result__R
-				]);
+			if (periodo_calc === '1'){
+				for (let o in trades){
+					data.push([
+						trades[o].trade__seq,
+						Global.convertDate(trades[o].trade__data),
+						trades[o].trade__cenario,
+						trades[o].trade__cts,
+						trades[o].result_bruto__brl,
+						trades[o].result_bruto__R,
+						trades[o].trade__custo,
+						trades[o].result__brl,
+						trades[o].result__R
+					]);
+				}
+			}
+			else if (periodo_calc === '2'){
+				for (let o in trades){
+					data.push([
+						trades[o].trade__seq,
+						Global.convertDate(trades[o].trade__data),
+						trades[o].trade__cts,
+						trades[o].result_bruto__brl,
+						trades[o].result_bruto__R,
+						trades[o].trade__custo,
+						trades[o].result__brl,
+						trades[o].result__R
+					]);
+				}
 			}
 			return data;
 		}

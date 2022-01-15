@@ -737,6 +737,31 @@ let RV_Statistics = (function(){
 		else if (_simulation.periodo_calc === '2'){
 			for (let o in _ops){
 				//////////////////////////////////
+				//Resultados do Trade
+				//////////////////////////////////
+				if (_options.get_tradeTableData && !_options.only_General){
+					_dashboard_ops__table_trades.push({
+						//Sequencia do trade, na ordem que vem do BD
+						trade__seq: _temp__table_stats['i_seq']++,
+						//Data do trade
+						trade__data: _ops[o].data,
+						//Contratos usados
+						trade__cts: _ops[o].cts_usado,
+						//Trades feitos no dia
+						trade__ops: _ops[o].qtd_trades,
+						//Resultado bruto do trade em BRL
+						result_bruto__brl: _ops[o].result_bruto['brl'],
+						//Resultado bruto do trade em R
+						result_bruto__R: _ops[o].result_bruto['R'],
+						//Custo do trade
+						trade__custo: _ops[o].custo,
+						//Resultado do trade em BRL
+						result__brl: _ops[o].result_liquido['brl'],
+						//Resultado do trade em R
+						result__R: _ops[o].result_liquido['R']
+					});
+				}
+				//////////////////////////////////
 				//Estatisticas Gerais
 				//////////////////////////////////
 				let day_of_week = moment(_ops[o].data).weekday();
