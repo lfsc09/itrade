@@ -112,12 +112,12 @@
 													<div class="iSelectKami dropdown bootstrap-select w-100" name="tipo_parada">
 														<button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Tipos de Parada</button>
 														<ul class="dropdown-menu overflow-auto">
-															<li class="not-selectable">Após N stops (Total)<input class="form-control form-control-sm" type="input" tipo_parada="1" name="valor_parada" onclick="this.select()" placeholder="Qtd"></li>
-															<li class="not-selectable">Após N stops (Sequencial)<input class="form-control form-control-sm" type="input" tipo_parada="2" name="valor_parada" onclick="this.select()" placeholder="Qtd"></li>
-															<li class="not-selectable">Após X valor no negativo<input class="form-control form-control-sm" type="input" tipo_parada="3" name="valor_parada" onclick="this.select()" placeholder="R$"></li>
-															<li class="not-selectable">Após X valor de perda bruta<input class="form-control form-control-sm" type="input" tipo_parada="4" name="valor_parada" onclick="this.select()" placeholder="R$"></li>
-															<li class="not-selectable">Após atingir X R's no negativo<input class="form-control form-control-sm" type="input" tipo_parada="5" name="valor_parada" onclick="this.select()" placeholder="R"></li>
-															<li class="not-selectable">Após atingir X R's de perda bruta<input class="form-control form-control-sm" type="input" tipo_parada="6" name="valor_parada" onclick="this.select()" placeholder="R"></li>
+															<li class="not-selectable">Após N stops (Total)<input class="form-control form-control-sm" type="input" tipo_parada="1" name="valor_parada" onclick="this.select()"></li>
+															<li class="not-selectable">Após N stops (Sequencial)<input class="form-control form-control-sm" type="input" tipo_parada="2" name="valor_parada" onclick="this.select()"></li>
+															<li class="not-selectable">Após X valor no Negativo<input class="form-control form-control-sm" type="input" tipo_parada="3" name="valor_parada" onclick="this.select()"></li>
+															<li class="not-selectable">Após X valor de Perda Bruta<input class="form-control form-control-sm" type="input" tipo_parada="4" name="valor_parada" onclick="this.select()"></li>
+															<li class="not-selectable">Após atingir X R's no Negativo<input class="form-control form-control-sm" type="input" tipo_parada="5" name="valor_parada" onclick="this.select()"></li>
+															<li class="not-selectable">Após atingir X R's de Perda Bruta<input class="form-control form-control-sm" type="input" tipo_parada="6" name="valor_parada" onclick="this.select()"></li>
 														</ul>
 													</div>
 												</div>

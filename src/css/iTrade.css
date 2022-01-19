@@ -28,7 +28,7 @@
 /*----------------------------------- iSelectKami ------------------------------------*/
 div.iSelectKami ul li button:active {color: #1e2125; background-color: #e9ecef}
 div.iSelectKami ul li button:focus {color: #212529; background-color: transparent}
-div.iSelectKami ul li.not-selectable {padding: .25rem 1rem; width: 100%; font-weight: 500}
+div.iSelectKami ul li.not-selectable {padding: .25rem 1rem; width: 100%; font-weight: 500; font-size: .9em}
 /*----------------------------------- SelectPicker -----------------------------------*/
 .bs-searchbox input[type='search'] {
 	min-height: calc(1.5em + (.5rem + 2px));

@@ -604,26 +604,31 @@ let Renda_variavel = (function(){
 			//Simulação de Tipo Parada e Valor Parada
 			/////////////////////////////////////////////
 			me.simulations.tipo_parada = renda_variavel__search.find('div[name="tipo_parada"]');
-			// me.simulations.tipo_parada = renda_variavel__search.find('select[name="tipo_parada"]');
-			// me.simulations.tipo_parada.change(function (){
-			// 	let value = $(this).val();
-			// 	if (value === '0'){
-			// 		me.simulations.valor_parada.val('').prop('disabled', true);
-			// 		_lista__instancias_arcabouco.updateInstancia_Simulations('valor_parada', '');
-			// 	}
-			// 	else
-			// 		me.simulations.valor_parada.prop('disabled', false);
-			// 	_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
-			// });
-			// me.simulations.valor_parada = renda_variavel__search.find('input[name="valor_parada"]');
-			// me.simulations.valor_parada.change(function (){
-			// 	_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
-			// });
-			// if ('tipo_parada' in dashboard_simulations)
-			// 	me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
-			// if ('valor_parada' in dashboard_simulations)
-			// 	me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
-			// me.simulations.valor_parada.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+			me.simulations.tipo_parada.find('input[name="valor_parada"]').each(function (i, el){
+				el = $(this);
+				el.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
+				if ('tipo_parada' in dashboard_simulations){
+					for (let tp = 0; tp < dashboard_simulations['tipo_parada'].length; tp++){
+						if (el.attr('tipo_parada') === dashboard_simulations['tipo_parada'][tp].tipo_parada){
+							el.val(dashboard_simulations['tipo_parada'][tp].valor_parada);
+							break;
+						}
+					}
+				}
+			});
+			me.simulations.tipo_parada.find('input[name="valor_parada"]').change(function (){
+				let dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+					localStorage_data = [];
+				me.simulations.tipo_parada.find('input[name="valor_parada"]').each(function (i, el){
+					if (el.value !== '' && el.value > 0){
+						localStorage_data.push({
+							tipo_parada: el.getAttribute('tipo_parada'),
+							valor_parada: el.value
+						});
+					}
+				});
+				_lista__instancias_arcabouco.updateInstancia_Simulations('tipo_parada', localStorage_data);
+			});
 			//////////////////////////////////
 			//Simulação de Simular Capital
 			//////////////////////////////////
@@ -753,14 +758,17 @@ let Renda_variavel = (function(){
 			/////////////////////////////////////////////
 			//Simulação de Tipo Parada e Valor Parada
 			/////////////////////////////////////////////
-			// if ('tipo_parada' in dashboard_simulations)
-			// 	me.simulations.tipo_parada.val(dashboard_simulations['tipo_parada']);
-			// else
-			// 	me.simulations.tipo_parada[0].selectedIndex = 0;
-			// if ('valor_parada' in dashboard_simulations)
-			// 	me.simulations.valor_parada.val(dashboard_simulations['valor_parada']).prop('disabled', false);
-			// else
-			// 	me.simulations.valor_parada.val('').prop('disabled', true);
+			me.simulations.tipo_parada.find('input[name="valor_parada"]').each(function (i, el){
+				el = $(this);
+				if ('tipo_parada' in dashboard_simulations){
+					for (let tp = 0; tp < dashboard_simulations['tipo_parada'].length; tp++){
+						if (el.attr('tipo_parada') === dashboard_simulations['tipo_parada'][tp].tipo_parada){
+							el.val(dashboard_simulations['tipo_parada'][tp].valor_parada);
+							break;
+						}
+					}
+				}
+			});
 			//////////////////////////////////
 			//Simulação de Simular Capital
 			//////////////////////////////////

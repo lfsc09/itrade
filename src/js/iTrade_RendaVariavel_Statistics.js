@@ -123,39 +123,115 @@ let RV_Statistics = (function(){
 		Já calcula as informações de resultado necessárias.
 	*/
 	let groupData_byPeriodo = function (list, filters, simulation){
-		let new_list = [];
+		let new_list = [],
+			stop_tipo_parada = {
+				condicao: null,
+				tipo_parada: {}
+			};
 		//Mantem 'por Trade'
 		if (simulation.periodo_calc === '1'){
 			for (let e in list){
-				let op_resultBruto_Unitario = calculate_op_result(list[e], simulation);
+				let op_resultBruto_Unitario = calculate_op_result(list[e], simulation),
+					tipo_parada_ok = true;
 				//Roda os 'filters' na operação
 				if (okToUse_filterOp(list[e], op_resultBruto_Unitario['stop'].brl, filters, simulation)){
+					//Inicia a condição do Tipo Parada (Em 'por Trade' seria o Dia)
+					if (stop_tipo_parada.condicao !== list[e].data){
+						stop_tipo_parada['condicao'] = list[e].data;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							stop_tipo_parada['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+								current: 0.0,
+								max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+							}
+						}
+					}
 					//Calcula o resultado bruto da operação com apenas 1 contrato
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
-					let cts_usado = findCts_toUse(list[e]['cts'], op_resultBruto_Unitario['stop']['brl'], list[e]['escalada'], simulation);
+					let cts_usado = findCts_toUse(list[e].cts, op_resultBruto_Unitario['stop'].brl, list[e].escalada, simulation);
 					//Calcula o resultado bruto aplicando o numero de contratos
-					let resultBruto_operacao = op_resultBruto_Unitario['result']['brl'] * (cts_usado / (list[e]['escalada'] + 1));
+					let resultBruto_operacao = op_resultBruto_Unitario['result'].brl * (cts_usado / (list[e].escalada + 1));
 					//Usa o custo da operação a ser aplicada no resultado 'Resultado Líquido'
-					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e]['ativo_custo']) : 0.0 );
+					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e].ativo_custo) : 0.0 );
 					//Calcula o resultado liquido aplicando os custos
 					let resultLiquido_operacao = resultBruto_operacao - custo_operacao;
-					new_list.push({
-						erro: list[e].erro,
-						data: list[e].data,
-						hora: list[e].hora,
-						cenario: list[e].cenario,
-						cts_usado: cts_usado,
-						custo: custo_operacao,
-						resultado_op: (resultLiquido_operacao > 0 ? 1 : (resultLiquido_operacao < 0 ? -1 : 0)),
-						result_bruto: {
-							brl: resultBruto_operacao,
-							R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
-						},
-						result_liquido: {
-							brl: resultLiquido_operacao,
-							R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
-						},
-					});
+					//Verifica se a operação pode ser executada dados os tipos de parada selecionados
+					for (let tp_value in stop_tipo_parada.tipo_parada){
+						//Parada N Stops (Total)
+						if (tp_value === '1'){
+							//Se for um Stop
+							if (resultLiquido_operacao < 1){
+								if (stop_tipo_parada['tipo_parada'][tp_value].current + 1 <= stop_tipo_parada['tipo_parada'][tp_value].max)
+									stop_tipo_parada['tipo_parada'][tp_value].current += 1;
+								else
+									tipo_parada_ok = false;
+							}
+						}
+						//Parada N Stops (Sequencial)
+						else if (tp_value === '2'){
+							//Se for um Stop
+							if (resultLiquido_operacao < 1){
+								if (stop_tipo_parada['tipo_parada'][tp_value].current + 1 <= stop_tipo_parada['tipo_parada'][tp_value].max)
+									stop_tipo_parada['tipo_parada'][tp_value].current += 1;
+								else
+									tipo_parada_ok = false;
+							}
+							else
+								stop_tipo_parada['tipo_parada'][tp_value].current = 0;
+						}
+						//Parada X Valor no Negativo
+						else if (tp_value === '3'){
+							if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * (-1))
+								stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
+							else
+								tipo_parada_ok = false;
+						}
+						//Parada X Valor de Perda Bruta
+						else if (tp_value === '4'){
+							//Se for um Stop
+							if (resultLiquido_operacao < 1){
+								if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * (-1))
+									stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
+								else
+									tipo_parada_ok = false;
+							}
+						}
+						//Parada X R's no Negativo
+						else if (tp_value === '5' && simulation.R !== null){
+							if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * simulation.R * (-1))
+								stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
+							else
+								tipo_parada_ok = false;
+						}
+						//Parada X R's de Perda Bruta
+						else if (tp_value === '6' && simulation.R !== null){
+							//Se for um Stop
+							if (resultLiquido_operacao < 1){
+								if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * simulation.R * (-1))
+									stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
+								else
+									tipo_parada_ok = false;
+							}
+						}
+					}
+					if (tipo_parada_ok){
+						new_list.push({
+							erro: list[e].erro,
+							data: list[e].data,
+							hora: list[e].hora,
+							cenario: list[e].cenario,
+							cts_usado: cts_usado,
+							custo: custo_operacao,
+							resultado_op: (resultLiquido_operacao > 0 ? 1 : (resultLiquido_operacao < 0 ? -1 : 0)),
+							result_bruto: {
+								brl: resultBruto_operacao,
+								R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
+							},
+							result_liquido: {
+								brl: resultLiquido_operacao,
+								R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
+							},
+						});
+					}
 				}
 			}
 		}
@@ -169,18 +245,18 @@ let RV_Statistics = (function(){
 				if (okToUse_filterOp(list[e], op_resultBruto_Unitario['stop'].brl, filters, simulation)){
 					//Calcula o resultado bruto da operação com apenas 1 contrato
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
-					let cts_usado = findCts_toUse(list[e]['cts'], op_resultBruto_Unitario['stop']['brl'], list[e]['escalada'], simulation);
+					let cts_usado = findCts_toUse(list[e].cts, op_resultBruto_Unitario['stop'].brl, list[e].escalada, simulation);
 					//Calcula o resultado bruto aplicando o numero de contratos
-					let resultBruto_operacao = op_resultBruto_Unitario['result']['brl'] * (cts_usado / (list[e]['escalada'] + 1));
+					let resultBruto_operacao = op_resultBruto_Unitario['result'].brl * (cts_usado / (list[e].escalada + 1));
 					//Usa o custo da operação a ser aplicada no resultado 'Resultado Líquido'
-					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e]['ativo_custo']) : 0.0 );
+					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e].ativo_custo) : 0.0 );
 					//Calcula o resultado liquido aplicando os custos
 					let resultLiquido_operacao = resultBruto_operacao - custo_operacao;
 					//Guarda o dia sendo olhado
 					if (day_used !== list[e].data){
 						day_used = list[e].data;
 						if (index > -1)
-							new_list[index]['resultado_op'] = (new_list[index]['result_liquido']['brl'] > 0 ? 1 : (new_list[index]['result_liquido']['brl'] < 0 ? -1 : 0));
+							new_list[index]['resultado_op'] = (new_list[index]['result_liquido'].brl > 0 ? 1 : (new_list[index]['result_liquido'].brl < 0 ? -1 : 0));
 						index++;
 					}
 					if (!(index in new_list)){
@@ -333,8 +409,7 @@ let RV_Statistics = (function(){
 			cts: ('cts' in simulation) ? simulation.cts : null,
 			usa_custo: ('usa_custo' in simulation) ? simulation.usa_custo == 1 : true,
 			ignora_erro: ('ignora_erro' in simulation) ? simulation.ignora_erro == 1 : false,
-			tipo_parada: ('tipo_parada' in simulation) ? simulation.tipo_parada : '0',
-			valor_parada: ('valor_parada' in simulation) ? simulation.valor_parada : null,
+			tipo_parada: ('tipo_parada' in simulation) ? simulation.tipo_parada : [],
 			valor_inicial: ('valor_inicial' in simulation) ? simulation.valor_inicial : null,
 			R: ('R' in simulation && simulation.R != 0) ? simulation.R : null
 		};
