@@ -38,13 +38,22 @@ let Global = (function(){
 	}
 	let convertDate = function(date){
 		//Valida a Data
-		if (!(/^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/.test(date)) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])\-(0[1-9]|1\d|2\d|3[01])$/.test(date)))
+		if (!(/^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/.test(date)) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])\-(0[1-9]|1\d|2\d|3[01])$/.test(date)) && !(/^(0[1-9]|1[0-2])\/(19|20)\d{2}$/.test(date)) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])$/.test(date)))
 			return ``;
 		let frag_date = date.split('/');
+		//Se for com '-'
 		if (frag_date.length === 1){
 			frag_date = date.split('-');
+			//Se for YYYY-mm
+			if (frag_date.length === 2)
+				return `${frag_date[1]}/${frag_date[0]}`;
+			//Se for YYYY-mm-dd
 			return `${frag_date[2]}/${frag_date[1]}/${frag_date[0]}`;
 		}
+		//Se for mm/YYYY 
+		else if (frag_date.length === 2)
+			return `${frag_date[1]}-${frag_date[0]}`;
+		//Se for dd/mm/YYYY
 		return `${frag_date[2]}-${frag_date[1]}-${frag_date[0]}`;
 	}
 	let convertDatetime = function(date){

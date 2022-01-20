@@ -385,6 +385,8 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_trades_filter input, #dashboard_ops__table_trades_paginate input {font-size: 12px}
 #dashboard_ops__table_trades tbody td{vertical-align: middle}
 #dashboard_ops__table_trades tbody td[name='trade__custo'] {font-size: 10px}
+#dashboard_ops__table_trades tbody td[name='lucro_bruto__brl'] {font-size: 10px}
+#dashboard_ops__table_trades tbody td[name='prejuizo_bruto__brl'] {font-size: 10px}
 /*------------------------------------------------------------------------------------*/
 /*------------------------------- CONTROLE FINANCEIRO --------------------------------*/
 /*------------------------------------------------------------------------------------*/
