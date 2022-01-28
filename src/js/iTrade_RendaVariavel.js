@@ -2364,9 +2364,9 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			if (_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'] === null){
 				html = `<table class="table m-0" id="dashboard_ops__table_stats__byCenario">`+
-						`<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario)}</tbody>`+
-						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats)}</tfoot>`+
+						`<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead', null, simulation__periodo_calc)}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario, simulation__periodo_calc)}</tbody>`+
+						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats, simulation__periodo_calc)}</tfoot>`+
 						`</table>`;
 				$(document.getElementById('dashboard_ops__table_stats__byCenario__place')).append(html).promise().then(function (){
 					_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'] = $(document.getElementById('dashboard_ops__table_stats__byCenario'));
@@ -2374,9 +2374,9 @@ let Renda_variavel = (function(){
 				});
 			}
 			else{
-				html = `<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead')}</thead>`+
-						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario)}</tbody>`+
-						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats)}</tfoot>`;
+				html = `<thead>${rebuildDashboardOps__Table_Stats__byCenario('thead', null, simulation__periodo_calc)}</thead>`+
+						`<tbody>${rebuildDashboardOps__Table_Stats__byCenario('tbody', dashboard_data.dashboard_ops__table_stats__byCenario, simulation__periodo_calc)}</tbody>`+
+						`<tfoot>${rebuildDashboardOps__Table_Stats__byCenario('tfoot', dashboard_data.dashboard_ops__table_stats, simulation__periodo_calc)}</tfoot>`;
 				_dashboard_ops__elements['tables']['dashboard_ops__table_stats__byCenario'].empty().append(html).promise().then(function (){
 					_dashboard_ops__section.show('data', ++finish_building);
 				});
@@ -2846,7 +2846,7 @@ let Renda_variavel = (function(){
 	/*
 		Retorna o html de uma linha usada em 'dashboard_ops__table_stats__byCenario', separando se é para o 'tbody' ou 'tfoot'.
 	*/
-	function dashboardOps__Table_Stats__byCenario__newLine(cenario, line_data, method){
+	function dashboardOps__Table_Stats__byCenario__newLine(cenario, line_data, method, periodo_calc){
 		if (method === 'tbody'){
 			return `<tr class="align-middle">`+
 					`<td><span name="trades__total_perc" class="data-tiny text-muted">(${line_data.trades__total_perc.toFixed(2)}%)</span></td>`+
@@ -2907,11 +2907,63 @@ let Renda_variavel = (function(){
 					`<td class="text-center"><span name="stats__edge" class="data-small">${line_data.stats__edge.toFixed(2)}%</span></td>`+
 					`</tr>`;
 		}
+		else if (method === 'tfoot_extra'){
+			let dd_periodo_label = (periodo_calc === '1') ? 'trades' : (periodo_calc === '2') ? 'dias' : 'meses';
+			return `<tr class="align-middle">`+
+					`<th></th>`+
+					`<th></th>`+
+					//Seq. Máx e Média de trades
+					`<th class="text-center divider"></th>`+
+					`<th class="text-center subheader" colspan="2">Seq. Máx</th>`+
+					`<th class="text-center subheader" colspan="2">Vol. Média</th>`+
+					//Média Lucro por Periodo
+					`<th class="text-center divider" colspan="3">Result. Médio p/ Mês</th>`+
+					//Drawdown
+					`<th class="text-center subheader divider">Total DD</th>`+
+					`<th class="text-center subheader">DD Curr.</th>`+
+					`<th class="text-center subheader">DD Máx.</th>`+
+					//Topo Historico
+					`<th class="text-center subheader divider">Topo Hist.</th>`+
+					//
+					`<th class="text-center"></th>`+
+					//
+					`<th class="text-center"></th>`+
+					//
+					`<th class="text-center"></th>`+
+					`<th class="text-center"></th>`+
+					`</tr>`+
+					`<tr class="align-middle">`+
+					`<td></td>`+
+					`<td></td>`+
+					//Seq. Máx e Média de trades
+					`<td class="text-center divider"></td>`+
+					`<td class="text-center"><span name="trades__max_seq_positivo" class="data-small text-success">${line_data.trades__max_seq_positivo}</span><span name="trades__max_seq_positivo_medio" class="data-tiny text-success ms-2">(~${line_data.trades__max_seq_positivo_medio.toFixed(2)})</span></td>`+
+					`<td class="text-center"><span name="trades__max_seq_negativo" class="data-small text-danger">${line_data.trades__max_seq_negativo}</span><span name="trades__max_seq_negativo_medio" class="data-tiny text-danger ms-2">(~${line_data.trades__max_seq_negativo_medio.toFixed(2)})</span></td>`+
+					`<td class="text-center" colspan="2"><span name="stats__media_vol" class="data-small">${(line_data.stats__media_vol !== '--') ? line_data.stats__media_vol.toFixed(2) : line_data.stats__media_vol}</span></td>`+
+					//Média Lucro por Periodo
+					`<td class="text-center divider"><span name="result__lucro_medio_brl" class="data-small">R$ ${line_data.result__lucro_medio_brl.toFixed(2)}</span></td>`+
+					`<td class="text-center"><span name="result__lucro_medio_R" class="data-small">${((line_data.result__lucro_medio_R !== '--') ? `${line_data.result__lucro_medio_R.toFixed(3)}R` : line_data.result__lucro_medio_R )}</span></td>`+
+					`<td class="text-center"><span name="result__lucro_medio_perc" class="data-small">${((line_data.result__lucro_medio_perc !== '--') ? `${line_data.result__lucro_medio_perc.toFixed(2)}%` : line_data.result__lucro_medio_perc)}</span></td>`+
+					//Drawdown
+					`<td class="text-center divider"><span name="stats__drawdown_qtd" class="data-small">${line_data.stats__drawdown_qtd}</span></td>`+
+					`<td class="text-center"><span name="stats__drawdown" class="data-small">R$ ${line_data.stats__drawdown.toFixed(2)}</span><span name="stats__drawdown_periodo" class="data-tiny ms-2">${line_data.stats__drawdown_periodo} ${dd_periodo_label}</span></td>`+
+					`<td class="text-center"><span name="stats__drawdown_max" class="data-small">R$ ${line_data.stats__drawdown_max.toFixed(2)}</span><span name="stats__drawdown_max_periodo" class="data-tiny ms-2">${line_data.stats__drawdown_max_periodo} ${dd_periodo_label}</span></td>`+
+					//Topo Historico
+					`<td class="text-center divider"><span name="stats__drawdown_topoHistorico" class="data-small">R$ ${line_data.stats__drawdown_topoHistorico.toFixed(2)}</span></td>`+
+					//
+					`<td class="text-center"></td>`+
+					//
+					`<td class="text-center"></td>`+
+					//
+					`<td class="text-center"></td>`+
+					`<td class="text-center"></td>`+
+					`</tr>`;
+		}
 	}
 	/*
 		Retorna o html da seção de 'thead' ou 'tbody' ou 'tfoot' da 'dashboard_ops__table_stats__byCenario'.
 	*/
-	function rebuildDashboardOps__Table_Stats__byCenario(section = '', stats = {}){
+	function rebuildDashboardOps__Table_Stats__byCenario(section = '', stats = {}, periodo_calc = '1'){
 		let html = ``;
 		if (section === 'thead')
 			html += `<tr class="align-end">`+
@@ -2937,10 +2989,12 @@ let Renda_variavel = (function(){
 		else if (section === 'tbody'){
 			let ordered_cenarios = (Object.keys(stats)).sort();
 			for (let cn=0; cn<ordered_cenarios.length; cn++)
-				html += dashboardOps__Table_Stats__byCenario__newLine(ordered_cenarios[cn], stats[ordered_cenarios[cn]], section);
+				html += dashboardOps__Table_Stats__byCenario__newLine(ordered_cenarios[cn], stats[ordered_cenarios[cn]], section, periodo_calc);
 		}
-		else if (section === 'tfoot')
-			html += dashboardOps__Table_Stats__byCenario__newLine('Total', stats, section);
+		else if (section === 'tfoot'){
+			html += dashboardOps__Table_Stats__byCenario__newLine('Total', stats, section, periodo_calc);
+			html += dashboardOps__Table_Stats__byCenario__newLine(null, stats, 'tfoot_extra', periodo_calc);
+		}
 		return html;
 	}
 	/*

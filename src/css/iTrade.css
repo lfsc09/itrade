@@ -160,9 +160,10 @@ i.glow {
 .pagination-sm > li:last-child > a, .pagination-sm > li:last-child > span {border-bottom-right-radius: 0; border-top-right-radius: 0}
 div.dataTables_paginate.paging_input ul.pagination div.input{float: left; padding: 3px 8px;}
 div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_input{width: 70px; display: inline; border-radius: 0}
-.table td.divider {border-left: 1px solid #dee2e6}
+.table td.divider, .table th.divider {border-left: 1px solid #dee2e6}
 .table thead th.subheader {border-bottom: 1px solid #dee2e6 !important; font-size: 11px}
 .table thead th.mainheader {border-bottom: none !important}
+.table tbody th.subheader, .table tfoot th.subheader {font-size: 11px}
 /*------------------------------------- BOOTSTRAP ------------------------------------*/
 .btn:focus {box-shadow: none}
 /*----------------------------- INSERT MODAL (GENÉRICO) ------------------------------*/
