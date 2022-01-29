@@ -160,16 +160,30 @@
 								</div>
 							</div>
 							<div class="row mt-3">
+								<!-- Graficos Evolução Patrimonial -->
+								<div class="col">
+									<div class="card rounded-3 shadow-sm">
+										<div class="card-body" id="dashboard_ops__chart_evolucaoPatrimonial"></div>
+									</div>
+								</div>
+							</div>
+							<div class="row mt-3">
 								<!-- Graficos Horario -->
-								<div class="col-3">
+								<div class="col-4">
 									<div class="card rounded-3 shadow-sm">
 										<div class="card-body" id="dashboard_ops__chart_resultadoPorHorario"></div>
 									</div>
 								</div>
-								<!-- Graficos Evolução Patrimonial -->
-								<div class="col-9">
+								<!-- Graficos Sequencia de Result. -->
+								<div class="col-4">
 									<div class="card rounded-3 shadow-sm">
-										<div class="card-body" id="dashboard_ops__chart_evolucaoPatrimonial"></div>
+										<div class="card-body" id="dashboard_ops__chart_sequencaResults"></div>
+									</div>
+								</div>
+								<!-- Graficos Histórico de Drawdown -->
+								<div class="col-4">
+									<div class="card rounded-3 shadow-sm">
+										<div class="card-body" id="dashboard_ops__chart_drawdown"></div>
 									</div>
 								</div>
 							</div>

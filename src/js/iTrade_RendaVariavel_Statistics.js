@@ -458,20 +458,44 @@ let RV_Statistics = (function(){
 			- banda_superior: Lista que conterá a banda de 'dist_banda' desvio acima da media.
 			- banda_inferior: Lista que conterá a banda de 'dist_banda' desvio abaixo da media.
 	*/
-	let BBollinger = function (obj, min_period = 1, empty_value = NaN, dist_banda = 1){
+	let BBollinger = function (obj, min_period = 1, empty_value = NaN, dist_banda = 1, all_bands = false, which_band = 'all'){
 		let desv_list = [];
-		for (let i_data=0; i_data<obj['data'].length; i_data++){
+		for (let i_data = 0; i_data < obj['data'].length; i_data++){
 			desv_list.push(obj['data'][i_data]);
 			if (desv_list.length > min_period){
 				let dp_calc = desvpad(desv_list, 'amostra');
 				obj['banda_media'].push(dp_calc['media']);
-				obj['banda_superior'].push(dp_calc['media'] + (dp_calc['desvpad'] * dist_banda));
-				obj['banda_inferior'].push(dp_calc['media'] - (dp_calc['desvpad'] * dist_banda));
+				if (all_bands){
+					for (let b = 1; b <= dist_banda; b++){
+						if (which_band === 'all' || which_band === 'sup')
+							obj[`banda_superior${b}`].push(dp_calc['media'] + (dp_calc['desvpad'] * b));
+						if (which_band === 'all' || which_band === 'inf')
+							obj[`banda_inferior${b}`].push(dp_calc['media'] - (dp_calc['desvpad'] * b));
+					}
+				}
+				else{
+					if (which_band === 'all' || which_band === 'sup')
+						obj['banda_superior'].push(dp_calc['media'] + (dp_calc['desvpad'] * dist_banda));
+					if (which_band === 'all' || which_band === 'inf')
+						obj['banda_inferior'].push(dp_calc['media'] - (dp_calc['desvpad'] * dist_banda));
+				}
 			}
 			else{
 				obj['banda_media'].push(empty_value);
-				obj['banda_superior'].push(empty_value);
-				obj['banda_inferior'].push(empty_value);
+				if (all_bands){
+					for (let b = 1; b <= dist_banda; b++){
+						if (which_band === 'all' || which_band === 'sup')
+							obj[`banda_superior${b}`].push(empty_value);
+						if (which_band === 'all' || which_band === 'inf')
+							obj[`banda_inferior${b}`].push(empty_value);
+					}
+				}
+				else{
+					if (which_band === 'all' || which_band === 'sup')
+						obj['banda_superior'].push(empty_value);
+					if (which_band === 'all' || which_band === 'inf')
+						obj['banda_inferior'].push(empty_value);
+				}
 			}
 		}
 	}
@@ -634,6 +658,18 @@ let RV_Statistics = (function(){
 				labels: [],
 				data_result: [],
 				data_qtd: []
+			},
+			sequencia_de_resultados: {
+				labels: [],
+				data_positivos: [],
+				data_negativos: []
+			},
+			drawdowns: {
+				labels: [],
+				data: [],
+				banda_media: [],
+				banda_superior1: [],
+				banda_superior2: []
 			}
 		}
 		//Variaveis temporarias usadas em '_dashboard_ops__table_stats'
@@ -652,6 +688,7 @@ let RV_Statistics = (function(){
 			sequencias_positivo__index: 0,
 			sequencias_positivo: [],
 			drawdowns: [],
+			sorted_drawdowns: [],
 			drawdowns_index: 0
 		}
 		//Variaveis para a tabela de estatistica por cenario
@@ -751,11 +788,18 @@ let RV_Statistics = (function(){
 							brl: 0,
 							periodo: 0
 						}
+						_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']] = {
+							brl: 0,
+							periodo: 0
+						}
 					}
 					let lucro__topo_diff = Math.abs(_dashboard_ops__table_stats['stats__drawdown_topoHistorico'] - Math.abs(_temp__table_stats['lucro_corrente']['brl']));
-					if (lucro__topo_diff > _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl'])
+					if (lucro__topo_diff > _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl']){
 						_temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+						_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+					}
 					_temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['periodo']++;
+					_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']]['periodo']++;
 					_dashboard_ops__table_stats['stats__drawdown'] = lucro__topo_diff;
 					_dashboard_ops__table_stats['stats__drawdown_periodo']++;
 				}
@@ -900,11 +944,11 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__sqn']                     = (_simulation['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_R'], _dashboard_ops__table_stats['stats__dp_R']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 			_dashboard_ops__table_stats['stats__media_vol']               = divide(_dashboard_ops__table_stats['stats__media_vol'], _dashboard_ops__table_stats['trades__total']);
 
-			_temp__table_stats['drawdowns'].sort((a, b) => a.brl - b.brl);
+			_temp__table_stats['sorted_drawdowns'].sort((a, b) => a.brl - b.brl);
 
 			_dashboard_ops__table_stats['stats__drawdown_qtd']            = _temp__table_stats['drawdowns'].length;
-			_dashboard_ops__table_stats['stats__drawdown_max']            = (_temp__table_stats['drawdowns'].length) ? _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns'].length-1]['brl'] : 0.0;
-			_dashboard_ops__table_stats['stats__drawdown_max_periodo']    = (_temp__table_stats['drawdowns'].length) ? _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns'].length-1]['periodo'] : 0.0;
+			_dashboard_ops__table_stats['stats__drawdown_max']            = (_temp__table_stats['sorted_drawdowns'].length) ? _temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns'].length-1]['brl'] : 0.0;
+			_dashboard_ops__table_stats['stats__drawdown_max_periodo']    = (_temp__table_stats['sorted_drawdowns'].length) ? _temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns'].length-1]['periodo'] : 0.0;
 
 			_dashboard_ops__table_stats['trades__erro']                   = ((!_simulation.ignora_erro) ? _dashboard_ops__table_stats['trades__erro'] : '--');
 			_dashboard_ops__table_stats['trades__erro_perc']              = ((!_simulation.ignora_erro) ? (divide(_dashboard_ops__table_stats['trades__erro'], _dashboard_ops__table_stats['trades__total']) * 100) : '--');
@@ -978,6 +1022,44 @@ let RV_Statistics = (function(){
 					_dashboard_ops__chart_data['resultado_por_hora']['data_result'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[h]]['result']);
 					_dashboard_ops__chart_data['resultado_por_hora']['data_qtd'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[h]]['qtd']);
 				}
+				//////////////////////////////////
+				//Gráfico Sequencia de Result.
+				//////////////////////////////////
+				let sequencia_sep_counter = {},
+					sequencia_sep_counter__max_key = 0;
+				for (let s = 0; s < _temp__table_stats['sequencias_positivo'].length; s++){
+					if (!(_temp__table_stats['sequencias_positivo'][s] in sequencia_sep_counter))
+						sequencia_sep_counter[_temp__table_stats['sequencias_positivo'][s]] = 0;
+					sequencia_sep_counter[_temp__table_stats['sequencias_positivo'][s]]++;
+				}
+				sequencia_sep_counter__max_key = Math.max(...Object.keys(sequencia_sep_counter));
+				for (let s = 1; s <= sequencia_sep_counter__max_key; s++){
+					if (s in sequencia_sep_counter)
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].push(sequencia_sep_counter[s]);
+					else
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].push(0);
+				}
+				sequencia_sep_counter = {};
+				sequencia_sep_counter__max_key = 0;
+				for (let s = 0; s < _temp__table_stats['sequencias_negativo'].length; s++){
+					if (!(_temp__table_stats['sequencias_negativo'][s] in sequencia_sep_counter))
+						sequencia_sep_counter[_temp__table_stats['sequencias_negativo'][s]] = 0;
+					sequencia_sep_counter[_temp__table_stats['sequencias_negativo'][s]]++;
+				}
+				sequencia_sep_counter__max_key = Math.max(...Object.keys(sequencia_sep_counter));
+				for (let s = 1; s <= sequencia_sep_counter__max_key; s++){
+					if (s in sequencia_sep_counter)
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].push(sequencia_sep_counter[s] * -1);
+					else
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].push(0);
+				}
+				_dashboard_ops__chart_data['sequencia_de_resultados']['labels'] = (_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].length > _dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].length) ? Object.keys(_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos']).map(o => parseInt(o) + 1) : Object.keys(_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos']).map(o => parseInt(o) + 1);
+				//////////////////////////////////
+				//Gráfico Historico de Drawdowns 
+				//////////////////////////////////
+				_dashboard_ops__chart_data['drawdowns']['data'] = _temp__table_stats['drawdowns'].map(o => o.brl);
+				_dashboard_ops__chart_data['drawdowns']['labels'] = Object.keys(_dashboard_ops__chart_data['drawdowns']['data']).map(o => parseInt(o) + 1);
+				BBollinger(_dashboard_ops__chart_data['drawdowns'], 1, NaN, 2, true, 'sup');
 			}
 			/*------------------------------- Retorno dos Dados ------------------------------*/
 			return {
@@ -1077,11 +1159,18 @@ let RV_Statistics = (function(){
 							brl: 0,
 							periodo: 0
 						}
+						_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']] = {
+							brl: 0,
+							periodo: 0
+						}
 					}
 					let lucro__topo_diff = Math.abs(_dashboard_ops__table_stats['stats__drawdown_topoHistorico'] - Math.abs(_temp__table_stats['lucro_corrente']['brl']));
-					if (lucro__topo_diff > _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl'])
+					if (lucro__topo_diff > _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl']){
 						_temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+						_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+					}
 					_temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['periodo']++;
+					_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']]['periodo']++;
 					_dashboard_ops__table_stats['stats__drawdown'] = lucro__topo_diff;
 					_dashboard_ops__table_stats['stats__drawdown_periodo']++;
 				}
@@ -1150,11 +1239,11 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__sqn']                     = (_simulation['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_R'], _dashboard_ops__table_stats['stats__dp_R']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 			_dashboard_ops__table_stats['stats__media_vol']               = '--';
 
-			_temp__table_stats['drawdowns'].sort((a, b) => a.brl - b.brl);
+			_temp__table_stats['sorted_drawdowns'].sort((a, b) => a.brl - b.brl);
 
 			_dashboard_ops__table_stats['stats__drawdown_qtd']            = _temp__table_stats['drawdowns'].length;
-			_dashboard_ops__table_stats['stats__drawdown_max']            = (_temp__table_stats['drawdowns'].length) ? _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns'].length-1]['brl'] : 0.0;
-			_dashboard_ops__table_stats['stats__drawdown_max_periodo']    = (_temp__table_stats['drawdowns'].length) ? _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns'].length-1]['periodo'] : 0.0;
+			_dashboard_ops__table_stats['stats__drawdown_max']            = (_temp__table_stats['sorted_drawdowns'].length) ? _temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns'].length-1]['brl'] : 0.0;
+			_dashboard_ops__table_stats['stats__drawdown_max_periodo']    = (_temp__table_stats['sorted_drawdowns'].length) ? _temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns'].length-1]['periodo'] : 0.0;
 
 			_dashboard_ops__table_stats['trades__erro']                   = ((!_simulation.ignora_erro) ? _dashboard_ops__table_stats['trades__erro'] : '--');
 			_dashboard_ops__table_stats['trades__erro_perc']              = ((!_simulation.ignora_erro) ? (divide(_dashboard_ops__table_stats['trades__erro'], _dashboard_ops__table_stats['trades__total']) * 100) : '--');
@@ -1282,11 +1371,18 @@ let RV_Statistics = (function(){
 							brl: 0,
 							periodo: 0
 						}
+						_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']] = {
+							brl: 0,
+							periodo: 0
+						}
 					}
 					let lucro__topo_diff = Math.abs(_dashboard_ops__table_stats['stats__drawdown_topoHistorico'] - Math.abs(_temp__table_stats['lucro_corrente']['brl']));
-					if (lucro__topo_diff > _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl'])
+					if (lucro__topo_diff > _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl']){
 						_temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+						_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+					}
 					_temp__table_stats['drawdowns'][_temp__table_stats['drawdowns_index']]['periodo']++;
+					_temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns_index']]['periodo']++;
 					_dashboard_ops__table_stats['stats__drawdown'] = lucro__topo_diff;
 					_dashboard_ops__table_stats['stats__drawdown_periodo']++;
 				}
@@ -1355,11 +1451,11 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__sqn']                     = (_simulation['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_R'], _dashboard_ops__table_stats['stats__dp_R']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 			_dashboard_ops__table_stats['stats__media_vol']               = '--';
 
-			_temp__table_stats['drawdowns'].sort((a, b) => a.brl - b.brl);
+			_temp__table_stats['sorted_drawdowns'].sort((a, b) => a.brl - b.brl);
 
 			_dashboard_ops__table_stats['stats__drawdown_qtd']            = _temp__table_stats['drawdowns'].length;
-			_dashboard_ops__table_stats['stats__drawdown_max']            = (_temp__table_stats['drawdowns'].length) ? _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns'].length-1]['brl'] : 0.0;
-			_dashboard_ops__table_stats['stats__drawdown_max_periodo']    = (_temp__table_stats['drawdowns'].length) ? _temp__table_stats['drawdowns'][_temp__table_stats['drawdowns'].length-1]['periodo'] : 0.0;
+			_dashboard_ops__table_stats['stats__drawdown_max']            = (_temp__table_stats['sorted_drawdowns'].length) ? _temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns'].length-1]['brl'] : 0.0;
+			_dashboard_ops__table_stats['stats__drawdown_max_periodo']    = (_temp__table_stats['sorted_drawdowns'].length) ? _temp__table_stats['sorted_drawdowns'][_temp__table_stats['drawdowns'].length-1]['periodo'] : 0.0;
 
 			_dashboard_ops__table_stats['trades__erro']                   = ((!_simulation.ignora_erro) ? _dashboard_ops__table_stats['trades__erro'] : '--');
 			_dashboard_ops__table_stats['trades__erro_perc']              = ((!_simulation.ignora_erro) ? (divide(_dashboard_ops__table_stats['trades__erro'], _dashboard_ops__table_stats['trades__total']) * 100) : '--');

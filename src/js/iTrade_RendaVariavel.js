@@ -1176,7 +1176,9 @@ let Renda_variavel = (function(){
 		charts: {
 			dashboard_ops__chart_resultadoNormalizado: null,
 			dashboard_ops__chart_resultadoPorHorario: null,
-			dashboard_ops__chart_evolucaoPatrimonial: null
+			dashboard_ops__chart_evolucaoPatrimonial: null,
+			dashboard_ops__chart_sequencaResults: null,
+			dashboard_ops__chart_drawdown: null
 		},
 		ext: {
 			color: function (){
@@ -2593,99 +2595,6 @@ let Renda_variavel = (function(){
 					return `${tooltipItems[0].label}  ${dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['date'][tooltipItems[0].dataIndex]}`;
 				}
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].update();
-
-			}
-			//////////////////////////////////
-			//Gráfico de Resultados por Hora
-			//////////////////////////////////
-			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] === null){
-				$(document.getElementById('dashboard_ops__chart_resultadoPorHorario')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
-					_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoPorHorario').querySelector('canvas'), {
-						type: 'bar',
-						data: {
-							labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
-							datasets: [
-								{
-									label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
-									backgroundColor: '#6c757d',
-	      							borderColor: '#6c757d',
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
-	      							stack: _lista__instancias_arcabouco.getSelected('nome')
-								},
-								{
-									label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
-	      							stack: _lista__instancias_arcabouco.getSelected('nome')
-								}
-							]
-						},
-						options: {
-							interaction: {
-								mode: 'index',
-								intersect: false
-							},
-							plugins: {
-								title: {
-									display: true,
-									text: ((simulation__periodo_calc === '1') ? 'Resultados por Hora' : ((simulation__periodo_calc === '2') ? 'Resultados por Dia' : 'Resultados por Mês'))
-								},
-								legend: {
-									display: true,
-									labels: {
-										filter: function (item, chart){
-											return item.datasetIndex % 2 === 1;
-										}
-									},
-									onClick: function (e, legendItem){
-										let index = legendItem.datasetIndex,
-											me = this.chart.getDatasetMeta(index);
-										if (me.hidden === null){
-											me.hidden = true;
-											this.chart.getDatasetMeta(index - 1).hidden = true;
-										}
-										else{
-											me.hidden = null;
-											this.chart.getDatasetMeta(index - 1).hidden = null;
-										}
-										this.chart.update();
-									}
-								}
-							},
-							scales: {
-								x: {
-									stacked: true
-								},
-								y: {
-									stacked: false
-								}
-							}
-						}
-					});
-				});
-			}
-			else{
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].data = {
-					labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
-					datasets: [
-						{
-							label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
-							backgroundColor: '#6c757d',
-  							borderColor: '#6c757d',
-  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
-  							stack: _lista__instancias_arcabouco.getSelected('nome')
-						},
-						{
-							label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
-  							stack: _lista__instancias_arcabouco.getSelected('nome')
-						}
-					]
-				}
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].update();
 			}
 			//////////////////////////////////
 			//Gráfico de Evolução Patrimonial
@@ -2838,6 +2747,329 @@ let Renda_variavel = (function(){
 					return `${tooltipItems[0].label}  ${dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['date'][tooltipItems[0].dataIndex]}`;
 				}
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_evolucaoPatrimonial'].update();
+			}
+			//////////////////////////////////
+			//Gráfico de Resultados por Hora
+			//////////////////////////////////
+			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] === null){
+				$(document.getElementById('dashboard_ops__chart_resultadoPorHorario')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
+					_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'] = new Chart(document.getElementById('dashboard_ops__chart_resultadoPorHorario').querySelector('canvas'), {
+						type: 'bar',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
+							datasets: [
+								{
+									label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
+									backgroundColor: '#6c757d',
+	      							borderColor: '#6c757d',
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
+	      							stack: _lista__instancias_arcabouco.getSelected('nome')
+								},
+								{
+									label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
+	      							stack: _lista__instancias_arcabouco.getSelected('nome')
+								}
+							]
+						},
+						options: {
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: ((simulation__periodo_calc === '1') ? 'Resultados por Hora' : ((simulation__periodo_calc === '2') ? 'Resultados por Dia' : 'Resultados por Mês'))
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											return item.datasetIndex % 2 === 1;
+										}
+									},
+									onClick: function (e, legendItem){
+										let index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (me.hidden === null){
+											me.hidden = true;
+											this.chart.getDatasetMeta(index - 1).hidden = true;
+										}
+										else{
+											me.hidden = null;
+											this.chart.getDatasetMeta(index - 1).hidden = null;
+										}
+										this.chart.update();
+									}
+								}
+							},
+							scales: {
+								x: {
+									stacked: true
+								},
+								y: {
+									stacked: false
+								}
+							}
+						}
+					});
+				});
+			}
+			else{
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].data = {
+					labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
+					datasets: [
+						{
+							label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
+							backgroundColor: '#6c757d',
+  							borderColor: '#6c757d',
+  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
+  							stack: _lista__instancias_arcabouco.getSelected('nome')
+						},
+						{
+							label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+  							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
+  							stack: _lista__instancias_arcabouco.getSelected('nome')
+						}
+					]
+				}
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].update();
+			}
+			//////////////////////////////////
+			//Gráfico Sequencia de Result.
+			//////////////////////////////////
+			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'] === null){
+				$(document.getElementById('dashboard_ops__chart_sequencaResults')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
+					_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'] = new Chart(document.getElementById('dashboard_ops__chart_sequencaResults').querySelector('canvas'), {
+						type: 'line',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['labels'],
+							datasets: [
+								{
+									label: _lista__instancias_arcabouco.getSelected('nome'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_positivos'],
+	      							stack: 'combined',
+	      							type: 'bar'
+								},
+								{
+									label: _lista__instancias_arcabouco.getSelected('nome'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_negativos'],
+	      							stack: 'combined',
+	      							type: 'bar'
+								}
+							]
+						},
+						options: {
+							elements: {
+								point: {
+									radius: 0
+								},
+								bar: {
+									backgroundColor: _dashboard_ops__elements['ext'].color(),
+									borderColor: _dashboard_ops__elements['ext'].color()
+								}
+							},
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: 'Sequencia Máx. de Result.'
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											if (item.text === _lista__instancias_arcabouco.getSelected('nome'))
+												item.fillStyle = _lista__instancias_arcabouco.getSelected('chartColor');
+											return item.datasetIndex % 2 === 1;
+										}
+									},
+									onClick: function (e, legendItem){
+										let index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (me.hidden === null){
+											me.hidden = true;
+											this.chart.getDatasetMeta(index - 1).hidden = true;
+										}
+										else{
+											me.hidden = null;
+											this.chart.getDatasetMeta(index - 1).hidden = null;
+										}
+										this.chart.update();
+									}
+								}
+							},
+							scales: {
+								y: { beginAtZero: true }
+							}
+						}
+					});
+				});
+			}
+			else{
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'].data = {
+					labels: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['labels'],
+					datasets: [
+						{
+							label: _lista__instancias_arcabouco.getSelected('nome'),
+  							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_positivos'],
+  							stack: 'combined',
+  							type: 'bar'
+						},
+						{
+							label: _lista__instancias_arcabouco.getSelected('nome'),
+  							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_negativos'],
+  							stack: 'combined',
+  							type: 'bar'
+						}
+					]
+				}
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'].update();
+			}
+			//////////////////////////////////
+			//Gráfico Histórico de Drawdown
+			//////////////////////////////////
+			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_drawdown'] === null){
+				$(document.getElementById('dashboard_ops__chart_drawdown')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
+					_dashboard_ops__elements['charts']['dashboard_ops__chart_drawdown'] = new Chart(document.getElementById('dashboard_ops__chart_drawdown').querySelector('canvas'), {
+						type: 'line',
+						data: {
+							labels: dashboard_data['dashboard_ops__chart_data']['drawdowns']['labels'],
+							datasets: [
+								{
+									label: 'Desvio Padrão (Sup2)',
+									backgroundColor: '#e71313',
+	      							borderColor: '#e71313',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_superior2']
+								},
+								{
+									label: 'Desvio Padrão (Sup1)',
+									backgroundColor: '#fd7e14',
+	      							borderColor: '#fd7e14',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_superior1']
+								},
+								{
+									label: 'Média',
+									backgroundColor: '#212529',
+	      							borderColor: '#212529',
+	      							borderWidth: 1,
+	      							borderDash: [5, 5],
+	      							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_media']
+								},
+								{
+									label: _lista__instancias_arcabouco.getSelected('nome'),
+									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+	      							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['data'],
+	      							stack: 'combined',
+	      							type: 'bar'
+								}
+							]
+						},
+						options: {
+							elements: {
+								point: {
+									radius: 0
+								}
+							},
+							interaction: {
+								mode: 'index',
+								intersect: false
+							},
+							plugins: {
+								title: {
+									display: true,
+									text: 'Histórico de Drawdowns'
+								},
+								legend: {
+									display: true,
+									labels: {
+										filter: function (item, chart){
+											if (item.text === _lista__instancias_arcabouco.getSelected('nome'))
+												item.fillStyle = _lista__instancias_arcabouco.getSelected('chartColor');
+											return (!item.text.includes('Desvio Padrão (Sup1)') && !item.text.includes('Desvio Padrão (Sup2)'));
+										}
+									},
+									onClick: function (e, legendItem){
+										let dataset_name = legendItem.text,
+											index = legendItem.datasetIndex,
+											me = this.chart.getDatasetMeta(index);
+										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome'))
+											me.hidden = (me.hidden === null) ? true : null;
+										else if (dataset_name === 'Média'){
+											if (me.hidden === null){
+												this.chart.getDatasetMeta(index - 1).hidden = true;
+												me.hidden = true;
+												this.chart.getDatasetMeta(index - 2).hidden = true;
+											}
+											else{
+												this.chart.getDatasetMeta(index - 1).hidden = null;
+												me.hidden = null;
+												this.chart.getDatasetMeta(index - 2).hidden = null;
+											}
+										}
+										this.chart.update();
+									}
+								}
+							},
+							scales: {
+								y: { beginAtZero: true }
+							}
+						}
+					});
+				});
+			}
+			else{
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_drawdown'].data = {
+					labels: dashboard_data['dashboard_ops__chart_data']['drawdowns']['labels'],
+					datasets: [
+						{
+							label: 'Desvio Padrão (Sup2)',
+							backgroundColor: '#e71313',
+  							borderColor: '#e71313',
+  							borderWidth: 1,
+  							borderDash: [5, 5],
+  							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_superior2']
+						},
+						{
+							label: 'Desvio Padrão (Sup1)',
+							backgroundColor: '#fd7e14',
+  							borderColor: '#fd7e14',
+  							borderWidth: 1,
+  							borderDash: [5, 5],
+  							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_superior1']
+						},
+						{
+							label: 'Média',
+							backgroundColor: '#212529',
+  							borderColor: '#212529',
+  							borderWidth: 1,
+  							borderDash: [5, 5],
+  							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_media']
+						},
+						{
+							label: _lista__instancias_arcabouco.getSelected('nome'),
+							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+  							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['data'],
+  							stack: 'combined',
+  							type: 'bar'
+						}
+					]
+				}
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_drawdown'].update();
 			}
 		}
 		else

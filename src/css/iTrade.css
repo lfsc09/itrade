@@ -380,6 +380,8 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__chart_resultadoNormalizado {height: 539px}
 #dashboard_ops__chart_resultadoPorHorario {height: 539px}
 #dashboard_ops__chart_evolucaoPatrimonial {height: 539px}
+#dashboard_ops__chart_sequencaResults {height: 539px}
+#dashboard_ops__chart_drawdown {height: 539px}
 #dashboard_ops__table_trades {font-size: 11px}
 #dashboard_ops__table_trades_filter {font-size: 14px}
 #dashboard_ops__table_trades_paginate {font-size: 12px}
