@@ -1712,16 +1712,6 @@ let Renda_variavel = (function(){
 		table.find('tbody').empty().append(html);
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*-------------------------------- Calculadora -----------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Constroi o modal de gerenciamento de arcabouços.
-	*/
-	function buildCalculadoraModal(){
-		//Reseta o formulario de cadastro e edição
-		$(document.getElementById('calculadora_modal')).modal('show');
-	}
-	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Arcabouco Info ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -5034,8 +5024,6 @@ let Renda_variavel = (function(){
 			buildAtivosModal(firstBuild = false, show = true);
 		else if (this.name === 'gerenciamentos')
 			buildGerenciamentosModal(forceRebuild = false, show = true);
-		else if (this.name === 'calculadora')
-			buildCalculadoraModal();
 		else if (this.name === 'arcabouco_info')
 			buildArcaboucoInfoOffcanvas();
 		else if (this.name === 'cenarios')
