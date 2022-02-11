@@ -249,6 +249,8 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #gerenciamentos_modal_form__acoes button {font-weight: 600}
 #gerenciamentos_modal_form__acoes button.btn-success {color: #212529; background-color: #bce1d0; border-color: #fff}
 #gerenciamentos_modal_form__acoes button.btn-danger {color: #212529; background-color: #f1bac0; border-color: #fff}
+/*----------------------------------- Calculadora ------------------------------------*/
+#calculadora_capital_form .form-label {font-size: 12px}
 /*------------------------------------- Cenarios -------------------------------------*/
 #cenarios_modal__cenarios div.card {border-left: 3px solid #0d6efd !important; border-radius: 0}
 #cenarios_modal__cenarios div.card[new_cenario] {border-left: 3px solid #ffc107 !important}

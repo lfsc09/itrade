@@ -14,7 +14,8 @@
 					</div>
 					<button class="btn btn-sm btn-primary me-2" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
 					<button class="btn btn-sm btn-primary me-2" type="button" name="ativos"><i class="fas fa-euro-sign me-2"></i>Ativos</button>
-					<button class="btn btn-sm btn-primary" type="button" name="gerenciamentos"><i class="fas fa-coins me-2"></i>Gerenciamentos</button>
+					<button class="btn btn-sm btn-primary me-2" type="button" name="gerenciamentos"><i class="fas fa-coins me-2"></i>Gerenciamentos</button>
+					<button class="btn btn-sm btn-primary" type="button" name="calculadora"><i class="fas fa-calculator me-2"></i>Calculadora</button>
 					<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="arcabouco_info"><i class="fas fa-info-circle me-2"></i>Info</button>
 					<button class="btn btn-sm btn-outline-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 					<div class="btn-group" role="group">
@@ -553,6 +554,78 @@
 										</thead>
 										<tbody></tbody>
 									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer"></div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="calculadora_modal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Calculadora</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row"><div class="col"><div id="calculadora_modal_toasts"></div></div></div>
+					<div class="row">
+						<div class="col">
+							<div class="card rounded-3 shadow-sm">
+								<div class="card-body">
+									<h6 class="card-title mb-4 d-flex justify-content-center fw-bold">Calculadora de Caixa</h6>
+									<div class="container-fluid d-flex px-0">
+										<form class="row m-0 flex-fill" id="calculadora_capital_form">
+											<div class="row">
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">Caixa R$</label>
+													<input type="text" name="caixa" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">Margem Corretora</label>
+													<input type="text" name="margem" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">Risco Máx do RR</label>
+													<input type="text" name="rRR" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+											</div>
+											<div class="row mt-1">
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">Vol Minima</label>
+													<input type="text" name="vol_min" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">R</label>
+													<input type="text" name="risco" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">Qtd Stops (Caixa)</label>
+													<input type="text" name="qtd_stops" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+											</div>
+											<div class="row mt-1">
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">Máx. cts a usar</label>
+													<input type="text" name="max_cts" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+												<div class="col">
+													<label class="form-label m-1 text-muted fw-bold">Caixa Ideal</label>
+													<input type="text" name="caixa_ideal" class="form-control form-control-sm" onclick="this.select()">
+												</div>
+											</div>
+											<div class="col-12 mt-4">
+												<div class="row">
+													<div class="col"><button type="button" class="btn btn-sm btn-danger w-100" zerar>Zerar</button></div>
+												</div>
+											</div>
+										</form>
+									</div>
 								</div>
 							</div>
 						</div>
