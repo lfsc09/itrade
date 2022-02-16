@@ -409,6 +409,19 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #contas_modal_form .form-label {font-size: 12px}
 #contas_modal_form .form-control-color {padding: .25rem 0.5rem}
 #table_contas {font-size: .80em}
+#table_contas_filter {display: none}
+#table_contas_info {font-size: 13px}
 #table_contas tbody td{vertical-align: middle}
+#table_contas tbody td[name='cor'] {width: 5%}
+#table_contas tbody td[name='cor'] i {font-size: 8px}
 #table_contas tbody td[name='editar'] {width: 4%}
 #table_contas tbody td[name='remover'] {width: 4%}
+/*--------------------------------- Cartões Crédito ----------------------------------*/
+#cartoes_credito_modal_form .form-label {font-size: 12px}
+#cartoes_credito_modal_form .form-control-color {padding: .25rem 0.5rem}
+#table_cartoes_credito {font-size: .80em}
+#table_cartoes_credito_filter {display: none}
+#table_cartoes_credito_info {font-size: 13px}
+#table_cartoes_credito tbody td{vertical-align: middle}
+#table_cartoes_credito tbody td[name='editar'] {width: 4%}
+#table_cartoes_credito tbody td[name='remover'] {width: 4%}

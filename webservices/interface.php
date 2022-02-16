@@ -217,6 +217,9 @@
 					$status = ControleFinanceiro::get_contas(null, $_SESSION['id']);
 					if ($status['status'])
 						$return_data['contas'] = $status['data'];
+					$status = ControleFinanceiro::get_cartoes_credito(null, $_SESSION['id']);
+					if ($status['status'])
+						$return_data['cartoes_credito'] = $status['data'];
 					// $status = ControleFinanceiro::get_gerenciamentos(null, $_SESSION['id']);
 					// if ($status['status'])
 					// 	$return_data['gerenciamentos'] = $status['data'];
@@ -260,6 +263,37 @@
 						$status = ControleFinanceiro::remove_contas($params_data, $_SESSION['id']);
 						if ($status['status'])
 							$status = ControleFinanceiro::get_contas(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				/*------------------------------- Cartões de Crédito ------------------------------*/
+				else if ($action === 'insert_cartoes_credito'){
+					if (!empty($params_data)){
+						$status = ControleFinanceiro::insert_cartoes_credito($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = ControleFinanceiro::get_cartoes_credito(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'update_cartoes_credito'){
+					if (!empty($params_data)){
+						$status = ControleFinanceiro::update_cartoes_credito($params_data, $params_data['id'], $_SESSION['id']);
+						if ($status['status'])
+							$status = ControleFinanceiro::get_cartoes_credito(null, $_SESSION['id']);
+						echo json_encode($status);
+					}
+					else
+						die(json_encode(['status' => 0, 'error' => 'No data passed']));
+				}
+				else if ($action === 'remove_cartoes_credito'){
+					if (!empty($params_data)){
+						$status = ControleFinanceiro::remove_cartoes_credito($params_data, $_SESSION['id']);
+						if ($status['status'])
+							$status = ControleFinanceiro::get_cartoes_credito(null, $_SESSION['id']);
 						echo json_encode($status);
 					}
 					else

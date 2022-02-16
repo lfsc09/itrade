@@ -173,9 +173,71 @@
 									<table class="table" id="table_contas">
 										<thead>
 											<tr>
+												<th></th>
 												<th>Banco</th>
 												<th>Número</th>
 												<th>Local</th>
+												<th></th>
+												<th></th>
+											</tr>
+										</thead>
+										<tbody></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer"></div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="cartoes_credito_modal" tabindex="-1" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">Cartões de Crédito</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row"><div class="col"><div id="cartoes_credito_modal_toasts"></div></div></div>
+					<div class="row">
+						<div class="col">
+							<div class="card rounded-3 shadow-sm">
+								<div class="card-body">
+									<div class="container-fluid d-flex px-0">
+										<form class="row m-0 flex-fill" id="cartoes_credito_modal_form">
+											<div class="col-6">
+												<label class="form-label m-1 text-muted fw-bold">Banco</label>
+												<input type="text" name="banco" class="form-control form-control-sm" onclick="this.select()">
+											</div>
+											<div class="col-6">
+												<label class="form-label m-1 text-muted fw-bold">Número</label>
+												<input type="text" name="numero" class="form-control form-control-sm" onclick="this.select()">
+											</div>
+											<div class="col-12 mt-3">
+												<div class="row">
+													<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="cartoes_credito_modal_enviar">Enviar</button></div>
+													<div class="col"><button type="button" class="btn btn-sm btn-danger w-100" id="cartoes_credito_modal_cancelar">Cancelar</button></div>
+												</div>
+											</div>
+										</form>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="row mt-2">
+						<div class="col">
+							<div class="card rounded-3 shadow-sm">
+								<div class="card-body">
+									<table class="table" id="table_cartoes_credito">
+										<thead>
+											<tr>
+												<th>Banco</th>
+												<th>Número</th>
 												<th></th>
 												<th></th>
 											</tr>

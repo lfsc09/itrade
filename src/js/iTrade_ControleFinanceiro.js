@@ -68,9 +68,26 @@ let Controle_financeiro = (function(){
 	//Configuração da tabela de contas em 'contas_modal'
 	let _conta__table_DT = {
 		columns: [
+			{name: 'cor', orderable: false},
 			{name: 'banco', orderable: true},
 			{name: 'numero', orderable: true},
 			{name: 'local', orderable: true},
+			{name: 'editar', orderable: false},
+			{name: 'remover', orderable: false}
+		],
+		lengthChange: false,
+		order: [[ 1, 'asc' ]],
+		pageLength: 10,
+		pagingType: 'input'
+	}
+	////////////////////////////////////////////////////////////////////////////////////
+	/*---------------------------- Lista Cartões Crédito -----------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	//Configuração da tabela de cartões em 'cartoes_credito_modal'
+	let _cartoes_credito__table_DT = {
+		columns: [
+			{name: 'banco', orderable: true},
+			{name: 'numero', orderable: true},
 			{name: 'editar', orderable: false},
 			{name: 'remover', orderable: false}
 		],
@@ -111,9 +128,10 @@ let Controle_financeiro = (function(){
 		let table = $(document.getElementById('table_contas')),
 			html = ``;
 		table.DataTable().destroy();
-		//Constroi tabela de informacoes dos arcabouços
+		//Constroi tabela de informacoes das contas
 		for (let co in _lista__contas.contas){
 			html += `<tr conta="${_lista__contas.contas[co].id}">`+
+					`<td name="cor" class="text-center"><i class="fas fa-square" style="color: ${_lista__contas.contas[co].cor}"></i></td>`+
 					`<td name="banco" class="fw-bold">${_lista__contas.contas[co].banco}</td>`+
 					`<td name="numero" class="fw-bold">${_lista__contas.contas[co].numero}</td>`+
 					`<td name="local" class="fw-bold">${_lista__contas.contas[co].local}</td>`+
@@ -123,6 +141,49 @@ let Controle_financeiro = (function(){
 		}
 		table.find('tbody').empty().append(html).promise().then(function (){
 			table.DataTable(_conta__table_DT);
+		});
+	}
+	////////////////////////////////////////////////////////////////////////////////////
+	/*---------------------------- Lista Cartões Crédito -----------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Reseta o formulário 'cartoes_credito_modal_form'.
+	*/
+	function resetFormCartoesCreditoModal(){
+		let form = $(document.getElementById('cartoes_credito_modal_form'));
+		form.removeAttr('id_cartao_credito');
+		form.find('input[name]').val('').removeAttr('changed');
+	}
+	/*
+		Constroi o modal de gerenciamento de cartões de crédito.
+	*/
+	function buildCartoesCreditoModal(forceRebuild = false, show = false){
+		if (forceRebuild)
+			buildCartoesCreditoTable();
+		if (show){
+			//Reseta o formulario de cadastro e edição
+			resetFormCartoesCreditoModal();
+			$(document.getElementById('cartoes_credito_modal')).modal('show');
+		}
+	}
+	/*
+		Constroi a tabela de cartões de crédito.
+	*/
+	function buildCartoesCreditoTable(){
+		let table = $(document.getElementById('table_cartoes_credito')),
+			html = ``;
+		table.DataTable().destroy();
+		//Constroi tabela de informacoes dos cartões de crédito
+		for (let cc in _lista__cartoes_credito.cartoes_credito){
+			html += `<tr cartao_credito="${_lista__cartoes_credito.cartoes_credito[cc].id}">`+
+					`<td name="banco" class="fw-bold">${_lista__cartoes_credito.cartoes_credito[cc].banco}</td>`+
+					`<td name="numero" class="fw-bold">${_lista__cartoes_credito.cartoes_credito[cc].numero}</td>`+
+					`<td name="editar" class="text-center"><button class="btn btn-sm btn-light" type="button" name="editar"><i class="fas fa-edit"></i></button></td>`+
+					`<td name="remover" class="text-center"><button class="btn btn-sm btn-light" type="button" name="remover"><i class="fas fa-trash text-danger"></i></button></td>`+
+					`</tr>`;
+		}
+		table.find('tbody').empty().append(html).promise().then(function (){
+			table.DataTable(_cartoes_credito__table_DT);
 		});
 	}
 	////////////////////////////////////////////////////////////////////////////////////
@@ -142,11 +203,12 @@ let Controle_financeiro = (function(){
 	$(document.getElementById('table_contas')).on('click', 'tbody tr td button[name="editar"]', function (){
 		let id_conta = $(this).parentsUntil('tbody').last().attr('conta'),
 			form = $(document.getElementById('contas_modal_form'));
-		for (let c in _lista__contas.contas){
-			if (_lista__contas.contas[c].id == id_conta){
-				form.find('input[name="banco"]').val(_lista__contas.contas[c].banco).removeAttr('changed');
-				form.find('input[name="numero"]').val(_lista__contas.contas[c].numero).removeAttr('changed');
-				form.find('input[name="local"]').val(_lista__contas.contas[c].local).removeAttr('changed');
+		for (let co in _lista__contas.contas){
+			if (_lista__contas.contas[co].id == id_conta){
+				form.find('input[name="cor"]').val(_lista__contas.contas[co].cor).removeAttr('changed');
+				form.find('input[name="banco"]').val(_lista__contas.contas[co].banco).removeAttr('changed');
+				form.find('input[name="numero"]').val(_lista__contas.contas[co].numero).removeAttr('changed');
+				form.find('input[name="local"]').val(_lista__contas.contas[co].local).removeAttr('changed');
 				form.attr('id_conta', id_conta);
 			}
 		}
@@ -164,7 +226,7 @@ let Controle_financeiro = (function(){
 					buildContasTable();
 				}
 				else
-					Global.toast.create({location: document.getElementById('ativos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+					Global.toast.create({location: document.getElementById('contas_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
 			}
 		});
 	});
@@ -224,6 +286,101 @@ let Controle_financeiro = (function(){
 		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
+	/*---------------------------- Lista Cartões Crédito -----------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Marca os inputs que forem alterados.
+	*/
+	$(document.getElementById('cartoes_credito_modal_form')).on('change', 'input[name]', function (){
+		this.setAttribute('changed', '');
+	});
+	/*
+		Processa click em 'table_cartoes_credito' (Para Edição dos cartões)
+	*/
+	$(document.getElementById('table_cartoes_credito')).on('click', 'tbody tr td button[name="editar"]', function (){
+		let id_cartao_credito = $(this).parentsUntil('tbody').last().attr('cartao_credito'),
+			form = $(document.getElementById('cartoes_credito_modal_form'));
+		for (let cc in _lista__cartoes_credito.cartoes_credito){
+			if (_lista__cartoes_credito.cartoes_credito[cc].id == id_cartao_credito){
+				form.find('input[name="banco"]').val(_lista__cartoes_credito.cartoes_credito[cc].banco).removeAttr('changed');
+				form.find('input[name="numero"]').val(_lista__cartoes_credito.cartoes_credito[cc].numero).removeAttr('changed');
+				form.attr('id_cartao_credito', id_cartao_credito);
+			}
+		}
+	});
+	/*
+		Processa os duplos cliques em 'table_cartoes_credito'.
+	*/
+	$(document.getElementById('table_cartoes_credito')).on('dblclick', 'tbody tr td button[name="remover"]', function (){
+		let id_cartao_credito = $(this).parentsUntil('tbody').last().attr('cartao_credito');
+		Global.connect({
+			data: {module: 'controle_financeiro', action: 'remove_cartoes_credito', params: {id: id_cartao_credito}},
+			success: function (result){
+				if (result.status){
+					_lista__cartoes_credito.update(result.data);
+					buildCartoesCreditoTable();
+				}
+				else
+					Global.toast.create({location: document.getElementById('cartoes_credito_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+			}
+		});
+	});
+	/*
+		Cancela envio de adição ou edição de cartões, removendo os dados do formulário e resetando ele.
+	*/
+	$(document.getElementById('cartoes_credito_modal_cancelar')).click(function (){
+		resetFormCartoesCreditoModal();
+	});
+	/*
+		Envia info do formulario de cartões para adicionar ou editar um cartão.
+	*/
+	$(document.getElementById('cartoes_credito_modal_enviar')).click(function (){
+		let form = $(document.getElementById('cartoes_credito_modal_form')),
+			id_cartao_credito = form.attr('id_cartao_credito'),
+			data = {};
+		form.find('input[name][changed]').each(function (){
+			data[this.name] = $(this).val();
+		});
+		//Se for edição
+		if (id_cartao_credito){
+			if (!Global.isObjectEmpty(data)){
+				data['id'] = id_cartao_credito;
+				Global.connect({
+					data: {module: 'controle_financeiro', action: 'update_cartoes_credito', params: data},
+					success: function (result){
+						if (result.status){
+							Global.toast.create({location: document.getElementById('cartoes_credito_modal_toasts'), color: 'success', body: 'Cartão Atualizado.', delay: 4000});
+							resetFormCartoesCreditoModal();
+							_lista__cartoes_credito.update(result.data);
+							buildCartoesCreditoTable();
+						}
+						else
+							Global.toast.create({location: document.getElementById('cartoes_credito_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+					}
+				});
+			}
+		}
+		//Se for adição
+		else{
+			if (!('banco' in data) || data['banco'] === '' || !('numero' in data) || data['numero'] === ''){
+				Global.toast.create({location: document.getElementById('cartoes_credito_modal_toasts'), color: 'warning', body: 'Todos os campos devem ser preenchidos.', delay: 4000});
+				return;
+			}
+			Global.connect({
+				data: {module: 'controle_financeiro', action: 'insert_cartoes_credito', params: data},
+				success: function (result){
+					if (result.status){
+						resetFormCartoesCreditoModal();
+						_lista__cartoes_credito.update(result.data);
+						buildCartoesCreditoTable();
+					}
+					else
+						Global.toast.create({location: document.getElementById('cartoes_credito_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+				}
+			});
+		}
+	});
+	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -256,14 +413,14 @@ let Controle_financeiro = (function(){
 				//Constroi a lista de Contas, Categorias, Cartões Crédito e Despesas Fixas
 				_lista__contas.update(result.data['contas']);
 				// _lista__categorias.update(result.data['categorias']);
-				// _lista__cartoes_credito.update(result.data['cartoes_credito']);
+				_lista__cartoes_credito.update(result.data['cartoes_credito']);
 				// _lista__despesas_fixas.update(result.data['despesas_fixas']);
 				//Inicia o modal de Contas
 				buildContasModal(forceRebuild = true, show = false);
 				//Inicia o modal de Categorias
 				// buildCategoriasModal(forceRebuild = true, show = false);
 				//Inicia o modal de Cartões Crédito
-				// buildCartoesCreditoModal(firstBuild = true, show = false);
+				buildCartoesCreditoModal(firstBuild = true, show = false);
 				//Inicia o modal de Despesas Fixas
 				// buildDespesasFixasModal(firstBuild = true, show = false);
 				//Inicia o offcanvas de Adicionar Lançamentos
