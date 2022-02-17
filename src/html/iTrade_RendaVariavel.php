@@ -112,22 +112,65 @@
 													<div class="iSelectKami dropdown bootstrap-select w-100" name="tipo_parada">
 														<button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Tipos de Parada</button>
 														<ul class="dropdown-menu overflow-auto">
-															<li class="not-selectable">Após N stops (Total)<input class="form-control form-control-sm" type="input" tipo_parada="1" name="valor_parada" onclick="this.select()"></li>
-															<li class="not-selectable">Após N stops (Sequencial)<input class="form-control form-control-sm" type="input" tipo_parada="2" name="valor_parada" onclick="this.select()"></li>
-															<li class="not-selectable">Após X valor no Negativo<input class="form-control form-control-sm" type="input" tipo_parada="3" name="valor_parada" onclick="this.select()"></li>
-															<li class="not-selectable">Após X valor de Perda Bruta<input class="form-control form-control-sm" type="input" tipo_parada="4" name="valor_parada" onclick="this.select()"></li>
-															<li class="not-selectable">Após atingir X R's no Negativo<input class="form-control form-control-sm" type="input" tipo_parada="5" name="valor_parada" onclick="this.select()"></li>
-															<li class="not-selectable">Após atingir X R's de Perda Bruta<input class="form-control form-control-sm" type="input" tipo_parada="6" name="valor_parada" onclick="this.select()"></li>
+															<li><h6 class="dropdown-header">No Dia / Semana / Mês</h6></li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">N stops (Total)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="d1" name="valor_parada" onclick="this.select()" placeholder="Dia">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="s1" name="valor_parada" onclick="this.select()" placeholder="Sem">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="m1" name="valor_parada" onclick="this.select()" placeholder="Mes">
+																</div>
+															</li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">N stops (Sequencial)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="d2" name="valor_parada" onclick="this.select()" placeholder="Dia">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="s2" name="valor_parada" onclick="this.select()" placeholder="Sem">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="m2" name="valor_parada" onclick="this.select()" placeholder="Mes">
+																</div>
+															</li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">R$ no Negativo</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="d3" name="valor_parada" onclick="this.select()" placeholder="Dia">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="s3" name="valor_parada" onclick="this.select()" placeholder="Sem">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="m3" name="valor_parada" onclick="this.select()" placeholder="Mes">
+																</div>
+															</li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">R$ de Perda Bruta</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="d4" name="valor_parada" onclick="this.select()" placeholder="Dia">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="s4" name="valor_parada" onclick="this.select()" placeholder="Sem">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="m4" name="valor_parada" onclick="this.select()" placeholder="Mes">
+																</div>
+															</li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">R no Negativo</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="d5" name="valor_parada" onclick="this.select()" placeholder="Dia">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="s5" name="valor_parada" onclick="this.select()" placeholder="Sem">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="m5" name="valor_parada" onclick="this.select()" placeholder="Mes">
+																</div>
+															</li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">R de Perda Bruta</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="d6" name="valor_parada" onclick="this.select()" placeholder="Dia">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="s6" name="valor_parada" onclick="this.select()" placeholder="Sem">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="m6" name="valor_parada" onclick="this.select()" placeholder="Mes">
+																</div>
+															</li>
 														</ul>
 													</div>
 												</div>
 												<div class="col-auto">
-													<label class="form-label m-0 text-muted fw-bold">Simular Capital</label>
-													<input type="text" name="valor_inicial" class="form-control form-control-sm" onclick="this.select()" placeholder="Capital">
-												</div>
-												<div class="col-auto">
-													<label class="form-label m-0 text-muted fw-bold">Simular R</label>
-													<input type="text" name="R" class="form-control form-control-sm" onclick="this.select()" placeholder="R">
+													<label class="form-label m-0 text-muted fw-bold">Simular Capital / R / Margem</label>
+													<div class="input-group">
+														<input type="text" name="valor_inicial" class="form-control form-control-sm" onclick="this.select()" placeholder="Capital">
+														<input type="text" name="R" class="form-control form-control-sm" onclick="this.select()" placeholder="R">
+														<input type="text" name="margem" class="form-control form-control-sm" onclick="this.select()" placeholder="Margem">
+													</div>
 												</div>
 											</form>
 										</div>
@@ -150,10 +193,10 @@
 							</div>
 							<div class="row mt-4">
 								<!-- Tabela de Trades -->
-								<div class="col-6" id="dashboard_ops__table_trades__place">
+								<div class="col-5" id="dashboard_ops__table_trades__place">
 								</div>
 								<!-- Grafico Trades Resultados Normalizado -->
-								<div class="col-6">
+								<div class="col-7">
 									<div class="card rounded-3 shadow-sm">
 										<div class="card-body" id="dashboard_ops__chart_resultadoNormalizado"></div>
 									</div>
@@ -168,22 +211,31 @@
 								</div>
 							</div>
 							<div class="row mt-3">
-								<!-- Graficos Horario -->
-								<div class="col-4">
-									<div class="card rounded-3 shadow-sm">
-										<div class="card-body" id="dashboard_ops__chart_resultadoPorHorario"></div>
-									</div>
+								<!-- Seção de Monte Carlo -->
+								<div class="col-5">
 								</div>
-								<!-- Graficos Sequencia de Result. -->
-								<div class="col-4">
-									<div class="card rounded-3 shadow-sm">
-										<div class="card-body" id="dashboard_ops__chart_sequencaResults"></div>
+								<div class="col-7">
+									<div class="row">
+										<!-- Graficos Horario -->
+										<div class="col-6">
+											<div class="card rounded-3 shadow-sm">
+												<div class="card-body" id="dashboard_ops__chart_resultadoPorHorario"></div>
+											</div>
+										</div>
+										<!-- Graficos Sequencia de Result. -->
+										<div class="col-6">
+											<div class="card rounded-3 shadow-sm">
+												<div class="card-body" id="dashboard_ops__chart_sequenciaResults"></div>
+											</div>
+										</div>
 									</div>
-								</div>
-								<!-- Graficos Histórico de Drawdown -->
-								<div class="col-4">
-									<div class="card rounded-3 shadow-sm">
-										<div class="card-body" id="dashboard_ops__chart_drawdown"></div>
+									<div class="row mt-3">
+										<!-- Graficos Histórico de Drawdown -->
+										<div class="col-12">
+											<div class="card rounded-3 shadow-sm">
+												<div class="card-body" id="dashboard_ops__chart_drawdown"></div>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>

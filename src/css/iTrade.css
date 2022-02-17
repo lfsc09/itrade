@@ -185,7 +185,12 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #renda_variavel__search div[name='tipo_parada'] {width: 190px}
 #renda_variavel__search div[name='tipo_parada'] ul.dropdown-menu {max-height: 500px; font-size: 13px; min-width: max-content}
 #renda_variavel__search div[name='tipo_parada'] ul li button[selected] {background-color: #dbddde}
+#renda_variavel__search div[name='tipo_parada'] ul li label {font-size: 11px}
+#renda_variavel__search div[name='tipo_parada'] ul li input {width: 90px}
 #renda_variavel__search select[name='ativo'].init, #renda_variavel__search select[name='gerenciamento'].init, #renda_variavel__search select[name='cenario'].init {height: 30px}
+#renda_variavel__search input[name='valor_inicial'] {width: 120px}
+#renda_variavel__search input[name='R'] {width: 90px}
+#renda_variavel__search input[name='margem'] {width: 90px}
 /*------------------------------------ Arcabouço -------------------------------------*/
 @keyframes pulse {
 	0% {
@@ -378,18 +383,15 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_trades_wrapper div.card-body.head {height: 50px}
 #dashboard_ops__table_trades_wrapper div.card-body.body {height: 479px}
 #dashboard_ops__chart_resultadoNormalizado {height: 539px}
-#dashboard_ops__chart_resultadoPorHorario {height: 539px}
 #dashboard_ops__chart_evolucaoPatrimonial {height: 539px}
-#dashboard_ops__chart_sequencaResults {height: 539px}
-#dashboard_ops__chart_drawdown {height: 539px}
+#dashboard_ops__chart_resultadoPorHorario {height: 450px}
+#dashboard_ops__chart_sequenciaResults {height: 450px}
+#dashboard_ops__chart_drawdown {height: 450px}
 #dashboard_ops__table_trades {font-size: 11px}
 #dashboard_ops__table_trades_filter {font-size: 14px}
 #dashboard_ops__table_trades_paginate {font-size: 12px}
 #dashboard_ops__table_trades_filter input, #dashboard_ops__table_trades_paginate input {font-size: 12px}
-#dashboard_ops__table_trades tbody td{vertical-align: middle}
-#dashboard_ops__table_trades tbody td[name='trade__custo'] {font-size: 10px}
-#dashboard_ops__table_trades tbody td[name='lucro_bruto__brl'] {font-size: 10px}
-#dashboard_ops__table_trades tbody td[name='prejuizo_bruto__brl'] {font-size: 10px}
+#dashboard_ops__table_trades tbody td{vertical-align: middle; font-size: 9px}
 /*------------------------------------------------------------------------------------*/
 /*------------------------------- CONTROLE FINANCEIRO --------------------------------*/
 /*------------------------------------------------------------------------------------*/

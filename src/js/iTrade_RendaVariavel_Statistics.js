@@ -119,29 +119,129 @@ let RV_Statistics = (function(){
 		return true;
 	}
 	/*
+		Realiza os calculos de 'tipo_parada', para aplicar os filtros.
+	*/
+	let checkTipo_Paradas = function (stop_tipo_parada, resultLiquido_operacao, simulation){
+		//Verifica se a operação pode ser executada dados os tipos de parada selecionados de 'No Dia', 'Na Semana' e 'No Mes'
+		for (let tp_cond in stop_tipo_parada){
+			for (let tp_value in stop_tipo_parada[tp_cond].tipo_parada){
+				//Parada N Stops (Total)
+				if (tp_value === 'd1' || tp_value === 's1' || tp_value === 'm1'){
+					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current < stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max){
+						//Se for um Stop
+						if (resultLiquido_operacao < 1)
+							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += 1;
+					}
+					else
+						return false;
+				}
+				//Parada N Stops (Sequencial)
+				else if (tp_value === 'd2' || tp_value === 's2' || tp_value === 'm2'){
+					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current < stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max){
+						//Se for um Stop
+						if (resultLiquido_operacao < 1)
+							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += 1;
+						else
+							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current = 0;
+					}
+					else
+						return false;
+				}
+				//Parada X Valor no Negativo
+				else if (tp_value === 'd3' || tp_value === 's3' || tp_value === 'm3'){
+					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * (-1))
+						stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					else
+						return false;
+				}
+				//Parada X Valor de Perda Bruta
+				else if (tp_value === 'd4' || tp_value === 's4' || tp_value === 'm4'){
+					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * (-1)){
+						//Se for um Stop
+						if (resultLiquido_operacao < 1)
+							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					}
+					else
+						return false;
+				}
+				//Parada X R's no Negativo
+				else if ((tp_value === 'd5' || tp_value === 's5' || tp_value === 'm5') && simulation.R !== null){
+					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * simulation.R * (-1))
+						stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					else
+						return false;
+				}
+				//Parada X R's de Perda Bruta
+				else if ((tp_value === 'd6' || tp_value === 's6' || tp_value === 'm6') && simulation.R !== null){
+					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * simulation.R * (-1)){
+						//Se for um Stop
+						if (resultLiquido_operacao < 1)
+							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					}
+					else
+						return false;
+				}
+			}
+		}
+		return true;
+	}
+	/*
 		Recebe a lista de operações (Por Trade), e agrupa dependendo do escolhido. (Por Trade 'Default', Por Dia, Por Mes)
 		Já calcula as informações de resultado necessárias.
 	*/
 	let groupData_byPeriodo = function (list, filters, simulation){
 		let new_list = [],
 			stop_tipo_parada = {
-				condicao: null,
-				tipo_parada: {}
-			};
+				dia: { condicao: null, tipo_parada: {} },
+				sem: { condicao: null, tipo_parada: {} },
+				mes: { condicao: null, tipo_parada: {} }
+			}
 		//Mantem 'por Trade'
 		if (simulation.periodo_calc === '1'){
 			for (let e in list){
-				let op_resultBruto_Unitario = calculate_op_result(list[e], simulation),
-					tipo_parada_ok = true;
+				let op_resultBruto_Unitario = calculate_op_result(list[e], simulation);
 				//Roda os 'filters' na operação
 				if (okToUse_filterOp(list[e], op_resultBruto_Unitario['stop'].brl, filters, simulation)){
-					//Inicia a condição do Tipo Parada (Em 'por Trade' seria o Dia)
-					if (stop_tipo_parada.condicao !== list[e].data){
-						stop_tipo_parada['condicao'] = list[e].data;
+					let current_month_year = list[e].data.split('-'),
+						current_week_year = moment(list[e].data).isoWeek();
+					current_week_year = `${current_month_year[0]}-${current_week_year}`;
+					current_month_year = `${current_month_year[0]}-${current_month_year[1]}`;
+					//Inicia a condição do Tipo Parada (No Dia)
+					if (stop_tipo_parada['dia'].condicao !== list[e].data){
+						stop_tipo_parada['dia']['condicao'] = list[e].data;
 						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
-							stop_tipo_parada['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
-								current: 0.0,
-								max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+							//Busca apenas os 'tipo_parada' de 'No Dia'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('d')){
+								stop_tipo_parada['dia']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
+					//Inicia a condição do Tipo Parada (Na Semana)
+					if (stop_tipo_parada['sem'].condicao !== current_week_year){
+						stop_tipo_parada['sem']['condicao'] = current_week_year;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'Na Semana'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('s')){
+								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
+					//Inicia a condição do Tipo Parada (No Mes)
+					if (stop_tipo_parada['mes'].condicao !== current_month_year){
+						stop_tipo_parada['mes']['condicao'] = current_month_year;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'No Mes'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('m')){
+								stop_tipo_parada['mes']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
 							}
 						}
 					}
@@ -154,66 +254,7 @@ let RV_Statistics = (function(){
 					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e].ativo_custo) : 0.0 );
 					//Calcula o resultado liquido aplicando os custos
 					let resultLiquido_operacao = resultBruto_operacao - custo_operacao;
-					//Verifica se a operação pode ser executada dados os tipos de parada selecionados
-					for (let tp_value in stop_tipo_parada.tipo_parada){
-						//Parada N Stops (Total)
-						if (tp_value === '1'){
-							//Se for um Stop
-							if (resultLiquido_operacao < 1){
-								if (stop_tipo_parada['tipo_parada'][tp_value].current + 1 <= stop_tipo_parada['tipo_parada'][tp_value].max)
-									stop_tipo_parada['tipo_parada'][tp_value].current += 1;
-								else
-									tipo_parada_ok = false;
-							}
-						}
-						//Parada N Stops (Sequencial)
-						else if (tp_value === '2'){
-							//Se for um Stop
-							if (resultLiquido_operacao < 1){
-								if (stop_tipo_parada['tipo_parada'][tp_value].current + 1 <= stop_tipo_parada['tipo_parada'][tp_value].max)
-									stop_tipo_parada['tipo_parada'][tp_value].current += 1;
-								else
-									tipo_parada_ok = false;
-							}
-							else
-								stop_tipo_parada['tipo_parada'][tp_value].current = 0;
-						}
-						//Parada X Valor no Negativo
-						else if (tp_value === '3'){
-							if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * (-1))
-								stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
-							else
-								tipo_parada_ok = false;
-						}
-						//Parada X Valor de Perda Bruta
-						else if (tp_value === '4'){
-							//Se for um Stop
-							if (resultLiquido_operacao < 1){
-								if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * (-1))
-									stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
-								else
-									tipo_parada_ok = false;
-							}
-						}
-						//Parada X R's no Negativo
-						else if (tp_value === '5' && simulation.R !== null){
-							if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * simulation.R * (-1))
-								stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
-							else
-								tipo_parada_ok = false;
-						}
-						//Parada X R's de Perda Bruta
-						else if (tp_value === '6' && simulation.R !== null){
-							//Se for um Stop
-							if (resultLiquido_operacao < 1){
-								if (stop_tipo_parada['tipo_parada'][tp_value].current + resultLiquido_operacao >= stop_tipo_parada['tipo_parada'][tp_value].max * simulation.R * (-1))
-									stop_tipo_parada['tipo_parada'][tp_value].current += resultLiquido_operacao;
-								else
-									tipo_parada_ok = false;
-							}
-						}
-					}
-					if (tipo_parada_ok){
+					if (checkTipo_Paradas(stop_tipo_parada, resultLiquido_operacao, simulation)){
 						new_list.push({
 							erro: list[e].erro,
 							data: list[e].data,
@@ -230,7 +271,7 @@ let RV_Statistics = (function(){
 							result_liquido: {
 								brl: resultLiquido_operacao,
 								R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
-							},
+							}
 						});
 					}
 				}
@@ -244,6 +285,49 @@ let RV_Statistics = (function(){
 				let op_resultBruto_Unitario = calculate_op_result(list[e], simulation);
 				//Roda os 'filters' na operação
 				if (okToUse_filterOp(list[e], op_resultBruto_Unitario['stop'].brl, filters, simulation)){
+					let current_month_year = list[e].data.split('-'),
+						current_week_year = moment(list[e].data).isoWeek();
+					current_week_year = `${current_month_year[0]}-${current_week_year}`;
+					current_month_year = `${current_month_year[0]}-${current_month_year[1]}`;
+					//Inicia a condição do Tipo Parada (No Dia)
+					if (stop_tipo_parada['dia'].condicao !== list[e].data){
+						stop_tipo_parada['dia']['condicao'] = list[e].data;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'No Dia'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('d')){
+								stop_tipo_parada['dia']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
+					//Inicia a condição do Tipo Parada (Na Semana)
+					if (stop_tipo_parada['sem'].condicao !== current_week_year){
+						stop_tipo_parada['sem']['condicao'] = current_week_year;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'Na Semana'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('s')){
+								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
+					//Inicia a condição do Tipo Parada (No Mes)
+					if (stop_tipo_parada['mes'].condicao !== current_month_year){
+						stop_tipo_parada['mes']['condicao'] = current_month_year;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'No Mes'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('m')){
+								stop_tipo_parada['mes']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
 					//Calcula o resultado bruto da operação com apenas 1 contrato
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
 					let cts_usado = findCts_toUse(list[e].cts, op_resultBruto_Unitario['stop'].brl, list[e].escalada, simulation);
@@ -253,61 +337,63 @@ let RV_Statistics = (function(){
 					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e].ativo_custo) : 0.0 );
 					//Calcula o resultado liquido aplicando os custos
 					let resultLiquido_operacao = resultBruto_operacao - custo_operacao;
-					//Guarda o dia sendo olhado
-					if (day_used !== list[e].data){
-						day_used = list[e].data;
-						if (index > -1)
-							new_list[index]['resultado_op'] = (new_list[index]['result_liquido'].brl > 0 ? 1 : (new_list[index]['result_liquido'].brl < 0 ? -1 : 0));
-						index++;
-					}
-					if (!(index in new_list)){
-						new_list[index] = {
-							erro: list[e].erro,
-							data: day_used,
-							qtd_trades: 1,
-							cts_usado: cts_usado,
-							custo: custo_operacao,
-							resultado_op: null,
-							lucro_bruto: {
-								brl: (resultBruto_operacao > 0) ? resultBruto_operacao : 0.0,
-								R: (simulation.R !== null) ? ((resultBruto_operacao > 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
-							},
-							prejuizo_bruto: {
-								brl: (resultBruto_operacao < 0) ? resultBruto_operacao : 0.0,
-								R: (simulation.R !== null) ? ((resultBruto_operacao < 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
-							},
-							result_bruto: {
-								brl: resultBruto_operacao,
-								R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
-							},
-							result_liquido: {
-								brl: resultLiquido_operacao,
-								R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
-							},
-						};
-					}
-					else{
-						new_list[index]['qtd_trades']++;
-						if (new_list[index]['erro'] === 0)
-							new_list[index]['erro'] = list[e].erro;
-						new_list[index]['cts_usado'] += cts_usado;
-						new_list[index]['custo'] += custo_operacao;
-						if (resultBruto_operacao > 0){
-							new_list[index]['lucro_bruto']['brl'] += resultBruto_operacao;
-							if (simulation.R !== null)
-								new_list[index]['lucro_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+					if (checkTipo_Paradas(stop_tipo_parada, resultLiquido_operacao, simulation)){
+						//Guarda o dia sendo olhado
+						if (day_used !== list[e].data){
+							day_used = list[e].data;
+							if (index > -1)
+								new_list[index]['resultado_op'] = (new_list[index]['result_liquido'].brl > 0 ? 1 : (new_list[index]['result_liquido'].brl < 0 ? -1 : 0));
+							index++;
 						}
-						else if (resultBruto_operacao < 0){
-							new_list[index]['prejuizo_bruto']['brl'] += resultBruto_operacao;
-							if (simulation.R !== null)
-								new_list[index]['prejuizo_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+						if (!(index in new_list)){
+							new_list[index] = {
+								erro: list[e].erro,
+								data: day_used,
+								qtd_trades: 1,
+								cts_usado: cts_usado,
+								custo: custo_operacao,
+								resultado_op: null,
+								lucro_bruto: {
+									brl: (resultBruto_operacao > 0) ? resultBruto_operacao : 0.0,
+									R: (simulation.R !== null) ? ((resultBruto_operacao > 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
+								},
+								prejuizo_bruto: {
+									brl: (resultBruto_operacao < 0) ? resultBruto_operacao : 0.0,
+									R: (simulation.R !== null) ? ((resultBruto_operacao < 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
+								},
+								result_bruto: {
+									brl: resultBruto_operacao,
+									R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
+								},
+								result_liquido: {
+									brl: resultLiquido_operacao,
+									R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
+								}
+							};
 						}
-						new_list[index]['result_bruto']['brl'] += resultBruto_operacao;
-						if (simulation.R !== null)
-							new_list[index]['result_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
-						new_list[index]['result_liquido']['brl'] += resultLiquido_operacao;
-						if (simulation.R !== null)
-							new_list[index]['result_liquido']['R'] += divide(resultLiquido_operacao, simulation.R);
+						else{
+							new_list[index]['qtd_trades']++;
+							if (new_list[index]['erro'] === 0)
+								new_list[index]['erro'] = list[e].erro;
+							new_list[index]['cts_usado'] += cts_usado;
+							new_list[index]['custo'] += custo_operacao;
+							if (resultBruto_operacao > 0){
+								new_list[index]['lucro_bruto']['brl'] += resultBruto_operacao;
+								if (simulation.R !== null)
+									new_list[index]['lucro_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+							}
+							else if (resultBruto_operacao < 0){
+								new_list[index]['prejuizo_bruto']['brl'] += resultBruto_operacao;
+								if (simulation.R !== null)
+									new_list[index]['prejuizo_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+							}
+							new_list[index]['result_bruto']['brl'] += resultBruto_operacao;
+							if (simulation.R !== null)
+								new_list[index]['result_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+							new_list[index]['result_liquido']['brl'] += resultLiquido_operacao;
+							if (simulation.R !== null)
+								new_list[index]['result_liquido']['R'] += divide(resultLiquido_operacao, simulation.R);
+						}
 					}
 				}
 			}
@@ -321,10 +407,51 @@ let RV_Statistics = (function(){
 				index = -1;
 			for (let e in list){
 				let op_resultBruto_Unitario = calculate_op_result(list[e], simulation);
-				let current_month_year = list[e].data.split('-');
-				current_month_year = `${current_month_year[0]}-${current_month_year[1]}`;
 				//Roda os 'filters' na operação
 				if (okToUse_filterOp(list[e], op_resultBruto_Unitario['stop'].brl, filters, simulation)){
+					let current_month_year = list[e].data.split('-'),
+						current_week_year = moment(list[e].data).isoWeek();
+					current_week_year = `${current_month_year[0]}-${current_week_year}`;
+					current_month_year = `${current_month_year[0]}-${current_month_year[1]}`;
+					//Inicia a condição do Tipo Parada (No Dia)
+					if (stop_tipo_parada['dia'].condicao !== list[e].data){
+						stop_tipo_parada['dia']['condicao'] = list[e].data;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'No Dia'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('d')){
+								stop_tipo_parada['dia']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
+					//Inicia a condição do Tipo Parada (Na Semana)
+					if (stop_tipo_parada['sem'].condicao !== current_week_year){
+						stop_tipo_parada['sem']['condicao'] = current_week_year;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'Na Semana'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('s')){
+								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
+					//Inicia a condição do Tipo Parada (No Mes)
+					if (stop_tipo_parada['mes'].condicao !== current_month_year){
+						stop_tipo_parada['mes']['condicao'] = current_month_year;
+						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
+							//Busca apenas os 'tipo_parada' de 'No Mes'
+							if (simulation['tipo_parada'][tp].tipo_parada.includes('m')){
+								stop_tipo_parada['mes']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									current: 0.0,
+									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
+								}
+							}
+						}
+					}
 					//Calcula o resultado bruto da operação com apenas 1 contrato
 					//Calcula o numero de contratos a ser usado dependendo do 'simulation'
 					let cts_usado = findCts_toUse(list[e].cts, op_resultBruto_Unitario['stop'].brl, list[e].escalada, simulation);
@@ -334,61 +461,63 @@ let RV_Statistics = (function(){
 					let custo_operacao = ((simulation.usa_custo) ? (cts_usado * list[e].ativo_custo) : 0.0 );
 					//Calcula o resultado liquido aplicando os custos
 					let resultLiquido_operacao = resultBruto_operacao - custo_operacao;
-					//Guarda o dia sendo olhado
-					if (month_used !== current_month_year){
-						month_used = current_month_year;
-						if (index > -1)
-							new_list[index]['resultado_op'] = (new_list[index]['result_liquido'].brl > 0 ? 1 : (new_list[index]['result_liquido'].brl < 0 ? -1 : 0));
-						index++;
-					}
-					if (!(index in new_list)){
-						new_list[index] = {
-							erro: list[e].erro,
-							data: month_used,
-							qtd_trades: 1,
-							cts_usado: cts_usado,
-							custo: custo_operacao,
-							resultado_op: null,
-							lucro_bruto: {
-								brl: (resultBruto_operacao > 0) ? resultBruto_operacao : 0.0,
-								R: (simulation.R !== null) ? ((resultBruto_operacao > 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
-							},
-							prejuizo_bruto: {
-								brl: (resultBruto_operacao < 0) ? resultBruto_operacao : 0.0,
-								R: (simulation.R !== null) ? ((resultBruto_operacao < 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
-							},
-							result_bruto: {
-								brl: resultBruto_operacao,
-								R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
-							},
-							result_liquido: {
-								brl: resultLiquido_operacao,
-								R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
-							},
-						};
-					}
-					else{
-						new_list[index]['qtd_trades']++;
-						if (new_list[index]['erro'] === 0)
-							new_list[index]['erro'] = list[e].erro;
-						new_list[index]['cts_usado'] += cts_usado;
-						new_list[index]['custo'] += custo_operacao;
-						if (resultBruto_operacao > 0){
-							new_list[index]['lucro_bruto']['brl'] += resultBruto_operacao;
-							if (simulation.R !== null)
-								new_list[index]['lucro_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+					if (checkTipo_Paradas(stop_tipo_parada, resultLiquido_operacao, simulation)){
+						//Guarda o mes sendo olhado
+						if (month_used !== current_month_year){
+							month_used = current_month_year;
+							if (index > -1)
+								new_list[index]['resultado_op'] = (new_list[index]['result_liquido'].brl > 0 ? 1 : (new_list[index]['result_liquido'].brl < 0 ? -1 : 0));
+							index++;
 						}
-						else if (resultBruto_operacao < 0){
-							new_list[index]['prejuizo_bruto']['brl'] += resultBruto_operacao;
-							if (simulation.R !== null)
-								new_list[index]['prejuizo_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+						if (!(index in new_list)){
+							new_list[index] = {
+								erro: list[e].erro,
+								data: month_used,
+								qtd_trades: 1,
+								cts_usado: cts_usado,
+								custo: custo_operacao,
+								resultado_op: null,
+								lucro_bruto: {
+									brl: (resultBruto_operacao > 0) ? resultBruto_operacao : 0.0,
+									R: (simulation.R !== null) ? ((resultBruto_operacao > 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
+								},
+								prejuizo_bruto: {
+									brl: (resultBruto_operacao < 0) ? resultBruto_operacao : 0.0,
+									R: (simulation.R !== null) ? ((resultBruto_operacao < 0) ? divide(resultBruto_operacao, simulation.R) : 0.0) : '--'
+								},
+								result_bruto: {
+									brl: resultBruto_operacao,
+									R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
+								},
+								result_liquido: {
+									brl: resultLiquido_operacao,
+									R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
+								}
+							};
 						}
-						new_list[index]['result_bruto']['brl'] += resultBruto_operacao;
-						if (simulation.R !== null)
-							new_list[index]['result_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
-						new_list[index]['result_liquido']['brl'] += resultLiquido_operacao;
-						if (simulation.R !== null)
-							new_list[index]['result_liquido']['R'] += divide(resultLiquido_operacao, simulation.R);
+						else{
+							new_list[index]['qtd_trades']++;
+							if (new_list[index]['erro'] === 0)
+								new_list[index]['erro'] = list[e].erro;
+							new_list[index]['cts_usado'] += cts_usado;
+							new_list[index]['custo'] += custo_operacao;
+							if (resultBruto_operacao > 0){
+								new_list[index]['lucro_bruto']['brl'] += resultBruto_operacao;
+								if (simulation.R !== null)
+									new_list[index]['lucro_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+							}
+							else if (resultBruto_operacao < 0){
+								new_list[index]['prejuizo_bruto']['brl'] += resultBruto_operacao;
+								if (simulation.R !== null)
+									new_list[index]['prejuizo_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+							}
+							new_list[index]['result_bruto']['brl'] += resultBruto_operacao;
+							if (simulation.R !== null)
+								new_list[index]['result_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
+							new_list[index]['result_liquido']['brl'] += resultLiquido_operacao;
+							if (simulation.R !== null)
+								new_list[index]['result_liquido']['R'] += divide(resultLiquido_operacao, simulation.R);
+						}
 					}
 				}
 			}
@@ -534,7 +663,7 @@ let RV_Statistics = (function(){
 			usa_custo: ('usa_custo' in simulation) ? simulation.usa_custo == 1 : true,
 			ignora_erro: ('ignora_erro' in simulation) ? simulation.ignora_erro == 1 : false,
 			tipo_parada: ('tipo_parada' in simulation) ? simulation.tipo_parada : [],
-			valor_inicial: ('valor_inicial' in simulation) ? simulation.valor_inicial : null,
+			valor_inicial: ('valor_inicial' in simulation) ? parseFloat(simulation.valor_inicial) : null,
 			R: ('R' in simulation && simulation.R != 0) ? simulation.R : null
 		};
 		//Variaveis para a tabela de estatistica geral
@@ -630,7 +759,11 @@ let RV_Statistics = (function(){
 			//Valor corrente para chegar à ruína de (X%)
 			stats__ruinaAtual: 0.0,
 			//Valor médio da Vol dos trades
-			stats__media_vol: 0.0
+			stats__media_vol: 0.0,
+			//Valor Inicial informado + resultado liquido
+			stats__valorInicial_com_lucro: 0.0,
+			//Quantidade de Stops até quebrar o Valor Inicial informado
+			stats__stops_ruina: 0
 		}
 		//Variaveis para a tabela de resultados dos trades
 		let _dashboard_ops__table_trades = [];
@@ -943,6 +1076,8 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__dp_perc']                 = (_simulation['valor_inicial'] !== null) ? (divide(_dashboard_ops__table_stats['stats__dp_brl'], _simulation['valor_inicial']) * 100) : '--';
 			_dashboard_ops__table_stats['stats__sqn']                     = (_simulation['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_R'], _dashboard_ops__table_stats['stats__dp_R']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 			_dashboard_ops__table_stats['stats__media_vol']               = divide(_dashboard_ops__table_stats['stats__media_vol'], _dashboard_ops__table_stats['trades__total']);
+			_dashboard_ops__table_stats['stats__valorInicial_com_lucro']  = (_simulation['valor_inicial'] !== null) ? (_simulation['valor_inicial'] + _temp__table_stats['lucro_corrente']['brl']) : '--';
+			_dashboard_ops__table_stats['stats__stops_ruina']             = (_simulation['valor_inicial'] !== null && _simulation['R'] !== null) ? Math.floor(divide(_dashboard_ops__table_stats['stats__valorInicial_com_lucro'], _simulation['R'])) : '--';
 
 			_temp__table_stats['sorted_drawdowns'].sort((a, b) => a.brl - b.brl);
 
@@ -1238,6 +1373,8 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__dp_perc']                 = (_simulation['valor_inicial'] !== null) ? (divide(_dashboard_ops__table_stats['stats__dp_brl'], _simulation['valor_inicial']) * 100) : '--';
 			_dashboard_ops__table_stats['stats__sqn']                     = (_simulation['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_R'], _dashboard_ops__table_stats['stats__dp_R']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 			_dashboard_ops__table_stats['stats__media_vol']               = '--';
+			_dashboard_ops__table_stats['stats__valorInicial_com_lucro']  = (_simulation['valor_inicial'] !== null) ? (_simulation['valor_inicial'] + _temp__table_stats['lucro_corrente']['brl']) : '--';
+			_dashboard_ops__table_stats['stats__stops_ruina']             = (_simulation['valor_inicial'] !== null && _simulation['R'] !== null) ? Math.floor(divide(_dashboard_ops__table_stats['stats__valorInicial_com_lucro'], _simulation['R'])) : '--';
 
 			_temp__table_stats['sorted_drawdowns'].sort((a, b) => a.brl - b.brl);
 
@@ -1274,6 +1411,44 @@ let RV_Statistics = (function(){
 					_dashboard_ops__chart_data['resultado_por_hora']['data_result'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[h]]['result']);
 					_dashboard_ops__chart_data['resultado_por_hora']['data_qtd'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[h]]['qtd']);
 				}
+				//////////////////////////////////
+				//Gráfico Sequencia de Result.
+				//////////////////////////////////
+				let sequencia_sep_counter = {},
+					sequencia_sep_counter__max_key = 0;
+				for (let s = 0; s < _temp__table_stats['sequencias_positivo'].length; s++){
+					if (!(_temp__table_stats['sequencias_positivo'][s] in sequencia_sep_counter))
+						sequencia_sep_counter[_temp__table_stats['sequencias_positivo'][s]] = 0;
+					sequencia_sep_counter[_temp__table_stats['sequencias_positivo'][s]]++;
+				}
+				sequencia_sep_counter__max_key = Math.max(...Object.keys(sequencia_sep_counter));
+				for (let s = 1; s <= sequencia_sep_counter__max_key; s++){
+					if (s in sequencia_sep_counter)
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].push(sequencia_sep_counter[s]);
+					else
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].push(0);
+				}
+				sequencia_sep_counter = {};
+				sequencia_sep_counter__max_key = 0;
+				for (let s = 0; s < _temp__table_stats['sequencias_negativo'].length; s++){
+					if (!(_temp__table_stats['sequencias_negativo'][s] in sequencia_sep_counter))
+						sequencia_sep_counter[_temp__table_stats['sequencias_negativo'][s]] = 0;
+					sequencia_sep_counter[_temp__table_stats['sequencias_negativo'][s]]++;
+				}
+				sequencia_sep_counter__max_key = Math.max(...Object.keys(sequencia_sep_counter));
+				for (let s = 1; s <= sequencia_sep_counter__max_key; s++){
+					if (s in sequencia_sep_counter)
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].push(sequencia_sep_counter[s] * -1);
+					else
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].push(0);
+				}
+				_dashboard_ops__chart_data['sequencia_de_resultados']['labels'] = (_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].length > _dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].length) ? Object.keys(_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos']).map(o => parseInt(o) + 1) : Object.keys(_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos']).map(o => parseInt(o) + 1);
+				//////////////////////////////////
+				//Gráfico Historico de Drawdowns 
+				//////////////////////////////////
+				_dashboard_ops__chart_data['drawdowns']['data'] = _temp__table_stats['drawdowns'].map(o => o.brl);
+				_dashboard_ops__chart_data['drawdowns']['labels'] = Object.keys(_dashboard_ops__chart_data['drawdowns']['data']).map(o => parseInt(o) + 1);
+				BBollinger(_dashboard_ops__chart_data['drawdowns'], 1, NaN, 2, true, 'sup');
 			}
 			/*------------------------------- Retorno dos Dados ------------------------------*/
 			return {
@@ -1450,6 +1625,8 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__dp_perc']                 = (_simulation['valor_inicial'] !== null) ? (divide(_dashboard_ops__table_stats['stats__dp_brl'], _simulation['valor_inicial']) * 100) : '--';
 			_dashboard_ops__table_stats['stats__sqn']                     = (_simulation['R'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_R'], _dashboard_ops__table_stats['stats__dp_R']) * Math.sqrt(_dashboard_ops__table_stats['trades__total'])) : '--';
 			_dashboard_ops__table_stats['stats__media_vol']               = '--';
+			_dashboard_ops__table_stats['stats__valorInicial_com_lucro']  = (_simulation['valor_inicial'] !== null) ? (_simulation['valor_inicial'] + _temp__table_stats['lucro_corrente']['brl']) : '--';
+			_dashboard_ops__table_stats['stats__stops_ruina']             = (_simulation['valor_inicial'] !== null && _simulation['R'] !== null) ? Math.floor(divide(_dashboard_ops__table_stats['stats__valorInicial_com_lucro'], _simulation['R'])) : '--';
 
 			_temp__table_stats['sorted_drawdowns'].sort((a, b) => a.brl - b.brl);
 
@@ -1486,6 +1663,44 @@ let RV_Statistics = (function(){
 					_dashboard_ops__chart_data['resultado_por_hora']['data_result'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[m]]['result']);
 					_dashboard_ops__chart_data['resultado_por_hora']['data_qtd'].push(_temp__table_stats['horas__unicas'][sorted_horas__unicas[m]]['qtd']);
 				}
+				//////////////////////////////////
+				//Gráfico Sequencia de Result.
+				//////////////////////////////////
+				let sequencia_sep_counter = {},
+					sequencia_sep_counter__max_key = 0;
+				for (let s = 0; s < _temp__table_stats['sequencias_positivo'].length; s++){
+					if (!(_temp__table_stats['sequencias_positivo'][s] in sequencia_sep_counter))
+						sequencia_sep_counter[_temp__table_stats['sequencias_positivo'][s]] = 0;
+					sequencia_sep_counter[_temp__table_stats['sequencias_positivo'][s]]++;
+				}
+				sequencia_sep_counter__max_key = Math.max(...Object.keys(sequencia_sep_counter));
+				for (let s = 1; s <= sequencia_sep_counter__max_key; s++){
+					if (s in sequencia_sep_counter)
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].push(sequencia_sep_counter[s]);
+					else
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].push(0);
+				}
+				sequencia_sep_counter = {};
+				sequencia_sep_counter__max_key = 0;
+				for (let s = 0; s < _temp__table_stats['sequencias_negativo'].length; s++){
+					if (!(_temp__table_stats['sequencias_negativo'][s] in sequencia_sep_counter))
+						sequencia_sep_counter[_temp__table_stats['sequencias_negativo'][s]] = 0;
+					sequencia_sep_counter[_temp__table_stats['sequencias_negativo'][s]]++;
+				}
+				sequencia_sep_counter__max_key = Math.max(...Object.keys(sequencia_sep_counter));
+				for (let s = 1; s <= sequencia_sep_counter__max_key; s++){
+					if (s in sequencia_sep_counter)
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].push(sequencia_sep_counter[s] * -1);
+					else
+						_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].push(0);
+				}
+				_dashboard_ops__chart_data['sequencia_de_resultados']['labels'] = (_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos'].length > _dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos'].length) ? Object.keys(_dashboard_ops__chart_data['sequencia_de_resultados']['data_positivos']).map(o => parseInt(o) + 1) : Object.keys(_dashboard_ops__chart_data['sequencia_de_resultados']['data_negativos']).map(o => parseInt(o) + 1);
+				//////////////////////////////////
+				//Gráfico Historico de Drawdowns 
+				//////////////////////////////////
+				_dashboard_ops__chart_data['drawdowns']['data'] = _temp__table_stats['drawdowns'].map(o => o.brl);
+				_dashboard_ops__chart_data['drawdowns']['labels'] = Object.keys(_dashboard_ops__chart_data['drawdowns']['data']).map(o => parseInt(o) + 1);
+				BBollinger(_dashboard_ops__chart_data['drawdowns'], 1, NaN, 2, true, 'sup');
 			}
 			/*------------------------------- Retorno dos Dados ------------------------------*/
 			return {

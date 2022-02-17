@@ -426,6 +426,10 @@ let Renda_variavel = (function(){
 				}
 			});
 			me.filters.data.daterangepicker({
+				ranges: {
+					'Tudo': [data_inicial, data_final]
+				},
+				alwaysShowCalendars: true,
 				showDropdowns: true,
 				minDate: data_inicial,
 				startDate: ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : data_inicial,
@@ -555,12 +559,7 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			me.simulations.periodo_calc = renda_variavel__search.find('select[name="periodo_calc"]');
 			me.simulations.periodo_calc.change(function (){
-				let value = $(this).val();
-				if (value === '1')
-					me.simulations.tipo_parada.find('button[data-bs-toggle]').removeAttr('disabled');
-				else
-					me.simulations.tipo_parada.find('button[data-bs-toggle]').attr('disabled', '');
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
 			if ('periodo_calc' in dashboard_simulations)
 				me.simulations.periodo_calc.val(dashboard_simulations['periodo_calc']);
@@ -609,8 +608,6 @@ let Renda_variavel = (function(){
 			//Simulação de Tipo Parada e Valor Parada
 			/////////////////////////////////////////////
 			me.simulations.tipo_parada = renda_variavel__search.find('div[name="tipo_parada"]');
-			if ('periodo_calc' in dashboard_simulations && dashboard_simulations['periodo_calc'] !== '1')
-				me.simulations.tipo_parada.find('button[data-bs-toggle]').attr('disabled', '');
 			me.simulations.tipo_parada.find('input[name="valor_parada"]').each(function (i, el){
 				el = $(this);
 				el.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
@@ -679,8 +676,13 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
-			let	data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY')),
-				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : ((_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial);
+			let	data_inicial_total = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
+				data_final_total = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial_total,
+				data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : data_inicial_total,
+				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : data_final_total;
+			me.filters.data.data('daterangepicker').range = {
+				'Today': [data_inicial_total, data_final_total]
+			}
 			me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
 			me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
 			me.filters.data.data('daterangepicker').setStartDate(data_inicial);
@@ -878,6 +880,10 @@ let Renda_variavel = (function(){
 					$(document.getElementById("lista_ops__table")).DataTable().draw();
 				});
 				me.filters.data.daterangepicker({
+					ranges: {
+						'Tudo': [data_inicial, data_final]
+					},
+					alwaysShowCalendars: true,
 					showDropdowns: true,
 					minDate: data_inicial,
 					startDate: data_inicial,
@@ -902,6 +908,9 @@ let Renda_variavel = (function(){
 				});
 			}
 			else{
+				me.filters.data.data('daterangepicker').ranges = {
+					'Tudo': [data_inicial, data_final]
+				}
 				me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
 				me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
 				me.filters.data.data('daterangepicker').setStartDate(data_inicial);
@@ -1177,7 +1186,7 @@ let Renda_variavel = (function(){
 			dashboard_ops__chart_resultadoNormalizado: null,
 			dashboard_ops__chart_resultadoPorHorario: null,
 			dashboard_ops__chart_evolucaoPatrimonial: null,
-			dashboard_ops__chart_sequencaResults: null,
+			dashboard_ops__chart_sequenciaResults: null,
 			dashboard_ops__chart_drawdown: null
 		},
 		ext: {
@@ -2591,6 +2600,7 @@ let Renda_variavel = (function(){
 					]
 				}
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].options.plugins.annotation.annotations = linha_risco;
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].options.plugins.title.text = ((simulation__periodo_calc === '1') ? 'Resultados por Trade' : ((simulation__periodo_calc === '2') ? 'Resultados por Dia' : 'Resultados por Mês'));
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoNormalizado'].options.plugins.tooltip.callbacks.title = function (tooltipItems){
 					return `${tooltipItems[0].label}  ${dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['date'][tooltipItems[0].dataIndex]}`;
 				}
@@ -2838,14 +2848,15 @@ let Renda_variavel = (function(){
 						}
 					]
 				}
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].options.plugins.title.text = ((simulation__periodo_calc === '1') ? 'Resultados por Hora' : ((simulation__periodo_calc === '2') ? 'Resultados por Dia' : 'Resultados por Mês'));
 				_dashboard_ops__elements['charts']['dashboard_ops__chart_resultadoPorHorario'].update();
 			}
 			//////////////////////////////////
 			//Gráfico Sequencia de Result.
 			//////////////////////////////////
-			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'] === null){
-				$(document.getElementById('dashboard_ops__chart_sequencaResults')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
-					_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'] = new Chart(document.getElementById('dashboard_ops__chart_sequencaResults').querySelector('canvas'), {
+			if (_dashboard_ops__elements['charts']['dashboard_ops__chart_sequenciaResults'] === null){
+				$(document.getElementById('dashboard_ops__chart_sequenciaResults')).append(`<canvas style="width:100%; height:100%"></canvas>`).promise().then(function (){
+					_dashboard_ops__elements['charts']['dashboard_ops__chart_sequenciaResults'] = new Chart(document.getElementById('dashboard_ops__chart_sequenciaResults').querySelector('canvas'), {
 						type: 'line',
 						data: {
 							labels: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['labels'],
@@ -2905,6 +2916,13 @@ let Renda_variavel = (function(){
 										}
 										this.chart.update();
 									}
+								},
+								tooltip: {
+									callbacks: {
+										label: function (tooltipItem){
+											return `${tooltipItem['dataset'].label}: ${Math.abs(tooltipItem.raw)}`;
+										}
+									}
 								}
 							},
 							scales: {
@@ -2915,7 +2933,7 @@ let Renda_variavel = (function(){
 				});
 			}
 			else{
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'].data = {
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_sequenciaResults'].data = {
 					labels: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['labels'],
 					datasets: [
 						{
@@ -2932,7 +2950,7 @@ let Renda_variavel = (function(){
 						}
 					]
 				}
-				_dashboard_ops__elements['charts']['dashboard_ops__chart_sequencaResults'].update();
+				_dashboard_ops__elements['charts']['dashboard_ops__chart_sequenciaResults'].update();
 			}
 			//////////////////////////////////
 			//Gráfico Histórico de Drawdown
@@ -3156,12 +3174,11 @@ let Renda_variavel = (function(){
 					`<th class="text-center subheader">DD Máx.</th>`+
 					//Topo Historico
 					`<th class="text-center subheader divider">Topo Hist.</th>`+
+					//Capital Corrente
+					`<th class="text-center subheader">Capital Corr.</th>`+
+					//Stops até Ruína
+					`<th class="text-center subheader" colspan="2">Stops até Ruína</th>`+
 					//
-					`<th class="text-center"></th>`+
-					//
-					`<th class="text-center"></th>`+
-					//
-					`<th class="text-center"></th>`+
 					`<th class="text-center"></th>`+
 					`</tr>`+
 					`<tr class="align-middle">`+
@@ -3182,12 +3199,11 @@ let Renda_variavel = (function(){
 					`<td class="text-center"><span name="stats__drawdown_max" class="data-small">R$ ${line_data.stats__drawdown_max.toFixed(2)}</span><span name="stats__drawdown_max_periodo" class="data-tiny ms-2">${line_data.stats__drawdown_max_periodo} ${dd_periodo_label}</span></td>`+
 					//Topo Historico
 					`<td class="text-center divider"><span name="stats__drawdown_topoHistorico" class="data-small">R$ ${line_data.stats__drawdown_topoHistorico.toFixed(2)}</span></td>`+
+					//Capital Corrente
+					`<td class="text-center"><span name="stats__valorInicial_com_lucro" class="data-small">${((line_data.stats__valorInicial_com_lucro !== '--') ? `R$ ${line_data.stats__valorInicial_com_lucro.toFixed(2)}` : line_data.stats__valorInicial_com_lucro)}</span></td>`+
+					//Stops até Ruína
+					`<td class="text-center" colspan="2"><span name="stats__stops_ruina" class="data-small">${((line_data.stats__stops_ruina !== '--') ? `${line_data.stats__stops_ruina.toFixed(0)}R` : line_data.stats__stops_ruina )}</span></td>`+
 					//
-					`<td class="text-center"></td>`+
-					//
-					`<td class="text-center"></td>`+
-					//
-					`<td class="text-center"></td>`+
 					`<td class="text-center"></td>`+
 					`</tr>`;
 		}
@@ -3341,6 +3357,7 @@ let Renda_variavel = (function(){
 					data.push([
 						trades[o].trade__seq,
 						Global.convertDate(trades[o].trade__data),
+						trades[o].trade__ops,
 						trades[o].trade__cts,
 						trades[o].lucro_bruto__brl,
 						trades[o].prejuizo_bruto__brl,
@@ -3355,6 +3372,7 @@ let Renda_variavel = (function(){
 					data.push([
 						trades[o].trade__seq,
 						Global.convertDate(trades[o].trade__data),
+						trades[o].trade__ops,
 						trades[o].trade__cts,
 						trades[o].lucro_bruto__brl,
 						trades[o].prejuizo_bruto__brl,
