@@ -122,64 +122,154 @@ let RV_Statistics = (function(){
 		Realiza os calculos de 'tipo_parada', para aplicar os filtros.
 	*/
 	let checkTipo_Paradas = function (stop_tipo_parada, resultLiquido_operacao, simulation){
-		//Verifica se a operação pode ser executada dados os tipos de parada selecionados de 'No Dia', 'Na Semana' e 'No Mes'
-		for (let tp_cond in stop_tipo_parada){
-			for (let tp_value in stop_tipo_parada[tp_cond].tipo_parada){
-				//Parada N Stops (Total)
-				if (tp_value === 'd1' || tp_value === 's1' || tp_value === 'm1'){
-					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current < stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max){
-						//Se for um Stop
-						if (resultLiquido_operacao < 1)
-							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += 1;
+		//Verifica se a operação pode ser executada dados os tipos de parada 'Na Semana'
+		for (let tp_value in stop_tipo_parada['sem'].tipo_parada){
+			//Parada N dias Stop Cheio (Total)
+			if (tp_value === 's1'){
+				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
+					return false;
+			}
+			//Parada N dias Stop (Total)
+			else if (tp_value === 's2'){
+				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
+					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0)
+							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current = 0.0;
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao = stop_tipo_parada['dia'].condicao;
 					}
-					else
-						return false;
+					stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current += resultLiquido_operacao;
 				}
-				//Parada N Stops (Sequencial)
-				else if (tp_value === 'd2' || tp_value === 's2' || tp_value === 'm2'){
-					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current < stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max){
-						//Se for um Stop
-						if (resultLiquido_operacao < 1)
-							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += 1;
+				else
+					return false;
+			}
+			//Parada N dias Stop (Sequencia)
+			else if (tp_value === 's3'){
+				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
+					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0)
+							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
 						else
-							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current = 0;
+							stop_tipo_parada['sem']['tipo_parada'][tp_value].current = 0;
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current = 0.0;
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao = stop_tipo_parada['dia'].condicao;
 					}
-					else
-						return false;
+					stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current += resultLiquido_operacao;
 				}
-				//Parada X Valor no Negativo
-				else if (tp_value === 'd3' || tp_value === 's3' || tp_value === 'm3'){
-					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * (-1))
-						stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
-					else
-						return false;
+				else
+					return false;
+			}
+		}
+		//Verifica se a operação pode ser executada dados os tipos de parada 'No Dia'
+		for (let tp_value in stop_tipo_parada['dia'].tipo_parada){
+			//Parada N Stops (Total)
+			if (tp_value === 'd1'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+					//Se for um Stop
+					if (resultLiquido_operacao < 1)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
 				}
-				//Parada X Valor de Perda Bruta
-				else if (tp_value === 'd4' || tp_value === 's4' || tp_value === 'm4'){
-					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * (-1)){
-						//Se for um Stop
-						if (resultLiquido_operacao < 1)
-							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
+				//Foi atingido o limite diário
+				else{
+					//Atualiza o 's1' os dias com stop cheio
+					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						}
 					}
-					else
-						return false;
+					return false;
 				}
-				//Parada X R's no Negativo
-				else if ((tp_value === 'd5' || tp_value === 's5' || tp_value === 'm5') && simulation.R !== null){
-					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * simulation.R * (-1))
-						stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
+			}
+			//Parada N Stops (Sequencia)
+			else if (tp_value === 'd2'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+					//Se for um Stop
+					if (resultLiquido_operacao < 1)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
 					else
-						return false;
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current = 0;
 				}
-				//Parada X R's de Perda Bruta
-				else if ((tp_value === 'd6' || tp_value === 's6' || tp_value === 'm6') && simulation.R !== null){
-					if (stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current > stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].max * simulation.R * (-1)){
-						//Se for um Stop
-						if (resultLiquido_operacao < 1)
-							stop_tipo_parada[tp_cond]['tipo_parada'][tp_value].current += resultLiquido_operacao;
+				//Foi atingido o limite diário
+				else{
+					//Atualiza o 's1' os dias com stop cheio
+					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						}
 					}
-					else
-						return false;
+					return false;
+				}
+			}
+			//Parada X Valor no Negativo
+			else if (tp_value === 'd3'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1))
+					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+				//Foi atingido o limite diário
+				else{
+					//Atualiza o 's1' os dias com stop cheio
+					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						}
+					}
+					return false;
+				}
+			}
+			//Parada X Valor de Perda Bruta
+			else if (tp_value === 'd4'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
+					//Se for um Stop
+					if (resultLiquido_operacao < 1)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+				}
+				//Foi atingido o limite diário
+				else{
+					//Atualiza o 's1' os dias com stop cheio
+					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						}
+					}
+					return false;
+				}
+			}
+			//Parada X R's no Negativo
+			else if (tp_value === 'd5' && simulation.R !== null){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1))
+					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+				//Foi atingido o limite diário
+				else{
+					//Atualiza o 's1' os dias com stop cheio
+					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						}
+					}
+					return false;
+				}
+			}
+			//Parada X R's de Perda Bruta
+			else if (tp_value === 'd6' && simulation.R !== null){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
+					//Se for um Stop
+					if (resultLiquido_operacao < 1)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+				}
+				//Foi atingido o limite diário
+				else{
+					//Atualiza o 's1' os dias com stop cheio
+					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						}
+					}
+					return false;
 				}
 			}
 		}
@@ -193,8 +283,7 @@ let RV_Statistics = (function(){
 		let new_list = [],
 			stop_tipo_parada = {
 				dia: { condicao: null, tipo_parada: {} },
-				sem: { condicao: null, tipo_parada: {} },
-				mes: { condicao: null, tipo_parada: {} }
+				sem: { condicao: null, tipo_parada: {} }
 			}
 		//Mantem 'por Trade'
 		if (simulation.periodo_calc === '1'){
@@ -226,19 +315,7 @@ let RV_Statistics = (function(){
 							//Busca apenas os 'tipo_parada' de 'Na Semana'
 							if (simulation['tipo_parada'][tp].tipo_parada.includes('s')){
 								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
-									current: 0.0,
-									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
-								}
-							}
-						}
-					}
-					//Inicia a condição do Tipo Parada (No Mes)
-					if (stop_tipo_parada['mes'].condicao !== current_month_year){
-						stop_tipo_parada['mes']['condicao'] = current_month_year;
-						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
-							//Busca apenas os 'tipo_parada' de 'No Mes'
-							if (simulation['tipo_parada'][tp].tipo_parada.includes('m')){
-								stop_tipo_parada['mes']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									dia: { condicao: null, current: 0.0 },
 									current: 0.0,
 									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
 								}
@@ -309,19 +386,7 @@ let RV_Statistics = (function(){
 							//Busca apenas os 'tipo_parada' de 'Na Semana'
 							if (simulation['tipo_parada'][tp].tipo_parada.includes('s')){
 								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
-									current: 0.0,
-									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
-								}
-							}
-						}
-					}
-					//Inicia a condição do Tipo Parada (No Mes)
-					if (stop_tipo_parada['mes'].condicao !== current_month_year){
-						stop_tipo_parada['mes']['condicao'] = current_month_year;
-						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
-							//Busca apenas os 'tipo_parada' de 'No Mes'
-							if (simulation['tipo_parada'][tp].tipo_parada.includes('m')){
-								stop_tipo_parada['mes']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									dia: { condicao: null, current: 0.0 },
 									current: 0.0,
 									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
 								}
@@ -433,19 +498,7 @@ let RV_Statistics = (function(){
 							//Busca apenas os 'tipo_parada' de 'Na Semana'
 							if (simulation['tipo_parada'][tp].tipo_parada.includes('s')){
 								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
-									current: 0.0,
-									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
-								}
-							}
-						}
-					}
-					//Inicia a condição do Tipo Parada (No Mes)
-					if (stop_tipo_parada['mes'].condicao !== current_month_year){
-						stop_tipo_parada['mes']['condicao'] = current_month_year;
-						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
-							//Busca apenas os 'tipo_parada' de 'No Mes'
-							if (simulation['tipo_parada'][tp].tipo_parada.includes('m')){
-								stop_tipo_parada['mes']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
+									dia: { condicao: null, current: 0.0 },
 									current: 0.0,
 									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
 								}

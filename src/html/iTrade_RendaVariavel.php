@@ -112,54 +112,43 @@
 													<div class="iSelectKami dropdown bootstrap-select w-100" name="tipo_parada">
 														<button class="form-control form-control-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">Tipos de Parada</button>
 														<ul class="dropdown-menu overflow-auto">
-															<li><h6 class="dropdown-header">No Dia / Semana / Mês</h6></li>
+															<li><h6 class="dropdown-header text-decoration-underline">No Dia</h6></li>
 															<li class="not-selectable">
 																<label class="text-muted fw-bold">N stops (Total)</label>
-																<div class="input-group">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="d1" name="valor_parada" onclick="this.select()" placeholder="Dia">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="s1" name="valor_parada" onclick="this.select()" placeholder="Sem">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="m1" name="valor_parada" onclick="this.select()" placeholder="Mes">
-																</div>
+																<input class="form-control form-control-sm" type="input" tipo_parada="d1" name="valor_parada" onclick="this.select()">
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">N stops (Sequencial)</label>
-																<div class="input-group">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="d2" name="valor_parada" onclick="this.select()" placeholder="Dia">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="s2" name="valor_parada" onclick="this.select()" placeholder="Sem">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="m2" name="valor_parada" onclick="this.select()" placeholder="Mes">
-																</div>
+																<label class="text-muted fw-bold">N stops (Sequencia)</label>
+																<input class="form-control form-control-sm" type="input" tipo_parada="d2" name="valor_parada" onclick="this.select()">
 															</li>
 															<li class="not-selectable">
 																<label class="text-muted fw-bold">R$ no Negativo</label>
-																<div class="input-group">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="d3" name="valor_parada" onclick="this.select()" placeholder="Dia">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="s3" name="valor_parada" onclick="this.select()" placeholder="Sem">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="m3" name="valor_parada" onclick="this.select()" placeholder="Mes">
-																</div>
+																<input class="form-control form-control-sm" type="input" tipo_parada="d3" name="valor_parada" onclick="this.select()">
 															</li>
 															<li class="not-selectable">
 																<label class="text-muted fw-bold">R$ de Perda Bruta</label>
-																<div class="input-group">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="d4" name="valor_parada" onclick="this.select()" placeholder="Dia">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="s4" name="valor_parada" onclick="this.select()" placeholder="Sem">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="m4" name="valor_parada" onclick="this.select()" placeholder="Mes">
-																</div>
+																<input class="form-control form-control-sm" type="input" tipo_parada="d4" name="valor_parada" onclick="this.select()">
 															</li>
 															<li class="not-selectable">
 																<label class="text-muted fw-bold">R no Negativo</label>
-																<div class="input-group">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="d5" name="valor_parada" onclick="this.select()" placeholder="Dia">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="s5" name="valor_parada" onclick="this.select()" placeholder="Sem">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="m5" name="valor_parada" onclick="this.select()" placeholder="Mes">
-																</div>
+																<input class="form-control form-control-sm" type="input" tipo_parada="d5" name="valor_parada" onclick="this.select()">
 															</li>
 															<li class="not-selectable">
 																<label class="text-muted fw-bold">R de Perda Bruta</label>
-																<div class="input-group">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="d6" name="valor_parada" onclick="this.select()" placeholder="Dia">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="s6" name="valor_parada" onclick="this.select()" placeholder="Sem">
-																	<input class="form-control form-control-sm" type="input" tipo_parada="m6" name="valor_parada" onclick="this.select()" placeholder="Mes">
-																</div>
+																<input class="form-control form-control-sm" type="input" tipo_parada="d6" name="valor_parada" onclick="this.select()">
+															</li>
+															<li><h6 class="dropdown-header text-decoration-underline">Na Semana</h6></li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">N dias stop cheio (Total)</label>
+																<input class="form-control form-control-sm" type="input" tipo_parada="s1" name="valor_parada" onclick="this.select()">
+															</li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">N dias stop (Total)</label>
+																<input class="form-control form-control-sm" type="input" tipo_parada="s2" name="valor_parada" onclick="this.select()">
+															</li>
+															<li class="not-selectable">
+																<label class="text-muted fw-bold">N dias stop (Sequencia)</label>
+																<input class="form-control form-control-sm" type="input" tipo_parada="s3" name="valor_parada" onclick="this.select()">
 															</li>
 														</ul>
 													</div>

@@ -398,6 +398,7 @@ let Renda_variavel = (function(){
 				gerenciamento_in_operacoes = {},
 				cenarios_in_operacoes = {},
 				cenarios_by_nome = {},
+				data_in_operacoes = {},
 				select_options_html = '';
 			//Monta uma lista de cenarios usando o nome como chave
 			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
@@ -407,6 +408,7 @@ let Renda_variavel = (function(){
 				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
 				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
 				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
+				data_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].data] = null;
 			}
 			//////////////////////////////////
 			//Filtro da Data
@@ -416,7 +418,7 @@ let Renda_variavel = (function(){
 			me.filters.data = renda_variavel__search.find('input[name="data"]');
 			me.filters.data.on('apply.daterangepicker', function (ev, picker){
 				//Apaga o filter de Data se a data for todo o periodo
-				if (picker.startDate.isSame(picker.minDate) && picker.endDate.isSame(picker.maxDate)){
+				if (picker.startDate.isSame(picker.minDate, 'day') && picker.endDate.isSame(picker.maxDate, 'day')){
 					_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', '');
 					_lista__instancias_arcabouco.updateInstancia_Filters('data_final', '');
 				}
@@ -435,9 +437,13 @@ let Renda_variavel = (function(){
 				startDate: ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : data_inicial,
 				endDate: ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : data_final,
 				maxDate: data_final,
-				isInvalidDate: function(date) {
+				isInvalidDate: function (date){
 					//Desabilita os FDS
 					return (date.day() == 0 || date.day() == 6);
+				},
+				isCustomDate: function (date){
+					if (date.format('YYYY-MM-DD') in data_in_operacoes)
+						return 'has-bt-data';
 				},
 				locale: {
 					format: 'DD/MM/YYYY',
@@ -868,7 +874,11 @@ let Renda_variavel = (function(){
 		update: function (){
 			let me = this,
 				lista_ops__search = $(document.getElementById('lista_ops__search')),
-				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id');
+				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+				data_in_operacoes = {};
+			//Captura dados das operações para montar os filtros
+			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco])
+				data_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].data] = null;
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
@@ -892,6 +902,10 @@ let Renda_variavel = (function(){
 					isInvalidDate: function(date) {
 						//Desabilita os FDS
 						return (date.day() == 0 || date.day() == 6);
+					},
+					isCustomDate: function (date){
+						if (date.format('YYYY-MM-DD') in data_in_operacoes)
+							return 'has-bt-data';
 					},
 					locale: {
 						format: 'DD/MM/YYYY',
