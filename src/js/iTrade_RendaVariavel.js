@@ -431,6 +431,7 @@ let Renda_variavel = (function(){
 				ranges: {
 					'Tudo': [data_inicial, data_final]
 				},
+				linkedCalendars: false,
 				alwaysShowCalendars: true,
 				showDropdowns: true,
 				minDate: data_inicial,
@@ -893,6 +894,7 @@ let Renda_variavel = (function(){
 					ranges: {
 						'Tudo': [data_inicial, data_final]
 					},
+					linkedCalendars: false,
 					alwaysShowCalendars: true,
 					showDropdowns: true,
 					minDate: data_inicial,

@@ -133,8 +133,11 @@ let RV_Statistics = (function(){
 			else if (tp_value === 's2'){
 				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
 					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0)
+						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0){
 							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
+								return false;
+						}
 						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current = 0.0;
 						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao = stop_tipo_parada['dia'].condicao;
 					}
@@ -147,8 +150,11 @@ let RV_Statistics = (function(){
 			else if (tp_value === 's3'){
 				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
 					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0)
+						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0){
 							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
+								return false;
+						}
 						else
 							stop_tipo_parada['sem']['tipo_parada'][tp_value].current = 0;
 						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current = 0.0;
@@ -168,18 +174,20 @@ let RV_Statistics = (function(){
 					//Se for um Stop
 					if (resultLiquido_operacao < 1)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
-				}
-				//Foi atingido o limite diário
-				else{
 					//Atualiza o 's1' os dias com stop cheio
 					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
-						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							}
 						}
 					}
-					return false;
 				}
+				//Foi atingido o limite diário
+				else
+					return false;
 			}
 			//Parada N Stops (Sequencia)
 			else if (tp_value === 'd2'){
@@ -189,34 +197,39 @@ let RV_Statistics = (function(){
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
 					else
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current = 0;
-				}
-				//Foi atingido o limite diário
-				else{
 					//Atualiza o 's1' os dias com stop cheio
 					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
-						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							}
 						}
 					}
-					return false;
 				}
+				//Foi atingido o limite diário
+				else
+					return false;
 			}
 			//Parada X Valor no Negativo
 			else if (tp_value === 'd3'){
-				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1))
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
 					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-				//Foi atingido o limite diário
-				else{
 					//Atualiza o 's1' os dias com stop cheio
 					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
-						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
+							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							}
 						}
 					}
-					return false;
 				}
+				//Foi atingido o limite diário
+				else
+					return false;
 			}
 			//Parada X Valor de Perda Bruta
 			else if (tp_value === 'd4'){
@@ -224,34 +237,39 @@ let RV_Statistics = (function(){
 					//Se for um Stop
 					if (resultLiquido_operacao < 1)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-				}
-				//Foi atingido o limite diário
-				else{
 					//Atualiza o 's1' os dias com stop cheio
 					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
-						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
+							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							}
 						}
 					}
-					return false;
 				}
+				//Foi atingido o limite diário
+				else
+					return false;
 			}
 			//Parada X R's no Negativo
 			else if (tp_value === 'd5' && simulation.R !== null){
-				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1))
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
 					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-				//Foi atingido o limite diário
-				else{
 					//Atualiza o 's1' os dias com stop cheio
 					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
-						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
+							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							}
 						}
 					}
-					return false;
 				}
+				//Foi atingido o limite diário
+				else
+					return false;
 			}
 			//Parada X R's de Perda Bruta
 			else if (tp_value === 'd6' && simulation.R !== null){
@@ -259,18 +277,20 @@ let RV_Statistics = (function(){
 					//Se for um Stop
 					if (resultLiquido_operacao < 1)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-				}
-				//Foi atingido o limite diário
-				else{
 					//Atualiza o 's1' os dias com stop cheio
 					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
-						if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-							stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-							stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
+							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							}
 						}
 					}
-					return false;
 				}
+				//Foi atingido o limite diário
+				else
+					return false;
 			}
 		}
 		return true;
