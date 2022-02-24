@@ -386,7 +386,8 @@ let Renda_variavel = (function(){
 			tipo_parada: null,
 			valor_parada: null,
 			valor_inicial: null,
-			R: null
+			R: null,
+			R_filter_ops: null
 		},
 		init: function (){
 			let me = this,
@@ -651,14 +652,19 @@ let Renda_variavel = (function(){
 				me.simulations.valor_inicial.val(dashboard_simulations['valor_inicial']);
 			me.simulations.valor_inicial.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
 			//////////////////////////////////
-			//Simulação de Simular R
+			//Simulação de Simular R e seu Filtro
 			//////////////////////////////////
 			me.simulations.R = renda_variavel__search.find('input[name="R"]');
+			me.simulations.R_filter_ops = renda_variavel__search.find('input[name="R_filter_ops"]');
 			me.simulations.R.change(function (){
 				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
+			me.simulations.R_filter_ops.change(function (){
+				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, (($(this).is(':checked')) ? '1' : ''));
+			});
 			if ('R' in dashboard_simulations)
 				me.simulations.R.val(dashboard_simulations['R']);
+			me.simulations.R_filter_ops.prop('checked', (('R_filter_ops' in dashboard_simulations) ? dashboard_simulations['R_filter_ops'] == '1' : false));
 			me.simulations.R.inputmask({alias: 'numeric', digitsOptional: false, digits: 2, rightAlign: false, placeholder: '0'});
 			return true;
 		},
@@ -790,9 +796,10 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			me.simulations.valor_inicial.val((('valor_inicial' in dashboard_simulations) ? dashboard_simulations['valor_inicial'] : ''));
 			//////////////////////////////////
-			//Simulação de Simular R
+			//Simulação de Simular R e seu Filtro
 			//////////////////////////////////
 			me.simulations.R.val((('R' in dashboard_simulations) ? dashboard_simulations['R'] : ''));
+			me.simulations.R_filter_ops.prop('checked', (('R_filter_ops' in dashboard_simulations) ? dashboard_simulations['R_filter_ops'] == '1' : false));
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////

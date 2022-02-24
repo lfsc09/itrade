@@ -158,6 +158,9 @@
 													<div class="input-group">
 														<input type="text" name="valor_inicial" class="form-control form-control-sm" onclick="this.select()" placeholder="Capital">
 														<input type="text" name="R" class="form-control form-control-sm" onclick="this.select()" placeholder="R">
+														<div class="input-group-text">
+															<input class="form-check-input m-0" type="checkbox" value="" name="R_filter_ops"><i class="fas fa-filter ms-2 text-muted"></i>
+														</div>
 														<input type="text" name="margem" class="form-control form-control-sm" onclick="this.select()" placeholder="Margem">
 													</div>
 												</div>
