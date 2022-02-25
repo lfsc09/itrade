@@ -363,7 +363,8 @@ let RV_Statistics = (function(){
 							resultado_op: (resultLiquido_operacao > 0 ? 1 : (resultLiquido_operacao < 0 ? -1 : 0)),
 							result_bruto: {
 								brl: resultBruto_operacao,
-								R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
+								R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--',
+								S: (op_resultBruto_Unitario['result'].brl != 0 ? divide(divide(op_resultBruto_Unitario['result'].brl, list[e].vol), op_resultBruto_Unitario['menor_alvo']) : 0),
 							},
 							result_liquido: {
 								brl: resultLiquido_operacao,
@@ -448,7 +449,8 @@ let RV_Statistics = (function(){
 								},
 								result_bruto: {
 									brl: resultBruto_operacao,
-									R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
+									R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--',
+									S: (op_resultBruto_Unitario['result'].brl != 0 ? divide(divide(op_resultBruto_Unitario['result'].brl, list[e].vol), op_resultBruto_Unitario['menor_alvo']) : 0),
 								},
 								result_liquido: {
 									brl: resultLiquido_operacao,
@@ -473,6 +475,7 @@ let RV_Statistics = (function(){
 									new_list[index]['prejuizo_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
 							}
 							new_list[index]['result_bruto']['brl'] += resultBruto_operacao;
+							new_list[index]['result_bruto']['S'] += (op_resultBruto_Unitario['result'].brl != 0 ? divide(divide(op_resultBruto_Unitario['result'].brl, list[e].vol), op_resultBruto_Unitario['menor_alvo']) : 0);
 							if (simulation.R !== null)
 								new_list[index]['result_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
 							new_list[index]['result_liquido']['brl'] += resultLiquido_operacao;
@@ -560,7 +563,8 @@ let RV_Statistics = (function(){
 								},
 								result_bruto: {
 									brl: resultBruto_operacao,
-									R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--'
+									R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--',
+									S: (op_resultBruto_Unitario['result'].brl != 0 ? divide(divide(op_resultBruto_Unitario['result'].brl, list[e].vol), op_resultBruto_Unitario['menor_alvo']) : 0),
 								},
 								result_liquido: {
 									brl: resultLiquido_operacao,
@@ -585,6 +589,7 @@ let RV_Statistics = (function(){
 									new_list[index]['prejuizo_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
 							}
 							new_list[index]['result_bruto']['brl'] += resultBruto_operacao;
+							new_list[index]['result_bruto']['S'] += (op_resultBruto_Unitario['result'].brl != 0 ? divide(divide(op_resultBruto_Unitario['result'].brl, list[e].vol), op_resultBruto_Unitario['menor_alvo']) : 0);
 							if (simulation.R !== null)
 								new_list[index]['result_bruto']['R'] += divide(resultBruto_operacao, simulation.R);
 							new_list[index]['result_liquido']['brl'] += resultLiquido_operacao;
@@ -606,13 +611,15 @@ let RV_Statistics = (function(){
 	let calculate_op_result = function (op, simulation){
 		if (op.gerenciamento_acoes && op.gerenciamento_acoes.length){
 			let maior_stop__gerenciamento = Math.min(...op.gerenciamento_acoes),
+				menor_alvo_gerenciamento = Math.min(...op.gerenciamento_acoes.filter(v => v > 0)),
 				maior_alvo__gerenciamento = Math.max(...op.gerenciamento_acoes);
 			return {
 				//Resultado com apenas 1 contrato (Sem escalada)
 				result: { brl: (op.resultado / (op.cts / (op.escalada + 1))) },
 				stop: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_stop__gerenciamento) },
 				stop_c_cts: { brl: op.vol * op.cts * op.ativo_valor_tick * Math.abs(maior_stop__gerenciamento) },
-				alvo: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_alvo__gerenciamento) }
+				alvo: { brl: op.vol * op.ativo_valor_tick * Math.abs(maior_alvo__gerenciamento) },
+				menor_alvo: menor_alvo_gerenciamento
 			}
 		}
 		else{
@@ -621,7 +628,8 @@ let RV_Statistics = (function(){
 				result: { brl: 0 },
 				stop: { brl: 0 },
 				stop_c_cts: { brl: 0 },
-				alvo: { brl: 0 }
+				alvo: { brl: 0 },
+				menor_alvo: 0
 			}
 		}
 	}
@@ -780,6 +788,8 @@ let RV_Statistics = (function(){
 			result__lucro_R: 0.0,
 			//Lucro total % das operações (Com base em um valor Inicial)
 			result__lucro_perc: 0.0,
+			//Lucro em Scalps
+			result__lucro_S: 0.0,
 			//Lucro médio no periodo em R$ das operações
 			result__lucro_medio_brl: 0.0,
 			//Lucro médio no periodo em R das operações
@@ -936,6 +946,8 @@ let RV_Statistics = (function(){
 				_temp__table_stats['dias__unicos'][_ops[o].data] = null;
 				//Para a Vol média
 				_dashboard_ops__table_stats['stats__media_vol'] += _ops[o].vol;
+				//Para o lucro em S
+				_dashboard_ops__table_stats['result__lucro_S'] += _ops[o].result_bruto['S'];
 				if (_ops[o].hora !== '00:00:00'){
 					let round_time = moment(_ops[o].hora, 'HH:mm:ss').startOf('hour').format('HH:mm');
 					if (!(round_time in _temp__table_stats['horas__unicas']))
@@ -1051,6 +1063,7 @@ let RV_Statistics = (function(){
 							result__lucro_brl: 0.0,
 							result__lucro_R: 0.0,
 							result__lucro_perc: 0.0,
+							result__lucro_S: 0.0,
 							result__mediaGain_brl: 0.0,
 							result__mediaGain_R: 0.0,
 							result__mediaGain_perc: 0.0,
@@ -1080,6 +1093,7 @@ let RV_Statistics = (function(){
 					}
 					_temp__table_stats__byCenario[_ops[o].cenario]['dias__unicos'][_ops[o].data] = null;
 					_dashboard_ops__table_stats__byCenario[_ops[o].cenario]['trades__total']++;
+					_dashboard_ops__table_stats__byCenario[_ops[o].cenario]['result__lucro_S'] += _ops[o].result_bruto['S'];
 					//Se for uma operação 'Positiva'
 					if (_ops[o].resultado_op === 1){
 						_dashboard_ops__table_stats__byCenario[_ops[o].cenario]['trades__positivo']++;
@@ -1316,6 +1330,8 @@ let RV_Statistics = (function(){
 					_temp__table_stats['horas__unicas'][day_of_week] = { result: 0.0, qtd: 0 };
 				_temp__table_stats['horas__unicas'][day_of_week]['result'] += _ops[o].result_liquido['brl'];
 				_temp__table_stats['horas__unicas'][day_of_week]['qtd']++;
+				//Para o lucro em S
+				_dashboard_ops__table_stats['result__lucro_S'] += _ops[o].result_bruto['S'];
 				//Se for uma operação 'Positiva'
 				if (_ops[o].resultado_op === 1){
 					_dashboard_ops__table_stats['trades__positivo']++;
@@ -1570,6 +1586,8 @@ let RV_Statistics = (function(){
 					_temp__table_stats['horas__unicas'][month] = { result: 0.0, qtd: 0 };
 				_temp__table_stats['horas__unicas'][month]['result'] += _ops[o].result_liquido['brl'];
 				_temp__table_stats['horas__unicas'][month]['qtd']++;
+				//Para o lucro em S
+				_dashboard_ops__table_stats['result__lucro_S'] += _ops[o].result_bruto['S'];
 				//Se for uma operação 'Positiva'
 				if (_ops[o].resultado_op === 1){
 					_dashboard_ops__table_stats['trades__positivo']++;
