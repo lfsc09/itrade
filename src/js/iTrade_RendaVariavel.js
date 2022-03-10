@@ -1244,6 +1244,7 @@ let Renda_variavel = (function(){
 		'1': [
 			{name: 'trade__seq', orderable: true},
 			{name: 'trade__data', orderable: true, type: 'br-date'},
+			{name: 'trade__hora', orderable: true, type: 'time'},
 			{name: 'trade__cenario', orderable: true},
 			{name: 'trade__cts', orderable: true},
 			{name: 'result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
@@ -1280,6 +1281,7 @@ let Renda_variavel = (function(){
 			let classes_by_column = {
 				trade__seq: 'text-muted fw-bold',
 				trade__data: 'text-muted fw-bold',
+				trade__hora: 'text-muted fw-bold',
 				trade__cenario: 'fw-bold',
 				trade__ops: 'fw-bold',
 				trade__cts: 'fw-bold',
@@ -1300,7 +1302,7 @@ let Renda_variavel = (function(){
 		info: false,
 		dom: '<"container-fluid p-0"<"row"<"col-12"<"card rounded-3 shadow-sm"<"card-body py-2 d-flex justify-content-between align-items-center head"fp>>>><"row mt-2"<"col-12"<"card rounded-3 shadow-sm"<"card-body body"t>>>>>',
 		order: [[ 0, 'desc' ]],
-		pageLength: 12,
+		pageLength: 21,
 		pagingType: 'input'
 	}
 	////////////////////////////////////////////////////////////////////////////////////
@@ -3278,6 +3280,7 @@ let Renda_variavel = (function(){
 				html += `<tr>`+
 						`<th>#</th>`+
 						`<th>Data</th>`+
+						`<th>Hora</th>`+
 						`<th>Cenário</th>`+
 						`<th>Cts</th>`+
 						`<th>Bruto BRL</th>`+
@@ -3320,6 +3323,7 @@ let Renda_variavel = (function(){
 					html += `<tr>`+
 							`<td name="trade__seq">${trades[o].trade__seq}</td>`+
 							`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
+							`<td name="trade__hora">${trades[o].trade__hora}</td>`+
 							`<td name="trade__cenario">${trades[o].trade__cenario}</td>`+
 							`<td name="trade__cts">${trades[o].trade__cts}</td>`+
 							`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
@@ -3367,6 +3371,7 @@ let Renda_variavel = (function(){
 					data.push([
 						trades[o].trade__seq,
 						Global.convertDate(trades[o].trade__data),
+						trades[o].trade__hora,
 						trades[o].trade__cenario,
 						trades[o].trade__cts,
 						trades[o].result_bruto__brl,

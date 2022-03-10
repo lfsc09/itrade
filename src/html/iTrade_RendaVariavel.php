@@ -185,12 +185,23 @@
 							</div>
 							<div class="row mt-4">
 								<!-- Tabela de Trades -->
-								<div class="col-5" id="dashboard_ops__table_trades__place">
-								</div>
-								<!-- Grafico Trades Resultados Normalizado -->
-								<div class="col-7">
-									<div class="card rounded-3 shadow-sm">
-										<div class="card-body" id="dashboard_ops__chart_resultadoNormalizado"></div>
+								<div class="col-8" id="dashboard_ops__table_trades__place"></div>
+								<div class="col-4">
+									<!-- Graficos Horario -->
+									<div class="row">
+										<div class="col-12">
+											<div class="card rounded-3 shadow-sm">
+												<div class="card-body" id="dashboard_ops__chart_resultadoPorHorario"></div>
+											</div>
+										</div>
+									</div>
+									<!-- Graficos Sequencia de Result. -->
+									<div class="row mt-3">
+										<div class="col-12">
+											<div class="card rounded-3 shadow-sm">
+												<div class="card-body" id="dashboard_ops__chart_sequenciaResults"></div>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -203,31 +214,16 @@
 								</div>
 							</div>
 							<div class="row mt-3">
-								<!-- Seção de Monte Carlo -->
-								<div class="col-5">
-								</div>
+								<!-- Grafico Trades Resultados Normalizado -->
 								<div class="col-7">
-									<div class="row">
-										<!-- Graficos Horario -->
-										<div class="col-6">
-											<div class="card rounded-3 shadow-sm">
-												<div class="card-body" id="dashboard_ops__chart_resultadoPorHorario"></div>
-											</div>
-										</div>
-										<!-- Graficos Sequencia de Result. -->
-										<div class="col-6">
-											<div class="card rounded-3 shadow-sm">
-												<div class="card-body" id="dashboard_ops__chart_sequenciaResults"></div>
-											</div>
-										</div>
+									<div class="card rounded-3 shadow-sm">
+										<div class="card-body" id="dashboard_ops__chart_resultadoNormalizado"></div>
 									</div>
-									<div class="row mt-3">
-										<!-- Graficos Histórico de Drawdown -->
-										<div class="col-12">
-											<div class="card rounded-3 shadow-sm">
-												<div class="card-body" id="dashboard_ops__chart_drawdown"></div>
-											</div>
-										</div>
+								</div>
+								<!-- Graficos Histórico de Drawdown -->
+								<div class="col-5">
+									<div class="card rounded-3 shadow-sm">
+										<div class="card-body" id="dashboard_ops__chart_drawdown"></div>
 									</div>
 								</div>
 							</div>

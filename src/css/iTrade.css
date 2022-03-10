@@ -385,11 +385,11 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_stats__byCenario tbody tr td:nth-child(17) {width: 4%}
 #dashboard_ops__table_stats__byCenario tbody tr td:nth-child(18) {width: 4%}
 #dashboard_ops__table_trades_wrapper div.card-body.head {height: 50px}
-#dashboard_ops__table_trades_wrapper div.card-body.body {height: 479px}
+#dashboard_ops__table_trades_wrapper div.card-body.body {height: 708px}
 #dashboard_ops__chart_resultadoNormalizado {height: 539px}
 #dashboard_ops__chart_evolucaoPatrimonial {height: 539px}
-#dashboard_ops__chart_resultadoPorHorario {height: 450px}
-#dashboard_ops__chart_sequenciaResults {height: 450px}
+#dashboard_ops__chart_resultadoPorHorario {height: 375px}
+#dashboard_ops__chart_sequenciaResults {height: 375px}
 #dashboard_ops__chart_drawdown {height: 450px}
 #dashboard_ops__table_trades {font-size: 11px}
 #dashboard_ops__table_trades_filter {font-size: 14px}

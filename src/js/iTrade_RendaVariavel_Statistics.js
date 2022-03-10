@@ -928,6 +928,8 @@ let RV_Statistics = (function(){
 						trade__seq: _temp__table_stats['i_seq']++,
 						//Data do trade
 						trade__data: _ops[o].data,
+						//Hora do trade
+						trade__hora: _ops[o].hora,
 						//Cenario do trade
 						trade__cenario: _ops[o].cenario,
 						//Contratos usados
