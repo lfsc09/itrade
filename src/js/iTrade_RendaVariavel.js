@@ -4,8 +4,6 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Renda Variavel --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
-	//Controla qual section esta sendo mostrada: 'dashboard_ops__section', 'analise_obs__section'
-	let _renda_variavel__section = 'dashboard_ops__section';
 	//////////////////////////////////
 	//Usuários
 	//////////////////////////////////
@@ -62,118 +60,102 @@ let Renda_variavel = (function(){
 			//Atualiza o objeto
 			data['usuarios'].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
 			this.arcaboucos[data.id] = data;
-			_lista__instancias_arcabouco.updateArcabouco_Info(data.id);
+			_instancia_arcabouco.updateArcabouco_Info(data.id);
 		},
 		remove: function (id){
 			//Atualiza o objeto
 			delete this.arcaboucos[id];
 			//Atualiza na lista de instancias
-			return _lista__instancias_arcabouco.removeAll_by_idArcabouco(id);
+			return _instancia_arcabouco.removeAll_by_idArcabouco(id);
 		}
 	}
 	//////////////////////////////////
 	//Cenários
 	//////////////////////////////////
-	//Controla a lista de cenários por arcabouço baixados
+	//Controla a lista de cenários do arcabouço selecionado
 	let _lista__cenarios = {
-		//Lista de cenarios por arcabouço
+		//Lista de cenarios do arcabouço
 		cenarios: {},
 		create: function (data){
-			let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id');
 			//Atualiza o objeto
-			this.cenarios[selected_inst_arcabouco] = {};
+			this.cenarios = {};
 			for (let cn in data)
-				this.cenarios[selected_inst_arcabouco][data[cn].id] = data[cn];
+				this.cenarios[data[cn].id] = data[cn];
 		},
 		update: function (data){
 			//Atualiza o objeto
-			this.cenarios[_lista__instancias_arcabouco.getSelected('id')][data.id] = data;
+			this.cenarios[data.id] = data;
 		},
 		remove: function (id){
 			//Atualiza o objeto
-			delete this.cenarios[_lista__instancias_arcabouco.getSelected('id')][id];
+			delete this.cenarios[id];
 		}
 	}
 	//////////////////////////////////
 	//Operações
 	//////////////////////////////////
-	//Controla a lista de operações por arcabouço baixados
+	//Controla a lista de operações da instancia
 	let	_lista__operacoes = {
-		//Lista de operações por arcabouço
-		operacoes: {},
+		//Lista de operacoes
+		operacoes: [],
 		update: function (data){
 			//Atualiza o Array
-			this.operacoes[_lista__instancias_arcabouco.getSelected('id')] = data;
+			this.operacoes = data;
 		}
 	}
 	//////////////////////////////////
-	//Instancias de Arcabouços
+	//Instancias de Arcabouços e Operações
 	//////////////////////////////////
-	//Controla a lista de instancias de arcabouços selecionadas
-	let	_lista__instancias_arcabouco = {
-		//Lista de instancias de arcabouços selecionadas
-		instancias: [],
-		//Lista de cores para cada instancia na lista
+	//Controla a instancia de arcabouço selecionada
+	let	_instancia_arcabouco = {
+		//Instancia de arcabouço selecionada
+		instancia: {},
+		//Cores para a instancia
 		colors: {
-			class: ['--bs-blue', '--bs-indigo', '--bs-green', '--bs-orange', '--bs-yellow'],
-			code: ['#0d6efd', '#6610f2', '#198754', '#fd7e14', '#ffc107'],
-			code_transparent: ['rgba(13, 110, 253, 0.1)', 'rgba(102, 16, 242, 0.2)', 'rgba(25, 135, 84, 0.2)', 'rgba(253, 126, 20, 0.2)', 'rgba(255, 193, 7, 0.2)']
+			// class: ['--bs-blue', '--bs-indigo', '--bs-green', '--bs-orange', '--bs-yellow'],
+			// code: ['#0d6efd', '#6610f2', '#198754', '#fd7e14', '#ffc107'],
+			// code_transparent: ['rgba(13, 110, 253, 0.1)', 'rgba(102, 16, 242, 0.2)', 'rgba(25, 135, 84, 0.2)', 'rgba(253, 126, 20, 0.2)', 'rgba(255, 193, 7, 0.2)']
+			class: '--bs-blue',
+			code: '#0d6efd',
+			code_transparent: 'rgba(13, 110, 253, 0.1)'
 		},
 		/*
-			Inicia a lista de instancias:
+			Inicia a instancia:
 				- Inicia do zero se não haver nada no sessionStorage.
-					- Pega o primeiro arcabouço e joga na lista.
+					- Pega o primeiro arcabouço.
 					- Inicia o arcabouço section com os cenarios e operações desse arcabouço.
 					- Atualiza o _lista__operacoes.operacoes e _lista__cenarios.cenarios.
 				- Se houver algo no sessionStorage pega oque tem la.
-					- Verifica quais instancias devem ser removidas, caso seus arcabouços não existam mais.
-						- Se nao sobrou nenhuma na lista, inicia como se fosse do zero.
-						- Senão inicia com a instancia selecionada.
-							 - Se os dados trazidos são do arcabouço da instancia, inicia com eles.
-							 	- E Atualiza o _lista__operacoes.operacoes e _lista__cenarios.cenarios.
-						 	- Senão dai baixa eles, inicia dai do arcabouço section e adiciona eles em _lista__operacoes.operacoes e _lista__cenarios.cenarios.
+					- Verifica se a instancia deve ser removida, caso seu arcabouço não exista mais.
+						- Inicia como se fosse do zero.
+					- Senão inicia com a instancia selecionada.
+						- Se os dados trazidos são do arcabouço da instancia, inicia com eles.
+					 	- Senão dai re-baixa os dados corretos.
 		*/
 		start: function (allData){
-			this.instancias = Global.browserStorage__Sync.get('instancias', 'sessionStorage', 'Array');
-			//Se ha instancias no sessionStorage
-			if (this.instancias.length){
-				//Verifica quais instancias devem ser removidas
-				for (let i in this.instancias){
-					if (!(this.instancias[i].id) in _lista__arcaboucos.arcaboucos)
-						this.instancias.splice(i, 1);
-				}
-				//Se há ainda alguma instancia
-				if (this.instancias.length){
-					//Verifica se há alguma instancia selecionada depois da remoção, se não há seleciona a primeira
-					let instancia_selected_index = null;
-					for (let i in this.instancias){
-						if (this.instancias[i].selected)
-							instancia_selected_index = i;
-					}
-					if (instancia_selected_index === null){
-						this.instancias[0].selected = true;
-						instancia_selected_index = 0;
-					}
-					rebuild__instanciasArcabouco_HTML();
-					Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
+			this.instancia = Global.browserStorage__Sync.get('instancia', 'sessionStorage');
+			//Se ha instancia no sessionStorage
+			if (!Global.isObjectEmpty(this.instancia)){
+				//Verifica se o arcabouço da instancia ainda existe
+				if (!(this.instancia.id) in _lista__arcaboucos.arcaboucos)
+					this.instancia = {};
+				//Se ainda existe
+				if (!Global.isObjectEmpty(this.instancia)){
+					rebuild__instanciaArcabouco_HTML();
 					//Verifica se os dados (cenarios + operacoes) são do arcabouço da instancia selecionada
-					if (this.instancias[instancia_selected_index].id === allData['arcaboucos'][0].id){
+					if (this.instancia.id === allData['arcaboucos'][0].id){
 						//Inicia o arcabouço section com os cenarios e operações que vieram.
 						_lista__cenarios.create(allData['cenarios']);
 						_lista__operacoes.update(allData['operacoes']);
 						//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
 						if (_renda_variavel__search.init()){
 							//Constroi o dashboard_ops section
-							if (_renda_variavel__section === 'dashboard_ops__section')
-								rebuildDashboard_ops();
-							//Ou constroi o analise_ops section
-							else if (_renda_variavel__section === 'analise_obs__section')
-								rebuildAnalise_obs();
+							rebuildDashboard_ops();
 						}
 					}
 					else{
 						Global.connect({
-							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: this.instancias[instancia_selected_index].id}},
+							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: this.instancia.id}},
 							success: function (result){
 								if (result.status){
 									//Inicia o arcabouço section com os cenarios e operações que vieram.
@@ -182,11 +164,7 @@ let Renda_variavel = (function(){
 									//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
 									if (_renda_variavel__search.init()){
 										//Constroi o dashboard_ops section
-										if (_renda_variavel__section === 'dashboard_ops__section')
-											rebuildDashboard_ops();
-										//Ou constroi o analise_ops section
-										else if (_renda_variavel__section === 'analise_obs__section')
-											rebuildAnalise_obs();
+										rebuildDashboard_ops();
 									}
 								}
 								else
@@ -196,175 +174,94 @@ let Renda_variavel = (function(){
 					}
 				}
 			}
-			//Se a lista de instancias ta vazia, inicia do Zero
-			if (this.instancias.length === 0){
+			//Se não há uma instancia ainda, inicia do Zero
+			if (Global.isObjectEmpty(this.instancia)) {
 				//Pega o primeiro arcabouço e joga na lista.
-				this.instancias.push({
-					instancia: Global._random.str('i'),
+				this.instancia = {
 					id: allData['arcaboucos'][0].id,
 					nome: allData['arcaboucos'][0].nome,
-					color: this.colors.class[0],
-					chartColor: this.colors.code[0],
-					chartColor_Transparent: this.colors.code_transparent[0],
-					selected: true,
+					color: this.colors.class,
+					chartColor: this.colors.code,
+					chartColor_Transparent: this.colors.code_transparent,
 					filters: {},
 					simulations: {}
-				});
-				rebuild__instanciasArcabouco_HTML();
-				Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
+				};
+				rebuild__instanciaArcabouco_HTML();
+				Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
 				//Inicia o arcabouço section com os cenarios e operações desse arcabouço.
 				_lista__cenarios.create(allData['cenarios']);
 				_lista__operacoes.update(allData['operacoes']);
 				//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
 				if (_renda_variavel__search.init()){
 					//Constroi o dashboard_ops section
-					if (_renda_variavel__section === 'dashboard_ops__section')
-						rebuildDashboard_ops();
-					//Ou constroi o analise_ops section
-					else if (_renda_variavel__section === 'analise_obs__section')
-						rebuildAnalise_obs();
+					rebuildDashboard_ops();
 				}
 			}
 		},
-		//Retorna a instancia selecionada ou um atributo da instancia selecionada
-		getSelected: function (key = ''){
-			for (let i in this.instancias){
-				if (this.instancias[i].selected){
-					if (key !== '')
-						return this.instancias[i][key];
-					return this.instancias[i];
-				}
+		//Retorna a instancia ou um atributo da instancia
+		get: function (key = ''){
+			if (!Global.isObjectEmpty(this.instancia)){
+				if (key !== '')
+					return this.instancia[key];
+				return this.instancia;
 			}
 			return null;
 		},
-		//Muda o estado de uma instancia para selecionado
-		setSelected: function (id_inst){
-			for (let i in this.instancias)
-				this.instancias[i].selected = (this.instancias[i].instancia === id_inst);
-			rebuild__instanciasArcabouco_HTML();
-			Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
-		},
-		//Adiciona uma nova instancia na lista
-		add: function (inst){
-			//Não cria mais depois do limite especificado
-			if ((this.instancias.length !== 0 && this.instancias.length === this.colors.class.length) || !('id' in inst))
+		//Seleciona uma nova instancia
+		select: function (inst){
+			//Não gera nova instancia se é do mesmo arcabouço
+			if (!('id' in inst) || inst.id === this.instancia.id)
 				return false;
-			//De-seleciona quem estiver selecionado
-			if (('selected' in inst) && inst.selected){
-				for (let i in this.instancias)
-					this.instancias[i].selected = false;
-			}
 			//Nova instancia com os dados passados
-			let new_inst = {
-				instancia: Global._random.str('i'),
+			this.instancia = {
 				id: inst.id,
 				nome: inst.nome || '----',
-				color: this.colors.class[this.instancias.length],
-				chartColor: this.colors.code[this.instancias.length],
-				chartColor_Transparent: this.colors.code_transparent[this.instancias.length],
-				selected: inst.selected || false,
+				color: this.colors.class,
+				chartColor: this.colors.code,
+				chartColor_Transparent: this.colors.code_transparent,
 				filters: {},
 				simulations: {}
 			}
-			//Adiciona na lista em memória
-			this.instancias.push(new_inst);
 			//Reconstroi o HTML
-			rebuild__instanciasArcabouco_HTML();
-			Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
+			rebuild__instanciaArcabouco_HTML();
+			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
 			return true;
 		},
 		//Atualiza os 'filters' da instancia selecionada
 		updateInstancia_Filters: function (key, value, rebuildSection = true){
-			for (let i in this.instancias){
-				if (this.instancias[i].selected){
-					if (value !== '')
-						this.instancias[i]['filters'][key] = value;
-					else
-						delete this.instancias[i]['filters'][key];
-				}
-			}
+			if (value !== '')
+				this.instancia['filters'][key] = value;
+			else
+				delete this.instancia['filters'][key];
 			if (rebuildSection){
 				//Constroi o dashboard_ops section
-				if (_renda_variavel__section === 'dashboard_ops__section')
-					rebuildDashboard_ops();
-				//Ou constroi o analise_ops section
-				else if (_renda_variavel__section === 'analise_obs__section')
-					rebuildAnalise_obs();
+				rebuildDashboard_ops();
 			}
-			Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
+			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
 		},
 		//Atualiza os 'simulations' da instancia selecionada
 		updateInstancia_Simulations: function (key, value, rebuildSection = true){
-			for (let i in this.instancias){
-				if (this.instancias[i].selected){
-					if (value !== '')
-						this.instancias[i]['simulations'][key] = value;
-					else
-						delete this.instancias[i]['simulations'][key];
-					break;
-				}
-			}
+			if (value !== '')
+				this.instancia['simulations'][key] = value;
+			else
+				delete this.instancia['simulations'][key];
 			if (rebuildSection){
 				//Constroi o dashboard_ops section
-				if (_renda_variavel__section === 'dashboard_ops__section')
-					rebuildDashboard_ops();
-				//Ou constroi o analise_ops section
-				else if (_renda_variavel__section === 'analise_obs__section')
-					rebuildAnalise_obs();
+				rebuildDashboard_ops();
 			}
-			Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
+			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
 		},
-		//Atualiza todas as instancias de um arcabouço da lista
+		//Atualiza a instancia selecionada
 		updateArcabouco_Info: function (id_arcabouco){
 			let was_updated = false;
-			for (let i in this.instancias){
-				if (this.instancias[i].id == id_arcabouco){
-					this.instancias[i].nome = _lista__arcaboucos.arcaboucos[id_arcabouco].nome;
-					was_updated = true;
-				}
+			if (this.instancia.id == id_arcabouco){
+				this.instancia.nome = _lista__arcaboucos.arcaboucos[id_arcabouco].nome;
+				was_updated = true;
 			}
 			if (was_updated){
-				rebuild__instanciasArcabouco_HTML();
-				Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
+				rebuild__instanciaArcabouco_HTML();
+				Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
 			}
-		},
-		//Remove uma instancia espeficica da lista
-		remove: function (id_inst){
-			for (let i in this.instancias){
-				if (this.instancias[i].instancia == id_inst){
-					//Não remover instancias selecionadas
-					if (this.instancias[i].selected)
-						return true;
-					this.instancias.splice(i, 1);
-				}
-			}
-			//Atualiza as cores
-			for (let i in this.instancias){
-				this.instancias[i].color = this.colors.class[i];
-				this.instancias[i].chartColor = this.colors.code[i];
-				this.instancias[i].chartColor_Transparent = this.colors.code_transparent[i];
-			}
-			rebuild__instanciasArcabouco_HTML();
-			Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
-		},
-		//Remove todas as instancias de um arcabouço da lista (Seleciona a próxima 1° da lista)
-		removeAll_by_idArcabouco: function (id_arcabouco){
-			let was_removed = false;
-			for (let i in this.instancias){
-				if (this.instancias[i].id == id_arcabouco){
-					this.instancias.splice(i, 1);
-					was_removed = true;
-				}
-			}
-			if (was_removed){
-				//Seleciona a nova primeira da lista se houver
-				if (this.instancias.length)
-					this.instancias[0].selected = true;
-				rebuild__instanciasArcabouco_HTML();
-				Global.browserStorage__Sync.set('instancias', this.instancias, 'sessionStorage');
-				return true;
-			}
-			return false;
 		}
 	}
 	//Possui os 'filters' e 'simulation' usados em 'renda_variavel__search'
@@ -392,9 +289,8 @@ let Renda_variavel = (function(){
 		init: function (){
 			let me = this,
 				renda_variavel__search = $(document.getElementById('renda_variavel__search')),
-				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				dashboard_filters = _instancia_arcabouco.get('filters'),
+				dashboard_simulations = _instancia_arcabouco.get('simulations'),
 				ativos_in_operacoes = {},
 				gerenciamento_in_operacoes = {},
 				cenarios_in_operacoes = {},
@@ -402,30 +298,30 @@ let Renda_variavel = (function(){
 				data_in_operacoes = {},
 				select_options_html = '';
 			//Monta uma lista de cenarios usando o nome como chave
-			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
-				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
+			for (let cn in _lista__cenarios.cenarios)
+				cenarios_by_nome[_lista__cenarios.cenarios[cn].nome] = _lista__cenarios.cenarios[cn].id;
 			//Captura dados das operações para montar os filtros
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
-				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
-				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
-				data_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].data] = null;
+			for (let op in _lista__operacoes.operacoes){
+				ativos_in_operacoes[_lista__operacoes.operacoes[op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[op].gerenciamento] = null;
+				cenarios_in_operacoes[_lista__operacoes.operacoes[op].cenario] = null;
+				data_in_operacoes[_lista__operacoes.operacoes[op].data] = null;
 			}
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
-			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
-				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial;
+			let	data_inicial = (_lista__operacoes.operacoes.length) ? Global.convertDate(_lista__operacoes.operacoes[0].data) : moment().format('DD/MM/YYYY'),
+				data_final = (_lista__operacoes.operacoes.length) ? Global.convertDate(_lista__operacoes.operacoes[_lista__operacoes.operacoes.length-1].data) : data_inicial;
 			me.filters.data = renda_variavel__search.find('input[name="data"]');
 			me.filters.data.on('apply.daterangepicker', function (ev, picker){
 				//Apaga o filter de Data se a data for todo o periodo
 				if (picker.startDate.isSame(picker.minDate, 'day') && picker.endDate.isSame(picker.maxDate, 'day')){
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', '');
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_final', '');
+					_instancia_arcabouco.updateInstancia_Filters('data_inicial', '');
+					_instancia_arcabouco.updateInstancia_Filters('data_final', '');
 				}
 				else{
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_inicial', picker.startDate.format('DD/MM/YYYY'));
-					_lista__instancias_arcabouco.updateInstancia_Filters('data_final', picker.endDate.format('DD/MM/YYYY'));
+					_instancia_arcabouco.updateInstancia_Filters('data_inicial', picker.startDate.format('DD/MM/YYYY'));
+					_instancia_arcabouco.updateInstancia_Filters('data_final', picker.endDate.format('DD/MM/YYYY'));
 				}
 			});
 			me.filters.data.daterangepicker({
@@ -481,7 +377,7 @@ let Renda_variavel = (function(){
 			});
 			me.filters.hora[0].noUiSlider.on('change', function (values, handle, unencoded, isTap, positions){
 				let handle_dic = ['hora_inicial', 'hora_final'];
-				_lista__instancias_arcabouco.updateInstancia_Filters(handle_dic[handle], moment(parseInt(values[handle])).format('HH:mm'));
+				_instancia_arcabouco.updateInstancia_Filters(handle_dic[handle], moment(parseInt(values[handle])).format('HH:mm'));
 			});
 			//////////////////////////////////
 			//Filtro do Ativo
@@ -500,7 +396,7 @@ let Renda_variavel = (function(){
 				}).on('loaded.bs.select', function (){
 					me.filters.ativo.parent().addClass('form-control');
 				}).on('changed.bs.select', function (){
-					_lista__instancias_arcabouco.updateInstancia_Filters('ativo', $(this).val());
+					_instancia_arcabouco.updateInstancia_Filters('ativo', $(this).val());
 				});
 			});
 			//////////////////////////////////
@@ -510,19 +406,19 @@ let Renda_variavel = (function(){
 			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
 			me.filters.gerenciamento = renda_variavel__search.find('select[name="gerenciamento"]');
 			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
-				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
+				_instancia_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
 			me.filters.gerenciamento.append(select_options_html).promise().then(function (){
 				if ('gerenciamento' in dashboard_filters)
 					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
 			});
 			me.filters.gerenciamento.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', $(this).val());
+				_instancia_arcabouco.updateInstancia_Filters('gerenciamento', $(this).val());
 			});
 			//////////////////////////////////
 			//Filtro de Cenario
 			//////////////////////////////////
 			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).sort((a, b) => (a.nome > b.nome) ? 1 : -1).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
+			select_options_html = Object.values(_lista__cenarios.cenarios).sort((a, b) => (a.nome > b.nome) ? 1 : -1).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
 			me.filters.cenario = renda_variavel__search.find('select[name="cenario"]');
 			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
 				let sessionStorage_data = {
@@ -531,7 +427,7 @@ let Renda_variavel = (function(){
 						observacoes: {}
 					}
 				}
-				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', sessionStorage_data, rebuildSection = false);
+				_instancia_arcabouco.updateInstancia_Filters('cenario', sessionStorage_data, rebuildSection = false);
 			}
 			me.filters.cenario.append(select_options_html).promise().then(function (){
 				me.filters.cenario.selectpicker({
@@ -545,7 +441,7 @@ let Renda_variavel = (function(){
 				}).on('loaded.bs.select', function (){
 					me.filters.cenario.parent().addClass('form-control');
 				}).on('changed.bs.select', function (){
-					let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
+					let dashboard_filters = _instancia_arcabouco.get('filters'),
 						sessionStorage_data = {};
 					$(this).find('option:selected').each(function (i, el){
 						sessionStorage_data[el.innerText] = {
@@ -553,21 +449,21 @@ let Renda_variavel = (function(){
 							observacoes: ('cenario' in dashboard_filters && el.innerText in dashboard_filters['cenario']) ? dashboard_filters['cenario'][el.innerText]['observacoes'] : {}
 						}
 					});
-					_lista__instancias_arcabouco.updateInstancia_Filters('cenario', sessionStorage_data);
-					rebuildSelect_Observacoes__content(_lista__instancias_arcabouco.getSelected('id'));
+					_instancia_arcabouco.updateInstancia_Filters('cenario', sessionStorage_data);
+					rebuildSelect_Observacoes__content();
 				});
 			});
 			//////////////////////////////////
 			//Filtro de Observacoes
 			//////////////////////////////////
 			me.filters.observacoes = renda_variavel__search.find('div[name="observacoes"]');
-			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
+			rebuildSelect_Observacoes__content();
 			//////////////////////////////////
 			//Simulação de Periodo de Calculo
 			//////////////////////////////////
 			me.simulations.periodo_calc = renda_variavel__search.find('select[name="periodo_calc"]');
 			me.simulations.periodo_calc.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
 			if ('periodo_calc' in dashboard_simulations)
 				me.simulations.periodo_calc.val(dashboard_simulations['periodo_calc']);
@@ -579,15 +475,15 @@ let Renda_variavel = (function(){
 				let value = $(this).val();
 				if (value === '1' || value === '3'){
 					me.simulations.cts.val('').prop('disabled', true);
-					_lista__instancias_arcabouco.updateInstancia_Simulations('cts', '');
+					_instancia_arcabouco.updateInstancia_Simulations('cts', '');
 				}
 				else
 					me.simulations.cts.prop('disabled', false);
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, value);
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, value);
 			});
 			me.simulations.cts = renda_variavel__search.find('input[name="cts"]');
 			me.simulations.cts.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
 			if ('tipo_cts' in dashboard_simulations)
 				me.simulations.tipo_cts.val(dashboard_simulations['tipo_cts']);
@@ -599,7 +495,7 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			me.simulations.usa_custo = renda_variavel__search.find('select[name="usa_custo"]');
 			me.simulations.usa_custo.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
 			if ('usa_custo' in dashboard_simulations)
 				me.simulations.usa_custo.val(dashboard_simulations['usa_custo']);
@@ -608,7 +504,7 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			me.simulations.ignora_erro = renda_variavel__search.find('select[name="ignora_erro"]');
 			me.simulations.ignora_erro.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
 			if ('ignora_erro' in dashboard_simulations)
 				me.simulations.ignora_erro.val(dashboard_simulations['ignora_erro']);
@@ -629,7 +525,7 @@ let Renda_variavel = (function(){
 				}
 			});
 			me.simulations.tipo_parada.find('input[name="valor_parada"]').change(function (){
-				let dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				let dashboard_simulations = _instancia_arcabouco.get('simulations'),
 					sessionStorage_data = [];
 				me.simulations.tipo_parada.find('input[name="valor_parada"]').each(function (i, el){
 					if (el.value !== '' && el.value > 0){
@@ -639,14 +535,14 @@ let Renda_variavel = (function(){
 						});
 					}
 				});
-				_lista__instancias_arcabouco.updateInstancia_Simulations('tipo_parada', sessionStorage_data);
+				_instancia_arcabouco.updateInstancia_Simulations('tipo_parada', sessionStorage_data);
 			});
 			//////////////////////////////////
 			//Simulação de Simular Capital
 			//////////////////////////////////
 			me.simulations.valor_inicial = renda_variavel__search.find('input[name="valor_inicial"]');
 			me.simulations.valor_inicial.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
 			if ('valor_inicial' in dashboard_simulations)
 				me.simulations.valor_inicial.val(dashboard_simulations['valor_inicial']);
@@ -657,10 +553,10 @@ let Renda_variavel = (function(){
 			me.simulations.R = renda_variavel__search.find('input[name="R"]');
 			me.simulations.R_filter_ops = renda_variavel__search.find('input[name="R_filter_ops"]');
 			me.simulations.R.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, $(this).val());
 			});
 			me.simulations.R_filter_ops.change(function (){
-				_lista__instancias_arcabouco.updateInstancia_Simulations(this.name, (($(this).is(':checked')) ? '1' : ''));
+				_instancia_arcabouco.updateInstancia_Simulations(this.name, (($(this).is(':checked')) ? '1' : ''));
 			});
 			if ('R' in dashboard_simulations)
 				me.simulations.R.val(dashboard_simulations['R']);
@@ -670,27 +566,26 @@ let Renda_variavel = (function(){
 		},
 		update: function (){
 			let me = this,
-				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-				dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-				dashboard_simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				dashboard_filters = _instancia_arcabouco.get('filters'),
+				dashboard_simulations = _instancia_arcabouco.get('simulations'),
 				ativos_in_operacoes = {},
 				gerenciamento_in_operacoes = {},
 				cenarios_in_operacoes = {},
 				cenarios_by_nome = {},
 				select_options_html = '';
 			//Monta uma lista de cenarios usando o nome como chave
-			for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
-				cenarios_by_nome[_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome] = _lista__cenarios.cenarios[selected_inst_arcabouco][cn].id;
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
-				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
-				cenarios_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].cenario] = null;
+			for (let cn in _lista__cenarios.cenarios)
+				cenarios_by_nome[_lista__cenarios.cenarios[cn].nome] = _lista__cenarios.cenarios[cn].id;
+			for (let op in _lista__operacoes.operacoes){
+				ativos_in_operacoes[_lista__operacoes.operacoes[op].ativo] = null;
+				gerenciamento_in_operacoes[_lista__operacoes.operacoes[op].gerenciamento] = null;
+				cenarios_in_operacoes[_lista__operacoes.operacoes[op].cenario] = null;
 			}
 			//////////////////////////////////
 			//Filtro da Data
 			//////////////////////////////////
-			let	data_inicial_total = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
-				data_final_total = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial_total,
+			let	data_inicial_total = (_lista__operacoes.operacoes.length) ? Global.convertDate(_lista__operacoes.operacoes[0].data) : moment().format('DD/MM/YYYY'),
+				data_final_total = (_lista__operacoes.operacoes.length) ? Global.convertDate(_lista__operacoes.operacoes[_lista__operacoes.operacoes.length-1].data) : data_inicial_total,
 				data_inicial = ('data_inicial' in dashboard_filters) ? dashboard_filters['data_inicial'] : data_inicial_total,
 				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : data_final_total;
 			me.filters.data.data('daterangepicker').range = {
@@ -719,7 +614,7 @@ let Renda_variavel = (function(){
 			let gerenciamento_in_operacoes__lista = Object.keys(gerenciamento_in_operacoes);
 			select_options_html = gerenciamento_in_operacoes__lista.reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
 			if (!('gerenciamento' in dashboard_filters) && gerenciamento_in_operacoes__lista.length)
-				_lista__instancias_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
+				_instancia_arcabouco.updateInstancia_Filters('gerenciamento', gerenciamento_in_operacoes__lista[0], rebuildSection = false);
 			me.filters.gerenciamento.empty().append(select_options_html).promise().then(function (){
 				if ('gerenciamento' in dashboard_filters)
 					me.filters.gerenciamento.val(dashboard_filters['gerenciamento']);
@@ -728,7 +623,7 @@ let Renda_variavel = (function(){
 			//Filtro de Cenario
 			//////////////////////////////////
 			let cenarios_in_operacoes__lista = Object.keys(cenarios_in_operacoes);
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).sort((a, b) => (a.nome > b.nome) ? 1 : -1).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
+			select_options_html = Object.values(_lista__cenarios.cenarios).sort((a, b) => (a.nome > b.nome) ? 1 : -1).reduce((p, c) => p + ((cenarios_in_operacoes__lista.includes(c.nome)) ? `<option value="${c.id}" ${((((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1 && p === '') || ('cenario' in dashboard_filters && c.nome in dashboard_filters['cenario'])) ? 'selected' : '' )}>${c.nome}</option>` : ``), '');
 			if ((!('cenario' in dashboard_filters) || Global.isObjectEmpty(dashboard_filters['cenario'])) && cenarios_in_operacoes__lista.length === 1){
 				let sessionStorage_data = {
 					[cenarios_in_operacoes__lista[0]]: {
@@ -736,7 +631,7 @@ let Renda_variavel = (function(){
 						observacoes: {}
 					}
 				}
-				_lista__instancias_arcabouco.updateInstancia_Filters('cenario', sessionStorage_data, rebuildSection = false);
+				_instancia_arcabouco.updateInstancia_Filters('cenario', sessionStorage_data, rebuildSection = false);
 			}
 			me.filters.cenario.empty().append(select_options_html).promise().then(function (){
 				me.filters.cenario.selectpicker('refresh');
@@ -744,7 +639,7 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			//Filtro de Observacoes
 			//////////////////////////////////
-			rebuildSelect_Observacoes__content(selected_inst_arcabouco);
+			rebuildSelect_Observacoes__content();
 			//////////////////////////////////
 			//Simulação de Periodo de Calculo
 			//////////////////////////////////
@@ -865,204 +760,6 @@ let Renda_variavel = (function(){
 	//Informa se o 'arcabouco_info' precisa ser reconstruido
 	let _arcabouco_info__needRebuild = false;
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------------- Lista Ops ------------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	//Informa se o 'list_ops' precisa ser reconstruido
-	let _list_ops__needRebuild = false;
-	//Variavel usada no controle de click, para saber se está pressionado o click ou não
-	let _lista_ops__table_DT_clickState = 0;
-	//Possui os filtros usados em 'lista_ops__search'
-	let _lista_ops__search = {
-		filters: {
-			data: null,
-			ativo: null,
-			cenario: null,
-			gerenciamento: null
-		},
-		update: function (){
-			let me = this,
-				lista_ops__search = $(document.getElementById('lista_ops__search')),
-				selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-				data_in_operacoes = {};
-			//Captura dados das operações para montar os filtros
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco])
-				data_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].data] = null;
-			//////////////////////////////////
-			//Filtro da Data
-			//////////////////////////////////
-			let	data_inicial = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][0].data) : moment().format('DD/MM/YYYY'),
-				data_final = (_lista__operacoes.operacoes[selected_inst_arcabouco].length) ? Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][_lista__operacoes.operacoes[selected_inst_arcabouco].length-1].data) : data_inicial;
-			if (me.filters.data === null){
-				me.filters.data = lista_ops__search.find('input[name="data"]');
-				me.filters.data.on('apply.daterangepicker', function (ev, picker){
-					$(document.getElementById("lista_ops__table")).DataTable().draw();
-				});
-				me.filters.data.daterangepicker({
-					ranges: {
-						'Tudo': [data_inicial, data_final]
-					},
-					linkedCalendars: false,
-					alwaysShowCalendars: true,
-					showDropdowns: true,
-					minDate: data_inicial,
-					startDate: data_inicial,
-					endDate: data_final,
-					maxDate: data_final,
-					isInvalidDate: function(date) {
-						//Desabilita os FDS
-						return (date.day() == 0 || date.day() == 6);
-					},
-					isCustomDate: function (date){
-						if (date.format('YYYY-MM-DD') in data_in_operacoes)
-							return 'has-bt-data';
-					},
-					locale: {
-						format: 'DD/MM/YYYY',
-						separator: ' - ',
-						applyLabel: 'Aplicar',
-						cancelLabel: 'Cancelar',
-						fromLabel: 'De',
-						toLabel: 'Até',
-						customRangeLabel: 'Custom',
-						weekLabel: 'S',
-						daysOfWeek: ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'],
-						monthNames: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
-					}
-				});
-			}
-			else{
-				me.filters.data.data('daterangepicker').ranges = {
-					'Tudo': [data_inicial, data_final]
-				}
-				me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
-				me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
-				me.filters.data.data('daterangepicker').setStartDate(data_inicial);
-				me.filters.data.data('daterangepicker').setEndDate(data_final);
-			}
-			let ativos_in_operacoes = {},
-				gerenciamento_in_operacoes = {},
-				select_options_html = '';
-			for (let op in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-				ativos_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].ativo] = null;
-				gerenciamento_in_operacoes[_lista__operacoes.operacoes[selected_inst_arcabouco][op].gerenciamento] = null;
-			}
-			//////////////////////////////////
-			//Filtro do Ativo
-			//////////////////////////////////
-			select_options_html = (Object.keys(ativos_in_operacoes)).reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
-			if (me.filters.ativo === null){
-				me.filters.ativo = lista_ops__search.find('select[name="ativo"]');
-				me.filters.ativo.append(select_options_html).promise().then(function (){
-					me.filters.ativo.selectpicker({
-						title: 'Ativo',
-						selectedTextFormat: 'count > 1',
-						actionsBox: true,
-						deselectAllText: 'Nenhum',
-						selectAllText: 'Todos',
-						style: '',
-						styleBase: 'form-control form-control-sm'
-					}).on('loaded.bs.select', function (){
-						me.filters.ativo.parent().addClass('form-control');
-					}).on('changed.bs.select', function (){
-						$(document.getElementById("lista_ops__table")).DataTable().draw();
-					});
-				});
-			}
-			else{
-				me.filters.ativo.empty().append(select_options_html).promise().then(function (){
-					me.filters.ativo.selectpicker('refresh');
-				});
-			}
-			//////////////////////////////////
-			//Filtro de Cenario
-			//////////////////////////////////
-			select_options_html = Object.values(_lista__cenarios.cenarios[selected_inst_arcabouco]).sort((a, b) => (a.nome > b.nome) ? 1 : -1).reduce((p, c) => p + `<option value="${c.nome}">${c.nome}</option>`, '');
-			if (me.filters.cenario === null){
-				me.filters.cenario = lista_ops__search.find('select[name="cenario"]');
-				me.filters.cenario.append(select_options_html).promise().then(function (){
-					me.filters.cenario.selectpicker({
-						title: 'Cenários',
-						selectedTextFormat: 'count > 2',
-						actionsBox: true,
-						deselectAllText: 'Nenhum',
-						selectAllText: 'Todos',
-						style: '',
-						styleBase: 'form-control form-control-sm'
-					}).on('loaded.bs.select', function (){
-						me.filters.cenario.parent().addClass('form-control');
-					}).on('changed.bs.select', function (){
-						$(document.getElementById("lista_ops__table")).DataTable().draw();
-					});
-				});
-			}
-			else{
-				me.filters.cenario.empty().append(select_options_html).promise().then(function (){
-					me.filters.cenario.selectpicker('refresh');
-				});
-			}
-			//////////////////////////////////
-			//Filtro do Gerenciamento
-			//////////////////////////////////
-			select_options_html = (Object.keys(gerenciamento_in_operacoes)).reduce((p, c) => p + `<option value="${c}">${c}</option>`, '');
-			if (me.filters.gerenciamento === null){
-				me.filters.gerenciamento = lista_ops__search.find('select[name="gerenciamento"]');
-				me.filters.gerenciamento.append(select_options_html).promise().then(function (){
-					me.filters.gerenciamento.selectpicker({
-						title: 'Gerenciamento',
-						selectedTextFormat: 'count > 1',
-						actionsBox: true,
-						deselectAllText: 'Nenhum',
-						selectAllText: 'Todos',
-						style: '',
-						styleBase: 'form-control form-control-sm'
-					}).on('loaded.bs.select', function (){
-						me.filters.gerenciamento.parent().addClass('form-control');
-					}).on('changed.bs.select', function (){
-						$(document.getElementById("lista_ops__table")).DataTable().draw();
-					});
-				});
-			}
-			else{
-				me.filters.gerenciamento.empty().append(select_options_html).promise().then(function (){
-					me.filters.gerenciamento.selectpicker('refresh');
-				});
-			}
-		}
-	}
-	//Funcoes usadas em '_lista_ops__table_DT'
-	let _lista_ops__table_DT_ext = {
-		vol_render: function (data, type, row){
-			return (type === 'display') ? ((data == 0) ? '' : $.fn.dataTable.render.number( '.', '', 0, '').display(data)) : data;
-		},
-		error_render: function (data, type, row){
-			return (type === 'display') ? ((data == 1) ? `<i class="fas fa-exclamation-triangle text-warning"></i>` : ``) : data;
-		}
-	}
-	//Configuração da tabela de operações em 'lista_ops'
-	let _lista_ops__table_DT = {
-		columns: [
-			{name: 'id', orderable: true},
-			{name: 'data', orderable: true, type: 'br-date'},
-			{name: 'hora', orderable: true},
-			{name: 'ativo', orderable: true},
-			{name: 'gerenciamento', orderable: true},
-			{name: 'op', orderable: false},
-			{name: 'resultado', orderable: true},
-			{name: 'vol', orderable: true, render: _lista_ops__table_DT_ext.vol_render},
-			{name: 'cenario', orderable: true},
-			{name: 'observacoes', orderable: false},
-			{name: 'erro', orderable: true, render: _lista_ops__table_DT_ext.error_render}
-		],
-		lengthChange: false,
-		columnDefs: [{
-			targets: [1],
-			orderData: [1, 2]
-		}],
-		order: [[ 0, 'desc' ]],
-		pageLength: 25,
-		pagingType: 'input'
-	}
-	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Operações Upload -------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -1110,7 +807,7 @@ let Renda_variavel = (function(){
 							vol: ((dataMap.indexOf('Vol') !== -1) ? (obj[line][dataMap.indexOf('Vol')].replace(/\.+/g, '')).replace(/\,+/g, '.') : ''),
 							cts: obj[line][dataMap.indexOf('Cts')],
 							cenario: obj[line][dataMap.indexOf('Padrao')],
-							observacoes: ((dataMap.indexOf("Observacoes") !== -1)?obj[line][dataMap.indexOf("Observacoes")].split(',') : []),
+							observacoes: ((dataMap.indexOf('Observacoes') !== -1)?obj[line][dataMap.indexOf('Observacoes')].split(',') : []),
 							erro: ((dataMap.indexOf('Erro') !== -1) ? obj[line][dataMap.indexOf('Erro')] : ''),
 							data: obj[line][dataMap.indexOf('Data')],
 							hora: obj[line][dataMap.indexOf('Hora')],
@@ -1223,18 +920,32 @@ let Renda_variavel = (function(){
 		trade__custo: function (data, type, row){
 			return (type === 'display') ? $.fn.dataTable.render.number( '', '.', 2, 'R$ ').display(data) : data;
 		},
+		trade__op: function (data, type, row){
+			return (type === 'display') ? ((data == 1) ? `<span class="badge bg-success">C</span>` : ((data == 2) ? `<span class="badge bg-danger">V</span>` : ``)) : data;
+		},
+		trade__erro: function (data, type, row){
+			return (type === 'display') ? ((data == 1) ? `<i class="fas fa-exclamation-triangle text-warning"></i>` : ``) : data;
+		},
+		trade__vol_media: function (data, type, row){
+			return (type === 'display') ? $.fn.dataTable.render.number( '', '', 0, '').display(data) : data;
+		},
 		result__R: function (data, type, row){
-			let rendered_num = $.fn.dataTable.render.number( '', '.', 3, '', 'R').display(data),
+			let rendered_num = $.fn.dataTable.render.number( '', '.', 3, '', 'R').display(Math.abs(data)),
 				color = ((data !== '--' && data > 0) ? 'text-success' : ((data !== '--' && data < 0) ? 'text-danger' : ''));
 			return (type === 'display') ? ((data !== '--') ? `<span class="${color}">${rendered_num}</span>` : data) : data;
 		},
+		result__S: function (data, type, row){
+			let rendered_num = $.fn.dataTable.render.number( '', '.', 1, '', 'S').display(Math.abs(data)),
+				color = ((data > 0) ? 'text-success' : ((data < 0) ? 'text-danger' : ''));
+			return (type === 'display') ? `<span class="${color}">${rendered_num}</span>` : data;
+		},
 		result__brl: function (data, type, row){
-			let rendered_num = $.fn.dataTable.render.number( '', '.', 2, 'R$ ').display(data),
+			let rendered_num = $.fn.dataTable.render.number( '', '.', 2, 'R$ ').display(Math.abs(data)),
 				color = ((data > 0) ? 'text-success' : ((data < 0) ? 'text-danger' : ''));
 			return (type === 'display') ? `<span class="${color}">${rendered_num}</span>` : data;
 		},
 		lucro_prejuizo__brl: function (data, type, row){
-			let rendered_num = $.fn.dataTable.render.number( '', '.', 2, 'R$ ').display(data),
+			let rendered_num = $.fn.dataTable.render.number( '', '.', 2, 'R$ ').display(Math.abs(data)),
 				color = ((data > 0) ? 'text-success' : ((data < 0) ? 'text-danger' : ''));
 			return (type === 'display') ? (data != 0 ? `<span class="${color}">${rendered_num}</span>` : ``) : data;
 		}
@@ -1246,124 +957,120 @@ let Renda_variavel = (function(){
 			{name: 'trade__data', orderable: true, type: 'br-date'},
 			{name: 'trade__hora', orderable: true, type: 'time'},
 			{name: 'trade__cenario', orderable: true},
+			{name: 'trade__op', orderable: false, render: _dashboard_ops__table_trades_DT_ext.trade__op},
 			{name: 'trade__cts', orderable: true},
-			{name: 'result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'trade__vol', orderable: true},
+			{name: 'trade__result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
 			{name: 'trade__custo', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
-			{name: 'result__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl}
+			{name: 'trade__result_liquido__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'trade__erro', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__erro}
 		],
 		'2': [
-			{name: 'trade__seq', orderable: true},
-			{name: 'trade__data', orderable: true, type: 'br-date'},
-			{name: 'trade__ops', orderable: true},
-			{name: 'trade__cts', orderable: true},
-			{name: 'lucro_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
-			{name: 'prejuizo_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
-			{name: 'result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
-			{name: 'trade__custo', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
-			{name: 'result__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl}
+			{name: 'dia__seq', orderable: true},
+			{name: 'dia__data', orderable: true, type: 'br-date'},
+			{name: 'dia__qtd_trades', orderable: true},
+			{name: 'dia__cts', orderable: true},
+			{name: 'dia__vol_media', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__vol_media},
+			{name: 'dia__lucro_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
+			{name: 'dia__prejuizo_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
+			{name: 'dia__result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'dia__result_bruto__S', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__S},
+			{name: 'dia__custo', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
+			{name: 'dia__result_liquido__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'dia__erro', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__erro}
 		],
 		'3': [
-			{name: 'trade__seq', orderable: true},
-			{name: 'trade__data', orderable: true, type: 'br-date'},
-			{name: 'trade__ops', orderable: true},
-			{name: 'trade__cts', orderable: true},
-			{name: 'lucro_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
-			{name: 'prejuizo_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
-			{name: 'result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
-			{name: 'trade__custo', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
-			{name: 'result__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl}
+			{name: 'mes__seq', orderable: true},
+			{name: 'mes__data', orderable: true, type: 'br-date'},
+			{name: 'mes__qtd_trades', orderable: true},
+			{name: 'mes__cts', orderable: true},
+			{name: 'mes__vol_media', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__vol_media},
+			{name: 'mes__lucro_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
+			{name: 'mes__prejuizo_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.lucro_prejuizo__brl},
+			{name: 'mes__result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'mes__result_bruto__S', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__S},
+			{name: 'mes__custo', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
+			{name: 'mes__result_liquido__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'mes__erro', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__erro}
 		]
 	}
-	//Configuração da tabela de operações em 'lista_ops'
+	//Configuração da tabela de operações
 	let _dashboard_ops__table_trades_DT = {
 		columns: [],
 		createdRow: function (row, data, index){
 			let classes_by_column = {
+				//Por Trade
 				trade__seq: 'text-muted fw-bold',
 				trade__data: 'text-muted fw-bold',
 				trade__hora: 'text-muted fw-bold',
 				trade__cenario: 'fw-bold',
-				trade__ops: 'fw-bold',
-				trade__cts: 'fw-bold',
-				lucro_bruto__brl: 'fw-bold',
-				prejuizo_bruto__brl: 'fw-bold',
-				result_bruto__brl: 'fw-bold',
-				result_bruto__R: 'fw-bold',
+				trade__op: 'fw-bold text-center',
+				trade__cts: 'fw-bold text-center',
+				trade__vol: 'fw-bold text-center',
+				trade__result_bruto__brl: 'fw-bold',
 				trade__custo: 'fw-bold text-danger',
-				result__brl: 'fw-bold',
-				result__R: 'fw-bold'
+				trade__result_liquido__brl: 'fw-bold',
+				trade__erro: 'text-center',
+				//Por Dia
+				dia__seq: 'text-muted fw-bold',
+				dia__data: 'text-muted fw-bold',
+				dia__qtd_trades: 'fw-bold text-center',
+				dia__cts: 'fw-bold text-center',
+				dia__vol_media: 'fw-bold text-center',
+				dia__lucro_bruto__brl: 'fw-bold',
+				dia__prejuizo_bruto__brl: 'fw-bold',
+				dia__result_bruto__brl: 'fw-bold',
+				dia__result_bruto__S: 'fw-bold',
+				dia__custo: 'fw-bold text-danger',
+				dia__result_liquido__brl: 'fw-bold',
+				dia__erro: 'text-center',
+				//Por Mes
+				mes__seq: 'text-muted fw-bold',
+				mes__data: 'text-muted fw-bold',
+				mes__qtd_trades: 'fw-bold text-center',
+				mes__cts: 'fw-bold text-center',
+				mes__vol_media: 'fw-bold text-center',
+				mes__lucro_bruto__brl: 'fw-bold',
+				mes__prejuizo_bruto__brl: 'fw-bold',
+				mes__result_bruto__brl: 'fw-bold',
+				mes__result_bruto__S: 'fw-bold',
+				mes__custo: 'fw-bold text-danger',
+				mes__result_liquido__brl: 'fw-bold',
+				mes__erro: 'text-center'
 			};
-			for (var i=0; i<_dashboard_ops__table_trades_DT["columns"].length; i++){
-				row.children[i].setAttribute("name", _dashboard_ops__table_trades_DT["columns"][i]["name"]);
-				row.children[i].setAttribute("class", classes_by_column[_dashboard_ops__table_trades_DT["columns"][i]["name"]]);
+			for (var i=0; i<_dashboard_ops__table_trades_DT['columns'].length; i++){
+				row.children[i].setAttribute('name', _dashboard_ops__table_trades_DT['columns'][i]['name']);
+				row.children[i].setAttribute('class', classes_by_column[_dashboard_ops__table_trades_DT['columns'][i]['name']]);
 			}
+		},
+		initComplete: function (){
+			$(document.getElementById('dashboard_ops__table_trades__actions')).append(`<button class="btn btn-sm btn-outline-danger d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>`);
 		},
 		lengthChange: false,
 		info: false,
-		dom: '<"container-fluid p-0"<"row"<"col-12"<"card rounded-3 shadow-sm"<"card-body py-2 d-flex justify-content-between align-items-center head"fp>>>><"row mt-2"<"col-12"<"card rounded-3 shadow-sm"<"card-body body"t>>>>>',
+		dom: '<"container-fluid p-0"<"row"<"col-12"<"card rounded-3 shadow-sm"<"card-body py-2 d-flex justify-content-between align-items-center head"<"d-flex justify-content-start align-items-center"f<"#dashboard_ops__table_trades__actions.ms-2">>p>>>><"row mt-2"<"col-12"<"card rounded-3 shadow-sm"<"card-body body"t>>>>>',
 		order: [[ 0, 'desc' ]],
 		pageLength: 21,
 		pagingType: 'input'
 	}
-	////////////////////////////////////////////////////////////////////////////////////
-	/*----------------------------- Section Analise Obs ------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	//Informa se o 'analise_obs' precisa ser reconstruido
-	let _analise_obs__needRebuild = false;
-	//Controla qual seção do analise_obs mostrar 'data', 'empty' ou 'building'
-	let _analise_obs__section = {
-		sections: {'data': 2, 'empty': 0, 'building': 0},
-		show: function (section_target, step = 0){
-			if (step === this.sections[section_target]){
-				$(document.getElementById('analise_obs__section')).find('> div[target]').each(function (){
-					$(this).toggleClass('d-none', this.getAttribute('target') !== section_target);
-				});
-			}
-		}
-	}
+	let _dashboard_ops__table_trades_DT__clickState = 0;
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Renda Variavel ---------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
-		Altera a seção visivel entre 'dashboard_ops__section', 'analise_obs__section'
+		Reconstroi a lista de instacia em 'renda_variavel__instancia'.
 	*/
-	function changeSection__Renda_variavel(section){
-		let renda_variavel = $(document.getElementById('renda_variavel'));
-		_renda_variavel__section = section;
-		if (_renda_variavel__section === 'dashboard_ops__section'){
-			renda_variavel.find('#analise_obs__section').addClass('d-none');
-			renda_variavel.find('#dashboard_ops__section').removeClass('d-none');
-			if (_analise_obs__needRebuild){
-				_analise_obs__needRebuild = false;
-				rebuildAnalise_obs();
-			}
-		}
-		else if (_renda_variavel__section === 'analise_obs__section'){
-			renda_variavel.find('#dashboard_ops__section').addClass('d-none');
-			renda_variavel.find('#analise_obs__section').removeClass('d-none');
-			if (_dashboard_ops__needRebuild){
-				_dashboard_ops__needRebuild = false;
-				rebuildDashboard_ops();
-			}
-		}
-	}
-	/*
-		Reconstroi a lista de instacia em 'renda_variavel__instancias'.
-	*/
-	function rebuild__instanciasArcabouco_HTML(){
-		let html = ``;
-		for (let i in _lista__instancias_arcabouco.instancias)
-			html += `<span class="badge badge-primary rounded-pill p-2 ${((i > 0) ? 'ms-2' : '')}" style="background-color: var(${_lista__instancias_arcabouco.instancias[i].color}) !important" instancia="${_lista__instancias_arcabouco.instancias[i].instancia}">${((_lista__instancias_arcabouco.instancias[i].selected) ? `<i class="fas fa-crown me-2"></i>` : '')}${_lista__instancias_arcabouco.instancias[i].nome}</span>`;
-		$(document.getElementById('renda_variavel__instancias')).empty().append(html);
+	function rebuild__instanciaArcabouco_HTML(){
+		let html = `<span class="badge badge-primary rounded-pill p-2" style="background-color: var(${_instancia_arcabouco.instancia.color}) !important">${_instancia_arcabouco.instancia.nome}</span>`;
+		$(document.getElementById('renda_variavel__instancia')).empty().append(html);
 	}
 	/*
 		Reconstroi a lista de 'observações', usada nos selects dos mesmos em 'filters'.
 	*/
-	function rebuildSelect_Observacoes__content(id_arcabouco){
-		let dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
-			selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+	function rebuildSelect_Observacoes__content(){
+		let dashboard_filters = _instancia_arcabouco.get('filters'),
 			el_name = _renda_variavel__search.filters.observacoes.attr('name'),
 			placeholder = {'observacoes': 'Observações'},
 			qtd_selected = 0,
@@ -1374,7 +1081,7 @@ let Renda_variavel = (function(){
 			//Percorre todos os cenários selecionadas no filtro
 			for (let cn=0; cn<ordered_cenarios.length; cn++){
 				//Se esse cenário possui observações cadastradas
-				if (_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name].length){
+				if (_lista__cenarios.cenarios[dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name].length){
 					//Inicia o select com o subfiltro de 'OR' e 'AND'
 					if (options_html === ''){
 						let select_query_union_name = `${el_name}_query_union`,
@@ -1386,10 +1093,10 @@ let Renda_variavel = (function(){
 						options_html += `<li><hr class="dropdown-divider"></li>`;
 					options_html += `<li><h6 class="dropdown-header">${ordered_cenarios[cn]}</h6></li>`;
 					//Insere as observações do cenário sendo verificado
-					for (let o in _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name]){
-						let is_selected = _lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref in dashboard_filters['cenario'][ordered_cenarios[cn]][el_name],
-							negar_checked = (is_selected) ? dashboard_filters['cenario'][ordered_cenarios[cn]][el_name][_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref] === 1 : false;
-						options_html += `<li><button class="dropdown-item" type="button" value="${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref}" cenario="${dashboard_filters['cenario'][ordered_cenarios[cn]].id}" pertence="${ordered_cenarios[cn]}" ${((is_selected) ? 'selected' : '' )}><input class="form-check-input me-3" type="checkbox" name="negar_valor" ${((negar_checked) ? 'checked' : '' )}>${_lista__cenarios.cenarios[selected_inst_arcabouco][dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].nome}</button>`;
+					for (let o in _lista__cenarios.cenarios[dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name]){
+						let is_selected = _lista__cenarios.cenarios[dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref in dashboard_filters['cenario'][ordered_cenarios[cn]][el_name],
+							negar_checked = (is_selected) ? dashboard_filters['cenario'][ordered_cenarios[cn]][el_name][_lista__cenarios.cenarios[dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref] === 1 : false;
+						options_html += `<li><button class="dropdown-item" type="button" value="${_lista__cenarios.cenarios[dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].ref}" cenario="${dashboard_filters['cenario'][ordered_cenarios[cn]].id}" pertence="${ordered_cenarios[cn]}" ${((is_selected) ? 'selected' : '' )}><input class="form-check-input me-3" type="checkbox" name="negar_valor" ${((negar_checked) ? 'checked' : '' )}>${_lista__cenarios.cenarios[dashboard_filters['cenario'][ordered_cenarios[cn]].id][el_name][o].nome}</button>`;
 						if (is_selected)
 							qtd_selected++;
 					}
@@ -1751,16 +1458,16 @@ let Renda_variavel = (function(){
 	/*
 		Gera as observações e cenários para o offcanvas 'arcabouco_info'.
 	*/
-	function buildArcaboucoInfo__CenariosEObs(id_arcabouco){
+	function buildArcaboucoInfo__CenariosEObs(){
 		let html = { table: ``, select: `<option value="">Todos</option>`};
-		for (let c in _lista__cenarios.cenarios[id_arcabouco]){
+		for (let c in _lista__cenarios.cenarios){
 			//Constroi o Select de filtro
-			html['select'] += `<option value="${_lista__cenarios.cenarios[id_arcabouco][c].id}">${_lista__cenarios.cenarios[id_arcabouco][c].nome}</option>`;
-			for (let o = 0; o < _lista__cenarios.cenarios[id_arcabouco][c]['observacoes'].length; o++){
-				html['table'] += `<tr cenario="${_lista__cenarios.cenarios[id_arcabouco][c].id}" ${((o === 0 && html['table'] !== '') ? `class="divider"` : ``)}>`+
-								 ((o === 0) ? `<td name="cenario" rowspan="${_lista__cenarios.cenarios[id_arcabouco][c]['observacoes'].length}"><span class="text-small"><code>${_lista__cenarios.cenarios[id_arcabouco][c].nome}</code></span></td>` : ``)+
-								 `<td name="ref"><span class="text-small"><code>${_lista__cenarios.cenarios[id_arcabouco][c]['observacoes'][o].ref}</code></span></td>`+
-								 `<td name="observacao"><span class="text-small"><code>${_lista__cenarios.cenarios[id_arcabouco][c]['observacoes'][o].nome}</code></span></td>`+
+			html['select'] += `<option value="${_lista__cenarios.cenarios[c].id}">${_lista__cenarios.cenarios[c].nome}</option>`;
+			for (let o = 0; o < _lista__cenarios.cenarios[c]['observacoes'].length; o++){
+				html['table'] += `<tr cenario="${_lista__cenarios.cenarios[c].id}" ${((o === 0 && html['table'] !== '') ? `class="divider"` : ``)}>`+
+								 ((o === 0) ? `<td name="cenario" rowspan="${_lista__cenarios.cenarios[c]['observacoes'].length}"><span class="text-small"><code>${_lista__cenarios.cenarios[c].nome}</code></span></td>` : ``)+
+								 `<td name="ref"><span class="text-small"><code>${_lista__cenarios.cenarios[c]['observacoes'][o].ref}</code></span></td>`+
+								 `<td name="observacao"><span class="text-small"><code>${_lista__cenarios.cenarios[c]['observacoes'][o].nome}</code></span></td>`+
 								 `</tr>`;
 			}
 		}
@@ -1769,7 +1476,7 @@ let Renda_variavel = (function(){
 	/*
 		Gera as estatisticas para o offcanvas 'arcabouco_info'.
 	*/
-	function buildArcaboucoInfo__Stats(id_arcabouco){
+	function buildArcaboucoInfo__Stats(){
 		let stats = {
 			total: 0,
 			dias: 0,
@@ -1777,21 +1484,21 @@ let Renda_variavel = (function(){
 			por_ativo: {}
 		}
 		let temp = { data_unica: {} }
-		for (let o = 0; o < _lista__operacoes.operacoes[id_arcabouco].length; o++){
+		for (let o = 0; o < _lista__operacoes.operacoes.length; o++){
 			stats.total++;
-			temp.data_unica[_lista__operacoes.operacoes[id_arcabouco][o].data] = null;
+			temp.data_unica[_lista__operacoes.operacoes[o].data] = null;
 			//Por Gerenciamento
-			if (!(_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento in stats.por_gerenciamento))
-				stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento] = { total: 0, cenario: {}};
-			stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento].total++;
+			if (!(_lista__operacoes.operacoes[o].gerenciamento in stats.por_gerenciamento))
+				stats.por_gerenciamento[_lista__operacoes.operacoes[o].gerenciamento] = { total: 0, cenario: {}};
+			stats.por_gerenciamento[_lista__operacoes.operacoes[o].gerenciamento].total++;
 			//Por Cenario no Gerenciamento
-			if (!(_lista__operacoes.operacoes[id_arcabouco][o].cenario in stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario']))
-				stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario] = { total: 0, por_dia: 0 };
-			stats.por_gerenciamento[_lista__operacoes.operacoes[id_arcabouco][o].gerenciamento]['cenario'][_lista__operacoes.operacoes[id_arcabouco][o].cenario].total++;
+			if (!(_lista__operacoes.operacoes[o].cenario in stats.por_gerenciamento[_lista__operacoes.operacoes[o].gerenciamento]['cenario']))
+				stats.por_gerenciamento[_lista__operacoes.operacoes[o].gerenciamento]['cenario'][_lista__operacoes.operacoes[o].cenario] = { total: 0, por_dia: 0 };
+			stats.por_gerenciamento[_lista__operacoes.operacoes[o].gerenciamento]['cenario'][_lista__operacoes.operacoes[o].cenario].total++;
 			//Por Ativo
-			if (!(_lista__operacoes.operacoes[id_arcabouco][o].ativo in stats.por_ativo))
-				stats.por_ativo[_lista__operacoes.operacoes[id_arcabouco][o].ativo] = 0;
-			stats.por_ativo[_lista__operacoes.operacoes[id_arcabouco][o].ativo]++;
+			if (!(_lista__operacoes.operacoes[o].ativo in stats.por_ativo))
+				stats.por_ativo[_lista__operacoes.operacoes[o].ativo] = 0;
+			stats.por_ativo[_lista__operacoes.operacoes[o].ativo]++;
 		}
 		stats.dias = Object.keys(temp.data_unica).length;
 		for (let g in stats.por_gerenciamento)
@@ -1805,9 +1512,9 @@ let Renda_variavel = (function(){
 	function buildArcaboucoInfoOffcanvas(){
 		if (_arcabouco_info__needRebuild){
 			_arcabouco_info__needRebuild = false;
-			let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-				stats_data = buildArcaboucoInfo__Stats(id_arcabouco),
-				cenarios_obs__html = buildArcaboucoInfo__CenariosEObs(id_arcabouco),
+			let id_arcabouco = _instancia_arcabouco.get('id'),
+				stats_data = buildArcaboucoInfo__Stats(),
+				cenarios_obs__html = buildArcaboucoInfo__CenariosEObs(),
 				first_tr_block = 0,
 				html = ``;
 			//Constroi a seção com as observações do arcabouço
@@ -1878,7 +1585,7 @@ let Renda_variavel = (function(){
 		Reconstroi o select de Cenarios, para copiar ao criar um novo cenario.
 	*/
 	function rebuildCenarios_modal_copiar(){
-		let id_arcabouco = _lista__instancias_arcabouco.getSelected('id');
+		let id_arcabouco = _instancia_arcabouco.get('id');
 		if (_lista__arcaboucos.arcaboucos[id_arcabouco].sou_criador == 1)
 			$(document.getElementById('cenarios_modal_copiar')).empty().append(buildCenariosCopySelect());
 		else
@@ -1888,7 +1595,7 @@ let Renda_variavel = (function(){
 		Constroi o modal de gerenciamento de cenarios.
 	*/
 	function buildCenariosModal(){
-		let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+		let id_arcabouco = _instancia_arcabouco.get('id'),
 			modal = $(document.getElementById('cenarios_modal'));
 		//Se sou criador do arcabouço
 		if (_lista__arcaboucos.arcaboucos[id_arcabouco].sou_criador == 1){
@@ -1900,17 +1607,17 @@ let Renda_variavel = (function(){
 			modal.find('#cenarios_modal_espelhar__arcaboucos').empty();
 		}
 		rebuildCenarios_modal_copiar();
-		modal.find('#cenarios_modal__cenarios').empty().append(buildCenariosPlace(_lista__cenarios.cenarios[_lista__instancias_arcabouco.getSelected('id')]));
+		modal.find('#cenarios_modal__cenarios').empty().append(buildCenariosPlace(_lista__cenarios.cenarios));
 		modal.modal('show');
 	}
 	/*
 		Constroi o select com os arcabouços, para espelhar seus cenários.
 	*/
 	function buildCenariosEspelhaSelect(){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+		let id_arcabouco = _instancia_arcabouco.get('id'),
 			select_options = `<option value="">---</option>`;
 		for (let a in _lista__arcaboucos.arcaboucos){
-			if (_lista__arcaboucos.arcaboucos[a].id !== selected_inst_arcabouco)
+			if (_lista__arcaboucos.arcaboucos[a].id !== id_arcabouco && _lista__arcaboucos.arcaboucos[a].sou_criador == 1)
 				select_options += `<option value="${_lista__arcaboucos.arcaboucos[a].id}">${_lista__arcaboucos.arcaboucos[a].nome}</option>`;
 		}
 		return select_options;
@@ -1919,10 +1626,9 @@ let Renda_variavel = (function(){
 		Constroi o select com os cenarios, para cópia.
 	*/
 	function buildCenariosCopySelect(data){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			select_options = `<option value="">---</option>`;
-		for (let c in _lista__cenarios.cenarios[selected_inst_arcabouco])
-			select_options += `<option value="${_lista__cenarios.cenarios[selected_inst_arcabouco][c]['nome']}">${_lista__cenarios.cenarios[selected_inst_arcabouco][c]['nome']}</option>`;
+		let select_options = `<option value="">---</option>`;
+		for (let c in _lista__cenarios.cenarios)
+			select_options += `<option value="${_lista__cenarios.cenarios[c]['nome']}">${_lista__cenarios.cenarios[c]['nome']}</option>`;
 		return select_options;
 	}
 	/*
@@ -1931,7 +1637,7 @@ let Renda_variavel = (function(){
 	function buildListaObservacoes(data, new_data = false){
 		if (Global.isObjectEmpty(data))
 			return { thead: ``, tbody: `<tr empty><td colspan="3" class="text-muted text-center fw-bold p-3"><i class="fas fa-cookie-bite me-2"></i>Nenhuma Observação.</td></tr>` }
-		let edit_data = (_lista__arcaboucos.arcaboucos[_lista__instancias_arcabouco.getSelected('id')].sou_criador == 1),
+		let edit_data = (_lista__arcaboucos.arcaboucos[_instancia_arcabouco.get('id')].sou_criador == 1),
 			html = { thead: `<tr><th class="border-0 text-center">Ref</th><th class="border-0">Nome</th><th class="border-0 text-center">Desativar</th></tr>`, tbody: `` };
 		for (let p in data){
 			let input_group = ``;
@@ -1952,7 +1658,7 @@ let Renda_variavel = (function(){
 		Constroi um cenarios com observacoes.
 	*/
 	function buildCenario(data = {}, new_cenario = false){
-		let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+		let id_arcabouco = _instancia_arcabouco.get('id'),
 			html = ('observacoes' in data) ? buildListaObservacoes(data['observacoes'], new_cenario) : buildListaObservacoes({}, new_cenario),
 			input_group = ``,
 			excluir_cenario = ``,
@@ -2022,7 +1728,7 @@ let Renda_variavel = (function(){
 			data.nome = cenario.find('input[name="cenario_nome"]').val();
 			if (data.nome === '')
 				return {};
-			data.id_arcabouco = _lista__instancias_arcabouco.getSelected('id');
+			data.id_arcabouco = _instancia_arcabouco.get('id');
 			data.observacoes = [];
 			cenario.find('tr[new_observacao]').each(function (r, row){
 				let nome = row.querySelector('input[name="nome"]').value,
@@ -2039,7 +1745,7 @@ let Renda_variavel = (function(){
 		//Cenario ja existe
 		else if (cenario[0].hasAttribute('cenario')){
 			data = {
-				id_arcabouco: _lista__instancias_arcabouco.getSelected('id'),
+				id_arcabouco: _instancia_arcabouco.get('id'),
 				id_cenario: cenario.attr('cenario'),
 				insert: {
 					//Observacoes de cenarios ja exitentes
@@ -2098,53 +1804,6 @@ let Renda_variavel = (function(){
 		return data;
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------------- Lista Ops ------------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Constroi o offcanvas de 'lista_ops'.
-	*/
-	function buildOperacoesOffcanvas(forceRebuild = false){
-		if (_list_ops__needRebuild || forceRebuild){
-			_list_ops__needRebuild = false;
-			let lista_ops__table = $(document.getElementById('lista_ops__table'));
-			lista_ops__table.DataTable().destroy();
-			lista_ops__table.find('tbody').empty().append(rebuildListaOps__Table()).promise().then(function (){
-				_lista_ops__search.update();
-				lista_ops__table.DataTable(_lista_ops__table_DT);
-			});
-			$(document.getElementById('lista_ops__actions')).find('button[name="remove_sel"]').addClass('d-none');
-		}
-		if (!forceRebuild)
-			$(document.getElementById('lista_ops')).offcanvas('show');
-	}
-	/*
-		Retorna o html da lista de operacoes. (Head ou Body)
-	*/
-	function rebuildListaOps__Table(){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			op_dic = {
-				text: ['', 'C', 'V'],
-				color: ['', 'bg-success', 'bg-danger']
-			},
-			html = ``;
-		for (let o in _lista__operacoes.operacoes[selected_inst_arcabouco]){
-			html += `<tr operacao="${_lista__operacoes.operacoes[selected_inst_arcabouco][o].id}">`+
-					`<td class="fw-bold text-muted" name="sequencia">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].sequencia}</td>`+
-					`<td class="fw-bold text-muted" name="data">${Global.convertDate(_lista__operacoes.operacoes[selected_inst_arcabouco][o].data)}</td>`+
-					`<td class="fw-bold text-muted" name="hora">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].hora}</td>`+
-					`<td class="fw-bold text-muted" name="ativo">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].ativo}</td>`+
-					`<td class="fw-bold text-muted" name="gerenciamento">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].gerenciamento}</td>`+
-					`<td name="op"><span class="badge ${op_dic['color'][_lista__operacoes.operacoes[selected_inst_arcabouco][o].op]}">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].cts}${op_dic['text'][_lista__operacoes.operacoes[selected_inst_arcabouco][o].op]}</span></td>`+
-					`<td class="fw-bold text-muted" name="vol">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].vol}</td>`+
-					`<td class="fw-bold text-muted" name="resultado">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].resultado}</td>`+
-					`<td class="fw-bold text-muted" name="cenario">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].cenario}</td>`+
-					`<td class="fw-bold text-muted" name="observacoes">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].observacoes}</td>`+
-					`<td name="erro">${_lista__operacoes.operacoes[selected_inst_arcabouco][o].erro}</td>`+
-					`</tr>`;
-		}
-		return html;
-	}
-	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Operações Upload -------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -2174,14 +1833,13 @@ let Renda_variavel = (function(){
 			thead_html = ``,
 			table = $(document.getElementById('table_upload_operacoes')),
 			table_layout = $(document.getElementById('table_layout')).val(),
-			selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
 			op_dic = ['', 'C', 'V'],
 			cenarios_dic = [],
 			ativos_dic = {'': {nome: '', custo: '', valor_tick: '', pts_tick: ''}},
 			gerenciamentos_dic = {'': {nome: '', acoes: ''}},
 			error = false;
-		for (let cn in _lista__cenarios.cenarios[selected_inst_arcabouco])
-			cenarios_dic.push(_lista__cenarios.cenarios[selected_inst_arcabouco][cn].nome);
+		for (let cn in _lista__cenarios.cenarios)
+			cenarios_dic.push(_lista__cenarios.cenarios[cn].nome);
 		for (let at in _lista__ativos.ativos){
 			ativos_dic[_lista__ativos.ativos[at].nome] = {
 				nome: _lista__ativos.ativos[at].nome,
@@ -2279,15 +1937,6 @@ let Renda_variavel = (function(){
 		fixTDBlocos__Table();
 	}
 	/*
-		Zera a contagem de Tendencia e Pernada em 'adicionar_operacoes_offcanvas__contagem'.
-	*/
-	function resetAdicionarOperacao__ContagemForm(){
-		let form_contagem = $(document.getElementById('adicionar_operacoes_offcanvas__contagem'));
-		form_contagem.find('input').attr('not_ok', 0).attr('raw_value', 0).val('');
-		form_contagem.find('button[name="up_c_tendencia"], button[name="down_c_tendencia"], button[name="restart_c_tendencia"]').removeClass('disabled');
-		form_contagem.find('button[name="up_c_pernada"], button[name="down_c_pernada"], button[name="restart_c_pernada"]').addClass('disabled');
-	}
-	/*
 		Constroi o offcanvas de adicionar operações.
 	*/
 	function buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = false, show = false){
@@ -2318,10 +1967,8 @@ let Renda_variavel = (function(){
 				form.find('select[name="hoje"]').parent().addClass('form-control');
 			});
 		}
-		if (forceRebuild){
+		if (forceRebuild)
 			resetAdicionarOperacaoTable();
-			resetAdicionarOperacao__ContagemForm();
-		}
 		if (show)
 			$(document.getElementById('adicionar_operacoes_offcanvas')).offcanvas('show');
 	}
@@ -2387,14 +2034,13 @@ let Renda_variavel = (function(){
 		Inicia ou reinicia a seção de 'dashboard_ops' da instancia de arcabouço selecionada.
 	*/
 	function rebuildDashboard_ops(){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			html = ``;
+		let html = ``;
 		_dashboard_ops__section.show('building');
-		if (selected_inst_arcabouco in _lista__operacoes.operacoes && _lista__operacoes.operacoes[selected_inst_arcabouco].length > 0){
+		if (_lista__operacoes.operacoes.length > 0){
 			let finish_building = 0,
-				simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+				simulations = _instancia_arcabouco.get('simulations'),
 				simulation__periodo_calc = ('periodo_calc' in simulations) ? simulations['periodo_calc'] : '1',
-				dashboard_data = RV_Statistics.generate__DashboardOps(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), simulations);
+				dashboard_data = RV_Statistics.generate__DashboardOps(_lista__operacoes.operacoes, _instancia_arcabouco.get('filters'), simulations);
 			//////////////////////////////////
 			//Info Estatistica (Total + Por Cenário)
 			//////////////////////////////////
@@ -2429,6 +2075,10 @@ let Renda_variavel = (function(){
 					$(document.getElementById('dashboard_ops__table_trades__place')).empty().append(html).promise().then(function (){
 						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
 						_dashboard_ops__table_trades_DT['columns'] = _dashboard_ops__table_trades_DT_columns[simulation__periodo_calc];
+						if (simulation__periodo_calc === '1')
+							_dashboard_ops__table_trades_DT.columnDefs = [{ targets: [1], orderData: [1, 2] }];
+						else
+							_dashboard_ops__table_trades_DT.columnDefs = [];
 						_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
 						_dashboard_ops__section.show('data', ++finish_building);
 					});
@@ -2445,6 +2095,10 @@ let Renda_variavel = (function(){
 						$(document.getElementById('dashboard_ops__table_trades__place')).empty().append(html).promise().then(function (){
 							_dashboard_ops__elements['tables']['dashboard_ops__table_trades'] = $(document.getElementById('dashboard_ops__table_trades'));
 							_dashboard_ops__table_trades_DT['columns'] = _dashboard_ops__table_trades_DT_columns[simulation__periodo_calc];
+							if (simulation__periodo_calc === '1')
+								_dashboard_ops__table_trades_DT.columnDefs = [{ targets: [1], orderData: [1, 2] }];
+							else
+								_dashboard_ops__table_trades_DT.columnDefs = [];
 							_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable(_dashboard_ops__table_trades_DT);
 							_dashboard_ops__section.show('data', ++finish_building);
 						});
@@ -2514,7 +2168,7 @@ let Renda_variavel = (function(){
 	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_inferior']
 								},
 								{
-									label: _lista__instancias_arcabouco.getSelected('nome'),
+									label: _instancia_arcabouco.get('nome'),
 	      							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['data'],
 	      							stack: 'combined',
 	      							type: 'bar'
@@ -2544,8 +2198,8 @@ let Renda_variavel = (function(){
 									display: true,
 									labels: {
 										filter: function (item, chart){
-											if (item.text === _lista__instancias_arcabouco.getSelected('nome'))
-												item.fillStyle = _lista__instancias_arcabouco.getSelected('chartColor');
+											if (item.text === _instancia_arcabouco.get('nome'))
+												item.fillStyle = _instancia_arcabouco.get('chartColor');
 											return (!item.text.includes('Desvio Padrão (Sup)') && !item.text.includes('Desvio Padrão (Inf)'));
 										}
 									},
@@ -2553,7 +2207,7 @@ let Renda_variavel = (function(){
 										let dataset_name = legendItem.text,
 											index = legendItem.datasetIndex,
 											me = this.chart.getDatasetMeta(index);
-										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome'))
+										if (dataset_name === _instancia_arcabouco.get('nome'))
 											me.hidden = (me.hidden === null) ? true : null;
 										else if (dataset_name === 'Média'){
 											if (me.hidden === null){
@@ -2617,7 +2271,7 @@ let Renda_variavel = (function(){
   							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['banda_inferior']
 						},
 						{
-							label: _lista__instancias_arcabouco.getSelected('nome'),
+							label: _instancia_arcabouco.get('nome'),
   							data: dashboard_data['dashboard_ops__chart_data']['resultados_normalizado']['data'],
   							stack: 'combined',
   							type: 'bar'
@@ -2650,31 +2304,31 @@ let Renda_variavel = (function(){
 							labels: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['labels'],
 							datasets: [
 								{
-									label: _lista__instancias_arcabouco.getSelected('nome'),
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+									label: _instancia_arcabouco.get('nome'),
+									backgroundColor: _instancia_arcabouco.get('chartColor'),
+	      							borderColor: _instancia_arcabouco.get('chartColor'),
 	      							borderWidth: 1,
 	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
 								},
 								{
 									label: 'SMA20',
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+									backgroundColor: _instancia_arcabouco.get('chartColor'),
+	      							borderColor: _instancia_arcabouco.get('chartColor'),
 	      							borderWidth: 1,
 	      							borderDash: [5, 5],
 	      							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
 								},
 								{
 									label: 'Desvio Padrão (Sup)',
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									backgroundColor: _instancia_arcabouco.get('chartColor_Transparent'),
+									borderColor: _instancia_arcabouco.get('chartColor_Transparent'),
 									borderWidth: 0,
 									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
 								},
 								{
 									label: 'Desvio Padrão (Inf)',
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-									borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+									backgroundColor: _instancia_arcabouco.get('chartColor_Transparent'),
+									borderColor: _instancia_arcabouco.get('chartColor_Transparent'),
 									borderWidth: 0,
 									fill: '-1',
 									data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
@@ -2707,7 +2361,7 @@ let Renda_variavel = (function(){
 										let dataset_name = legendItem.text,
 											index = legendItem.datasetIndex,
 											me = this.chart.getDatasetMeta(index);
-										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome')){
+										if (dataset_name === _instancia_arcabouco.get('nome')){
 											if (me.hidden === null){
 												me.hidden = true;
 												this.chart.getDatasetMeta(index + 2).hidden = true;
@@ -2747,31 +2401,31 @@ let Renda_variavel = (function(){
 					labels: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['labels'],
 					datasets: [
 						{
-							label: _lista__instancias_arcabouco.getSelected('nome'),
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							label: _instancia_arcabouco.get('nome'),
+							backgroundColor: _instancia_arcabouco.get('chartColor'),
+							borderColor: _instancia_arcabouco.get('chartColor'),
 							borderWidth: 1,
 							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['data']
 						},
 						{
 							label: 'SMA20',
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							backgroundColor: _instancia_arcabouco.get('chartColor'),
+							borderColor: _instancia_arcabouco.get('chartColor'),
 							borderWidth: 1,
 							borderDash: [5, 5],
 							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['sma20']
 						},
 						{
 							label: 'Desvio Padrão (Sup)',
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							backgroundColor: _instancia_arcabouco.get('chartColor_Transparent'),
+							borderColor: _instancia_arcabouco.get('chartColor_Transparent'),
 							borderWidth: 0,
 							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_superior']
 						},
 						{
 							label: 'Desvio Padrão (Inf)',
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
-							borderColor: _lista__instancias_arcabouco.getSelected('chartColor_Transparent'),
+							backgroundColor: _instancia_arcabouco.get('chartColor_Transparent'),
+							borderColor: _instancia_arcabouco.get('chartColor_Transparent'),
 							borderWidth: 0,
 							fill: '-1',
 							data: dashboard_data['dashboard_ops__chart_data']['evolucao_patrimonial']['banda_inferior']
@@ -2794,18 +2448,18 @@ let Renda_variavel = (function(){
 							labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
 							datasets: [
 								{
-									label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
+									label: `${_instancia_arcabouco.get('nome')} Qtd`,
 									backgroundColor: '#6c757d',
 	      							borderColor: '#6c757d',
 	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
-	      							stack: _lista__instancias_arcabouco.getSelected('nome')
+	      							stack: _instancia_arcabouco.get('nome')
 								},
 								{
-									label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+									label: `${_instancia_arcabouco.get('nome')}`,
+									backgroundColor: _instancia_arcabouco.get('chartColor'),
+	      							borderColor: _instancia_arcabouco.get('chartColor'),
 	      							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
-	      							stack: _lista__instancias_arcabouco.getSelected('nome')
+	      							stack: _instancia_arcabouco.get('nome')
 								}
 							]
 						},
@@ -2858,18 +2512,18 @@ let Renda_variavel = (function(){
 					labels: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['labels'],
 					datasets: [
 						{
-							label: `${_lista__instancias_arcabouco.getSelected('nome')} Qtd`,
+							label: `${_instancia_arcabouco.get('nome')} Qtd`,
 							backgroundColor: '#6c757d',
   							borderColor: '#6c757d',
   							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_qtd'],
-  							stack: _lista__instancias_arcabouco.getSelected('nome')
+  							stack: _instancia_arcabouco.get('nome')
 						},
 						{
-							label: `${_lista__instancias_arcabouco.getSelected('nome')}`,
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							label: `${_instancia_arcabouco.get('nome')}`,
+							backgroundColor: _instancia_arcabouco.get('chartColor'),
+  							borderColor: _instancia_arcabouco.get('chartColor'),
   							data: dashboard_data['dashboard_ops__chart_data']['resultado_por_hora']['data_result'],
-  							stack: _lista__instancias_arcabouco.getSelected('nome')
+  							stack: _instancia_arcabouco.get('nome')
 						}
 					]
 				}
@@ -2887,13 +2541,13 @@ let Renda_variavel = (function(){
 							labels: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['labels'],
 							datasets: [
 								{
-									label: _lista__instancias_arcabouco.getSelected('nome'),
+									label: _instancia_arcabouco.get('nome'),
 	      							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_positivos'],
 	      							stack: 'combined',
 	      							type: 'bar'
 								},
 								{
-									label: _lista__instancias_arcabouco.getSelected('nome'),
+									label: _instancia_arcabouco.get('nome'),
 	      							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_negativos'],
 	      							stack: 'combined',
 	      							type: 'bar'
@@ -2923,8 +2577,8 @@ let Renda_variavel = (function(){
 									display: true,
 									labels: {
 										filter: function (item, chart){
-											if (item.text === _lista__instancias_arcabouco.getSelected('nome'))
-												item.fillStyle = _lista__instancias_arcabouco.getSelected('chartColor');
+											if (item.text === _instancia_arcabouco.get('nome'))
+												item.fillStyle = _instancia_arcabouco.get('chartColor');
 											return item.datasetIndex % 2 === 1;
 										}
 									},
@@ -2962,13 +2616,13 @@ let Renda_variavel = (function(){
 					labels: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['labels'],
 					datasets: [
 						{
-							label: _lista__instancias_arcabouco.getSelected('nome'),
+							label: _instancia_arcabouco.get('nome'),
   							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_positivos'],
   							stack: 'combined',
   							type: 'bar'
 						},
 						{
-							label: _lista__instancias_arcabouco.getSelected('nome'),
+							label: _instancia_arcabouco.get('nome'),
   							data: dashboard_data['dashboard_ops__chart_data']['sequencia_de_resultados']['data_negativos'],
   							stack: 'combined',
   							type: 'bar'
@@ -3012,9 +2666,9 @@ let Renda_variavel = (function(){
 	      							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_media']
 								},
 								{
-									label: _lista__instancias_arcabouco.getSelected('nome'),
-									backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-	      							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+									label: _instancia_arcabouco.get('nome'),
+									backgroundColor: _instancia_arcabouco.get('chartColor'),
+	      							borderColor: _instancia_arcabouco.get('chartColor'),
 	      							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['data'],
 	      							stack: 'combined',
 	      							type: 'bar'
@@ -3040,8 +2694,8 @@ let Renda_variavel = (function(){
 									display: true,
 									labels: {
 										filter: function (item, chart){
-											if (item.text === _lista__instancias_arcabouco.getSelected('nome'))
-												item.fillStyle = _lista__instancias_arcabouco.getSelected('chartColor');
+											if (item.text === _instancia_arcabouco.get('nome'))
+												item.fillStyle = _instancia_arcabouco.get('chartColor');
 											return (!item.text.includes('Desvio Padrão (Sup1)') && !item.text.includes('Desvio Padrão (Sup2)'));
 										}
 									},
@@ -3049,7 +2703,7 @@ let Renda_variavel = (function(){
 										let dataset_name = legendItem.text,
 											index = legendItem.datasetIndex,
 											me = this.chart.getDatasetMeta(index);
-										if (dataset_name === _lista__instancias_arcabouco.getSelected('nome'))
+										if (dataset_name === _instancia_arcabouco.get('nome'))
 											me.hidden = (me.hidden === null) ? true : null;
 										else if (dataset_name === 'Média'){
 											if (me.hidden === null){
@@ -3103,9 +2757,9 @@ let Renda_variavel = (function(){
   							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['banda_media']
 						},
 						{
-							label: _lista__instancias_arcabouco.getSelected('nome'),
-							backgroundColor: _lista__instancias_arcabouco.getSelected('chartColor'),
-  							borderColor: _lista__instancias_arcabouco.getSelected('chartColor'),
+							label: _instancia_arcabouco.get('nome'),
+							backgroundColor: _instancia_arcabouco.get('chartColor'),
+  							borderColor: _instancia_arcabouco.get('chartColor'),
   							data: dashboard_data['dashboard_ops__chart_data']['drawdowns']['data'],
   							stack: 'combined',
   							type: 'bar'
@@ -3282,10 +2936,13 @@ let Renda_variavel = (function(){
 						`<th>Data</th>`+
 						`<th>Hora</th>`+
 						`<th>Cenário</th>`+
+						`<th>Op.</th>`+
 						`<th>Cts</th>`+
+						`<th>Vol</th>`+
 						`<th>Bruto BRL</th>`+
 						`<th>Custo</th>`+
 						`<th>Líquido BRL</th>`+
+						`<th>Erro</th>`+
 						`</tr>`;
 			}
 			else if (periodo_calc === '2'){
@@ -3294,11 +2951,14 @@ let Renda_variavel = (function(){
 						`<th>Data</th>`+
 						`<th>Ops</th>`+
 						`<th>Cts</th>`+
+						`<th>Vol</th>`+
 						`<th>Lucro Bruto</th>`+
 						`<th>Prejuízo Bruto</th>`+
+						`<th>Bruto S</th>`+
 						`<th>Bruto BRL</th>`+
 						`<th>Custo</th>`+
 						`<th>Líquido BRL</th>`+
+						`<th>Erro</th>`+
 						`</tr>`;
 			}
 			else if (periodo_calc === '3'){
@@ -3307,11 +2967,14 @@ let Renda_variavel = (function(){
 						`<th>Data</th>`+
 						`<th>Ops</th>`+
 						`<th>Cts</th>`+
+						`<th>Vol</th>`+
 						`<th>Lucro Bruto</th>`+
 						`<th>Prejuízo Bruto</th>`+
+						`<th>Bruto S</th>`+
 						`<th>Bruto BRL</th>`+
 						`<th>Custo</th>`+
 						`<th>Líquido BRL</th>`+
+						`<th>Erro</th>`+
 						`</tr>`;
 			}
 			return html;
@@ -3325,40 +2988,49 @@ let Renda_variavel = (function(){
 							`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
 							`<td name="trade__hora">${trades[o].trade__hora}</td>`+
 							`<td name="trade__cenario">${trades[o].trade__cenario}</td>`+
+							`<td name="trade__op">${trades[o].trade__op}</td>`+
 							`<td name="trade__cts">${trades[o].trade__cts}</td>`+
-							`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
+							`<td name="trade__vol">${trades[o].trade__vol}</td>`+
+							`<td name="trade__result_bruto__brl">${trades[o].trade__result_bruto__brl}</td>`+
 							`<td name="trade__custo">${trades[o].trade__custo}</td>`+
-							`<td name="result__brl">${trades[o].result__brl}</td>`+
+							`<td name="trade__result_liquido__brl">${trades[o].trade__result_liquido__brl}</td>`+
+							`<td name="trade__erro">${trades[o].trade__erro}</td>`+
 							`</tr>`;
 				}
 			}
 			else if (periodo_calc === '2'){
 				for (let o in trades){
 					html += `<tr>`+
-							`<td name="trade__seq">${trades[o].trade__seq}</td>`+
-							`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
-							`<td name="trade__ops">${trades[o].trade__ops}</td>`+
-							`<td name="trade__cts">${trades[o].trade__cts}</td>`+
-							`<td name="lucro_bruto__brl">${trades[o].lucro_bruto__brl}</td>`+
-							`<td name="prejuizo_bruto__brl">${trades[o].prejuizo_bruto__brl}</td>`+
-							`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
-							`<td name="trade__custo">${trades[o].trade__custo}</td>`+
-							`<td name="result__brl">${trades[o].result__brl}</td>`+
+							`<td name="dia__seq">${trades[o].dia__seq}</td>`+
+							`<td name="dia__data">${Global.convertDate(trades[o].dia__data)}</td>`+
+							`<td name="dia__qtd_trades">${trades[o].dia__qtd_trades}</td>`+
+							`<td name="dia__cts">${trades[o].dia__cts}</td>`+
+							`<td name="dia__vol_media">${trades[o].dia__vol_media}</td>`+
+							`<td name="dia__lucro_bruto__brl">${trades[o].dia__lucro_bruto__brl}</td>`+
+							`<td name="dia__prejuizo_bruto__brl">${trades[o].dia__prejuizo_bruto__brl}</td>`+
+							`<td name="dia__result_bruto__brl">${trades[o].dia__result_bruto__brl}</td>`+
+							`<td name="dia__result_bruto__S">${trades[o].dia__result_bruto__S}</td>`+
+							`<td name="dia__custo">${trades[o].dia__custo}</td>`+
+							`<td name="dia__result_liquido__brl">${trades[o].dia__result_liquido__brl}</td>`+
+							`<td name="dia__erro">${trades[o].dia__erro}</td>`+
 							`</tr>`;
 				}
 			}
 			else if (periodo_calc === '3'){
 				for (let o in trades){
 					html += `<tr>`+
-							`<td name="trade__seq">${trades[o].trade__seq}</td>`+
-							`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
-							`<td name="trade__ops">${trades[o].trade__ops}</td>`+
-							`<td name="trade__cts">${trades[o].trade__cts}</td>`+
-							`<td name="lucro_bruto__brl">${trades[o].lucro_bruto__brl}</td>`+
-							`<td name="prejuizo_bruto__brl">${trades[o].prejuizo_bruto__brl}</td>`+
-							`<td name="result_bruto__brl">${trades[o].result_bruto__brl}</td>`+
-							`<td name="trade__custo">${trades[o].trade__custo}</td>`+
-							`<td name="result__brl">${trades[o].result__brl}</td>`+
+							`<td name="mes__seq">${trades[o].mes__seq}</td>`+
+							`<td name="mes__data">${Global.convertDate(trades[o].mes__data)}</td>`+
+							`<td name="mes__qtd_trades">${trades[o].mes__qtd_trades}</td>`+
+							`<td name="mes__cts">${trades[o].mes__cts}</td>`+
+							`<td name="mes__vol_media">${trades[o].mes__vol_media}</td>`+
+							`<td name="mes__lucro_bruto__brl">${trades[o].mes__lucro_bruto__brl}</td>`+
+							`<td name="mes__prejuizo_bruto__brl">${trades[o].mes__prejuizo_bruto__brl}</td>`+
+							`<td name="mes__result_bruto__brl">${trades[o].mes__result_bruto__brl}</td>`+
+							`<td name="mes__result_bruto__S">${trades[o].mes__result_bruto__S}</td>`+
+							`<td name="mes__custo">${trades[o].mes__custo}</td>`+
+							`<td name="mes__result_liquido__brl">${trades[o].mes__result_liquido__brl}</td>`+
+							`<td name="mes__erro">${trades[o].mes__erro}</td>`+
 							`</tr>`;
 				}
 			}
@@ -3373,10 +3045,13 @@ let Renda_variavel = (function(){
 						Global.convertDate(trades[o].trade__data),
 						trades[o].trade__hora,
 						trades[o].trade__cenario,
+						trades[o].trade__op,
 						trades[o].trade__cts,
+						trades[o].trade__vol,
 						trades[o].result_bruto__brl,
 						trades[o].trade__custo,
-						trades[o].result__brl
+						trades[o].result__brl,
+						trades[o].trade__erro,
 					]);
 				}
 			}
@@ -3414,35 +3089,6 @@ let Renda_variavel = (function(){
 		}
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*----------------------------- Section Analise Obs ------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Inicia ou reinicia a seção de 'analise_obs' da instancia de arcabouço selecionada.
-		** (Apenas se houver 1 cenário selecionado ou filtrado) **
-	*/
-	function rebuildAnalise_obs(){
-		let selected_inst_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
-			html = ``;
-		_analise_obs__section.show('building');
-		if (selected_inst_arcabouco in _lista__operacoes.operacoes && _lista__operacoes.operacoes[selected_inst_arcabouco].length > 0){
-			let finish_building = 0,
-				analise_por_grupo_data = RV_Statistics.generate(_lista__operacoes.operacoes[selected_inst_arcabouco], _lista__instancias_arcabouco.getSelected('filters'), _lista__instancias_arcabouco.getSelected('simulations'));
-			//////////////////////////////////
-			//Info Melhores e Piores Estatisticas (Por Grupo)
-			//////////////////////////////////
-
-			//////////////////////////////////
-			//Tabela de Resultados de todos os grupos gerados
-			//////////////////////////////////
-
-			//////////////////////////////////
-			//Gráfico de Resultados disperso (Por Grupo)
-			//////////////////////////////////
-		}
-		else
-			_analise_obs__section.show('empty');
-	}
-	////////////////////////////////////////////////////////////////////////////////////
 	/*---------------------------- EXECUCAO DAS FUNCOES ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Lista Arcabouços --------------------------------*/
@@ -3451,21 +3097,11 @@ let Renda_variavel = (function(){
 		Processa o fechamento do modal 'arcaboucos_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('arcaboucos_modal')).on('hidden.bs.modal', function (){
-		if (_renda_variavel__section === 'dashboard_ops__section'){
-			if (_dashboard_ops__needRebuild){
-				_dashboard_ops__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildDashboard_ops();
-			}
-		}
-		else if (_renda_variavel__section === 'analise_obs__section'){
-			if (_analise_obs__needRebuild){
-				_analise_obs__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildAnalise_obs();
-			}
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
+			//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+			_renda_variavel__search.update();
+			rebuildDashboard_ops();
 		}
 	});
 	/*
@@ -3491,24 +3127,20 @@ let Renda_variavel = (function(){
 			let id_arcabouco = this.getAttribute('arcabouco');
 			if (e.ctrlKey){
 				//Se a instancia foi adicionada na lista
-				if (_lista__instancias_arcabouco.add({id: id_arcabouco, nome: _lista__arcaboucos.arcaboucos[id_arcabouco].nome, selected: true})){
+				if (_instancia_arcabouco.select({id: id_arcabouco, nome: _lista__arcaboucos.arcaboucos[id_arcabouco].nome, selected: true})){
 					_dashboard_ops__needRebuild = true;
-					_analise_obs__needRebuild = true;
-					_list_ops__needRebuild = true;
 					_arcabouco_info__needRebuild = true;
-					if (!(id_arcabouco in _lista__operacoes.operacoes)){
-						Global.connect({
-							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: id_arcabouco}},
-							success: function (result){
-								if (result.status){
-									_lista__cenarios.create(result.data['cenarios']);
-									_lista__operacoes.update(result.data['operacoes']);
-								}
-								else
-									Global.toast.create({location: document.getElementById('arcaboucos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+					Global.connect({
+						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: id_arcabouco}},
+						success: function (result){
+							if (result.status){
+								_lista__cenarios.create(result.data['cenarios']);
+								_lista__operacoes.update(result.data['operacoes']);
 							}
-						});
-					}
+							else
+								Global.toast.create({location: document.getElementById('arcaboucos_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+						}
+					});
 				}
 			}
 		}
@@ -3543,8 +3175,6 @@ let Renda_variavel = (function(){
 				if (result.status){
 					if (_lista__arcaboucos.remove(id_arcabouco)){
 						_dashboard_ops__needRebuild = true;
-						_analise_obs__needRebuild = true;
-						_list_ops__needRebuild = true;
 						_arcabouco_info__needRebuild = true;
 					}
 					buildArcaboucosTable();
@@ -3880,7 +3510,7 @@ let Renda_variavel = (function(){
 	/*
 		Filtra os cenários e observações em 'arcabouco_info'.
 	*/
-	$(document.getElementById("arcabouco_info_place")).on('change', '.arcabouco_info__cenarios__filter select', function (){
+	$(document.getElementById('arcabouco_info_place')).on('change', '.arcabouco_info__cenarios__filter select', function (){
 		let cenario = $(this).val();
 		$(document.getElementById('arcabouco_info_place')).find('.arcabouco_info__cenarios_obs table tr').each(function (){
 			$(this).toggleClass('d-none', (cenario !== '' && this.getAttribute('cenario') != cenario));
@@ -3893,45 +3523,30 @@ let Renda_variavel = (function(){
 		Processa o fechamento do modal 'cenarios_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('cenarios_modal')).on('hidden.bs.modal', function (){
-		if (_renda_variavel__section === 'dashboard_ops__section'){
-			if (_dashboard_ops__needRebuild){
-				_dashboard_ops__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildDashboard_ops();
-			}
-		}
-		else if (_renda_variavel__section === 'analise_obs__section'){
-			if (_analise_obs__needRebuild){
-				_analise_obs__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildAnalise_obs();
-			}
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
+			//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+			_renda_variavel__search.update();
+			rebuildDashboard_ops();
 		}
 	});
 	/*
-		Processa o espelhamento de cenários de u outro arcabouço.
+		Processa o espelhamento de cenários de um outro arcabouço.
 		Adiciona os cenarios de outro arcabouço, menos os que o nome já existir.
 	*/
 	$(document.getElementById('cenarios_modal_espelhar')).click(function (){
 		let arcabouco_espelhar_select = $(document.getElementById('cenarios_modal_espelhar__arcaboucos')),
 			id_arcabouco_espelhar = arcabouco_espelhar_select.val();
 		if (id_arcabouco_espelhar !== ''){
-			//Se as informações do cenario não estiver em memória buscar
-			if (id_arcabouco_espelhar in _lista__cenarios.cenarios)
-				buildCenarios_Espelhados(Object.values(_lista__cenarios.cenarios[id_arcabouco_espelhar]));
-			else{
-				Global.connect({
-					data: {module: 'renda_variavel', action: 'get_cenarios', params: {id_arcabouco: id_arcabouco_espelhar}},
-					success: function (result){
-						if (result.status)
-							buildCenarios_Espelhados(result.data);
-						else
-							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
-					}
-				});
-			}
+			Global.connect({
+				data: {module: 'renda_variavel', action: 'get_cenarios', params: {id_arcabouco: id_arcabouco_espelhar}},
+				success: function (result){
+					if (result.status)
+						buildCenarios_Espelhados(result.data);
+					else
+						Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+				}
+			});
 			arcabouco_espelhar_select.val('');
 		}
 	});
@@ -3997,8 +3612,6 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
-							_analise_obs__needRebuild = true;
-							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Removido.', delay: 4000});
 							_lista__cenarios.remove(remove_data.id);
@@ -4093,8 +3706,6 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
-							_analise_obs__needRebuild = true;
-							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Adicionado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result.data[0], false));
@@ -4117,8 +3728,6 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
-							_analise_obs__needRebuild = true;
-							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Atualizado.', delay: 4000});
 							cenario_div.replaceWith(buildCenario(result['data']['cenario'], false));
@@ -4155,117 +3764,18 @@ let Renda_variavel = (function(){
 			cenario_div.find('button[salvar_cenario]').removeClass('disabled');
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*--------------------------------- Lista Ops ------------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Corrige bug no bootstrap que não mostra o offcanvas na 1 vez que abre.	
-	*/
-	$(document.getElementById('lista_ops')).on('shown.bs.offcanvas', function (){
-		$(this).show();
-	});
-	/*
-		Processa os cliques na tabela de operações de um arcabouço.
-		Click:
-			- (Ctrl): Selecionar 1 row.
-	*/
-	$(document.getElementById('lista_ops__table')).on('mousedown', 'tbody tr', function (e){
-		//Ativa a seleção de linhas (Ctrl pressionado)
-		if (e.ctrlKey){
-			e.preventDefault();
-			//Se ja ta selecionado, desmarca
-			if (Global.hasClass(this, 'selected'))
-				$(this).removeClass('selected');
-			else{
-				_lista_ops__table_DT_clickState = 1;
-				$(this).addClass('selected');
-			}
-			let action_submenu = $(document.getElementById('lista_ops__actions'));
-			if ($(document.getElementById('lista_ops__table')).find('tbody tr.selected').length === 0)
-				action_submenu.find('button[name="remove_sel"]').addClass('d-none');
-			else
-				action_submenu.find('button[name="remove_sel"]').removeClass('d-none');
-		}
-		//Deseleciona tudo
-		else{
-			$(document.getElementById('lista_ops__table')).find('tbody tr.selected').removeClass('selected');
-			$(document.getElementById('lista_ops__actions')).find('button[name="remove_sel"]').addClass('d-none');
-		}
-	}).on('mouseenter', 'tbody tr', function (e){
-		//Seleciona linhas caso esteje segurando (Ctrl e Click)
-		if (_lista_ops__table_DT_clickState && e.ctrlKey){
-			e.preventDefault();
-			$(this).addClass('selected');
-		}
-	}).on('mouseup', 'tbody tr', function (e){
-		if (e.ctrlKey)
-			_lista_ops__table_DT_clickState = 0;
-	});
-	/*
-		Processa a remocao de tudo ou das operações selecionadas com double click.
-	*/
-	$(document.getElementById('lista_ops__actions')).on('dblclick', 'button[name]', function (){
-		let remove_data = {};
-		//Remove todas as operações do arcabouço
-		if (this.name === 'remove_all')
-			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
-		else if (this.name === 'remove_sel'){
-			remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
-			$(document.getElementById('lista_ops__table')).DataTable().rows({search: 'applied'}).nodes().each(function (tr){
-				if (Global.hasClass(tr, 'selected'))
-					remove_data['operacoes'].push(tr.getAttribute('operacao'));
-			});
-			if (remove_data['operacoes'].length === 0){
-				Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'danger', body: 'Nenhuma operação selecionada.', delay: 4000});
-				return false;
-			}
-		}
-		if (!Global.isObjectEmpty(remove_data)){
-			Global.connect({
-				data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
-				success: function (result){
-					if (result.status){
-						Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'success', body: 'Operações Apagadas.', delay: 4000});
-						_lista__operacoes.update(result['data']['operacoes']);
-						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
-						buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
-						buildOperacoesOffcanvas(forceRebuild = true);
-						//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-						_renda_variavel__search.update();
-						if (_renda_variavel__section === 'dashboard_ops__section')
-							rebuildDashboard_ops();
-						else if (_renda_variavel__section === 'analise_obs__section')
-							rebuildAnalise_obs();
-					}
-					else
-						Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'danger', body: result.error, delay: 4000});
-				}
-			});
-		}
-	});
-	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Operações Upload ------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
 		Processa o fechamento do modal 'upload_operacoes_modal', para reconstrucao do arcabouço section.
 	*/
 	$(document.getElementById('upload_operacoes_modal')).on('hidden.bs.modal', function (){
-		if (_renda_variavel__section === 'dashboard_ops__section'){
-			if (_dashboard_ops__needRebuild){
-				_dashboard_ops__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildDashboard_ops();
-				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
-			}
-		}
-		else if (_renda_variavel__section === 'analise_obs__section'){
-			if (_analise_obs__needRebuild){
-				_analise_obs__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildAnalise_obs();
-				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
-			}
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
+			//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+			_renda_variavel__search.update();
+			rebuildDashboard_ops();
+			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
 		}
 	});
 	/*
@@ -4296,7 +3806,7 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('upload_operacoes_modal_enviar')).click(function (){
 		let table = $(document.getElementById('table_upload_operacoes')),
-			insert_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
+			insert_data = {id_arcabouco: _instancia_arcabouco.get('id'), operacoes: []};
 		$(document.getElementById('table_upload_operacoes')).find('tbody tr').each(function (t, tr){
 			tr = $(tr);
 			let sequencia = tr.find('td[name="sequencia"]').attr('value'),
@@ -4340,8 +3850,6 @@ let Renda_variavel = (function(){
 				success: function (result){
 					if (result.status){
 						_dashboard_ops__needRebuild = true;
-						_analise_obs__needRebuild = true;
-						_list_ops__needRebuild = true;
 						_arcabouco_info__needRebuild = true;
 						_lista__operacoes.update(result['data']['operacoes']);
 						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
@@ -4378,114 +3886,13 @@ let Renda_variavel = (function(){
 	$(document.getElementById('adicionar_operacoes_offcanvas')).on('shown.bs.offcanvas', function (){
 		$(this).show();
 	}).on('hidden.bs.offcanvas', function (){
-		if (_renda_variavel__section === 'dashboard_ops__section'){
-			if (_dashboard_ops__needRebuild){
-				_dashboard_ops__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildDashboard_ops();
-				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
-			}
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
+			//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+			_renda_variavel__search.update();
+			rebuildDashboard_ops();
+			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
 		}
-		else if (_renda_variavel__section === 'analise_obs__section'){
-			if (_analise_obs__needRebuild){
-				_analise_obs__needRebuild = false;
-				//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-				_renda_variavel__search.update();
-				rebuildAnalise_obs();
-				buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
-			}
-		}
-	});
-	/*
-		Gerencia a contagem de Pernada e Tendencia em 'adicionar_operacoes_offcanvas__contagem'.
-	*/
-	$(document.getElementById('adicionar_operacoes_offcanvas__contagem')).find('button[name]').on('click', function (){
-		let form = $(document.getElementById('adicionar_operacoes_offcanvas__contagem')),
-			c_tendencia = form.find('input[name="c_tendencia"]'),
-			c_pernada = form.find('input[name="c_pernada"]'),
-			raw_value_c_tendencia = parseInt(c_tendencia.attr('raw_value')),
-			raw_value_c_pernada = parseInt(c_pernada.attr('raw_value')),
-			show_value_c_tendencia = '',
-			show_value_c_pernada = '',
-			not_ok_c_tendencia = false,
-			not_ok_c_pernada = false;
-		//Contagem de Tendencia
-		if (this.getAttribute('name') === 'up_c_tendencia'){
-			if (raw_value_c_tendencia === 0)
-				form.find('button[name="down_c_tendencia"], button[name="up_c_pernada"]').addClass('disabled');
-			form.find('button[name="up_c_tendencia"], button[name="restart_c_pernada"]').addClass('disabled');
-			form.find('button[name="down_c_pernada"], button[name="restart_c_tendencia"]').removeClass('disabled');
-			raw_value_c_tendencia++;
-			//Atualiza texto tendencia
-			show_value_c_tendencia = `A${Math.abs(raw_value_c_tendencia)}`;
-			if (Math.abs(raw_value_c_tendencia) === 2 || Math.abs(raw_value_c_tendencia) === 4)
-				not_ok_c_tendencia = true;
-			//Atualiza texto pernada
-			if (Math.abs(raw_value_c_pernada) > 0){
-				show_value_c_pernada = `F B${Math.abs(raw_value_c_pernada)}`;
-				if (Math.abs(raw_value_c_pernada) === 1 || Math.abs(raw_value_c_pernada) === 3)
-					not_ok_c_pernada = true;
-			}
-		}
-		else if (this.getAttribute('name') === 'down_c_tendencia'){
-			if (raw_value_c_tendencia === 0)
-				form.find('button[name="up_c_tendencia"], button[name="down_c_pernada"]').addClass('disabled');
-			form.find('button[name="down_c_tendencia"], button[name="restart_c_pernada"]').addClass('disabled');
-			form.find('button[name="up_c_pernada"], button[name="restart_c_tendencia"]').removeClass('disabled');
-			raw_value_c_tendencia--;
-			//Atualiza texto tendencia
-			show_value_c_tendencia = `B${Math.abs(raw_value_c_tendencia)}`;
-			if (Math.abs(raw_value_c_tendencia) === 2 || Math.abs(raw_value_c_tendencia) === 4)
-				not_ok_c_tendencia = true;
-			//Atualiza texto pernada
-			if (Math.abs(raw_value_c_pernada) > 0){
-				show_value_c_pernada = `F A${Math.abs(raw_value_c_pernada)}`;
-				if (Math.abs(raw_value_c_pernada) === 1 || Math.abs(raw_value_c_pernada) === 3)
-					not_ok_c_pernada = true;
-			}
-		}
-		else if (this.getAttribute('name') === 'restart_c_tendencia'){
-			form.find('button[name="up_c_tendencia"], button[name="down_c_tendencia"], button[name="restart_c_tendencia"]').removeClass('disabled');
-			form.find('button[name="up_c_pernada"], button[name="down_c_pernada"], button[name="restart_c_pernada"]').addClass('disabled');
-			raw_value_c_tendencia = 0;
-			raw_value_c_pernada = 0;
-		}
-		//Contagem de Pernada
-		else if (this.getAttribute('name') === 'up_c_pernada'){
-			form.find('button[name="up_c_pernada"], button[name="restart_c_tendencia"]').addClass('disabled');
-			form.find('button[name="down_c_tendencia"], button[name="restart_c_pernada"]').removeClass('disabled');
-			raw_value_c_pernada++;
-			//Atualiza texto pernada
-			show_value_c_pernada = `A${Math.abs(raw_value_c_pernada)}`;
-			if (Math.abs(raw_value_c_pernada) === 2 || Math.abs(raw_value_c_pernada) === 4)
-				not_ok_c_pernada = true;
-			//Atualiza texto tendencia
-			show_value_c_tendencia = `F B${Math.abs(raw_value_c_tendencia)}`;
-			if (Math.abs(raw_value_c_tendencia) === 1 || Math.abs(raw_value_c_tendencia) === 3)
-				not_ok_c_tendencia = true;
-		}
-		else if (this.getAttribute('name') === 'down_c_pernada'){
-			form.find('button[name="down_c_pernada"], button[name="restart_c_tendencia"]').addClass('disabled');
-			form.find('button[name="up_c_tendencia"], button[name="restart_c_pernada"]').removeClass('disabled');
-			raw_value_c_pernada--;
-			//Atualiza texto pernada
-			show_value_c_pernada = `B${Math.abs(raw_value_c_pernada)}`;
-			if (Math.abs(raw_value_c_pernada) === 2 || Math.abs(raw_value_c_pernada) === 4)
-				not_ok_c_pernada = true;
-			//Atualiza texto tendencia
-			show_value_c_tendencia = `F A${Math.abs(raw_value_c_tendencia)}`;
-			if (Math.abs(raw_value_c_tendencia) === 1 || Math.abs(raw_value_c_tendencia) === 3)
-				not_ok_c_tendencia = true;
-		}
-		else if (this.getAttribute('name') === 'restart_c_pernada'){
-			form.find('button[name="restart_c_restart"]').addClass('disabled');
-			raw_value_c_pernada = 0;
-			show_value_c_tendencia = c_tendencia.val();
-			not_ok_c_tendencia = parseInt(c_tendencia.attr('not_ok')) === 1;
-		}
-		form.find('input[name="c_tendencia"]').attr('not_ok', ((not_ok_c_tendencia) ? 1 : 0)).attr('raw_value', raw_value_c_tendencia).toggleClass('not_ok', not_ok_c_tendencia).val(show_value_c_tendencia);
-		form.find('input[name="c_pernada"]').attr('not_ok', ((not_ok_c_pernada) ? 1 : 0)).attr('raw_value', raw_value_c_pernada).toggleClass('not_ok', not_ok_c_pernada).val(show_value_c_pernada);
 	});
 	/*
 		Insere um novo bloco de operações.
@@ -4499,7 +3906,7 @@ let Renda_variavel = (function(){
 			default_cts = form.find('input[name="cts"]').val(),
 			default_cenario = form.find('input[name="cenario"]').val(),
 			id_cenario = -1,
-			id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			id_arcabouco = _instancia_arcabouco.get('id'),
 			gerenciamentos_a_criar = [],
 			default_gerenciamentos = form.find('select[name="gerenciamento"]').val(),
 			ult_seq = (parseInt(tbody.find('tr').last().attr('sequencia')) || 0) + 1,
@@ -4603,7 +4010,7 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('table_adicionar_operacoes')).on('focus', 'input[name="cenario"]', function (){
 		if (this.value !== ''){
-			let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+			let id_arcabouco = _instancia_arcabouco.get('id'),
 				id_cenario = -1;
 			for (let cn in _lista__cenarios['cenarios'][id_arcabouco]){
 				if (this.value.localeCompare(_lista__cenarios['cenarios'][id_arcabouco][cn]['nome'], undefined, {sensitivity: 'base'}) === 0)
@@ -4686,7 +4093,7 @@ let Renda_variavel = (function(){
 				}
 				if (gerenciamento_index !== -1 && _lista__gerenciamentos['gerenciamentos'][gerenciamento_index]['escaladas'].indexOf(this.value) !== -1){
 					let cts_input = tr.find('input[name="cts"]');
-					cts_input.val(parseFloat(cts_input.val()) * (parseInt(this.value)) + 1);
+					cts_input.val(parseFloat(cts_input.val()) * (parseInt(this.value) + 1));
 				}
 				else
 					this.value = '';
@@ -4700,7 +4107,7 @@ let Renda_variavel = (function(){
 			}
 			//Trata o cenário, para mostrar suas observações ao lado
 			if (this.name === 'cenario'){
-				let id_arcabouco = _lista__instancias_arcabouco.getSelected('id'),
+				let id_arcabouco = _instancia_arcabouco.get('id'),
 					id_cenario = -1;
 				for (let cn in _lista__cenarios['cenarios'][id_arcabouco]){
 					if (this.value.localeCompare(_lista__cenarios['cenarios'][id_arcabouco][cn]['nome'], undefined, {sensitivity: 'base'}) === 0)
@@ -4740,7 +4147,7 @@ let Renda_variavel = (function(){
 		}
 		//Calcula Risco Máx com base nos dados para ver se a operação pode existir
 		if (inputs_check_riscoMax.includes(this.name)){
-			let simulations = _lista__instancias_arcabouco.getSelected('simulations'),
+			let simulations = _instancia_arcabouco.get('simulations'),
 				R = ('R' in simulations) ? parseFloat(simulations.R) : null;
 			//Para cada gerenciamento do bloco
 			tr.parent().find(`tr[bloco="${bloco}"]`).each(function (i, e_tr){
@@ -4824,14 +4231,13 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('adicionar_operacoes_offcanvas__erase_all')).on('dblclick', function (){
 		resetAdicionarOperacaoTable();
-		resetAdicionarOperacao__ContagemForm();
 	});
 	/*
 		Envia as operações para serem adicionadas ao arcabouço em 'adicionar_operacoes_offcanvas'.
 	*/
 	$(document.getElementById('adicionar_operacoes_offcanvas__enviar')).on('click', function (){
 		let tbody = $(document.getElementById('table_adicionar_operacoes')).find('tbody'),
-			insert_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []},
+			insert_data = {id_arcabouco: _instancia_arcabouco.get('id'), operacoes: []},
 			error = false;
 		//Exclui as linhas com 'risk_block'
 		tbody.find('tr.risk_block').remove();
@@ -4914,8 +4320,6 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							_dashboard_ops__needRebuild = true;
-							_analise_obs__needRebuild = true;
-							_list_ops__needRebuild = true;
 							_arcabouco_info__needRebuild = true;
 							_lista__operacoes.update(result['data']['operacoes']);
 							_lista__arcaboucos.update(result['data']['arcabouco'][0]);
@@ -4949,51 +4353,6 @@ let Renda_variavel = (function(){
 	/*----------------------------- Section Dashboard Ops ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
-		Processa um clique nas instancias de arcabouço.
-			- Clique normal: Muda a instancia selecionada.
-			- Clique + Ctrl: Remove a instancia da lista.
-	*/
-	$(document.getElementById('renda_variavel__instancias')).on('click', 'span.badge', function (e){
-		if (e.ctrlKey)
-			_lista__instancias_arcabouco.remove(this.getAttribute('instancia'));
-		else{
-			if (_lista__instancias_arcabouco.getSelected('instancia') !== this.getAttribute('instancia')){
-				_lista__instancias_arcabouco.setSelected(this.getAttribute('instancia'));
-				_list_ops__needRebuild = true;
-				_arcabouco_info__needRebuild = true;
-				//Inicia o offcanvas de Adicionar Operações
-				buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = true, show = false);
-				if (!(_lista__instancias_arcabouco.getSelected('id') in _lista__operacoes.operacoes)){
-					Global.connect({
-						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: _lista__instancias_arcabouco.getSelected('id')}},
-						success: function (result){
-							if (result.status){
-								_lista__cenarios.create(result.data['cenarios']);
-								_lista__operacoes.update(result.data['operacoes']);
-								//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-								_renda_variavel__search.update();
-								if (_renda_variavel__section === 'dashboard_ops__section')
-									rebuildDashboard_ops();
-								else if (_renda_variavel__section === 'analise_obs__section')
-									rebuildAnalise_obs();
-							}
-							else
-								Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
-						}
-					});
-				}
-				else{
-					//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-					_renda_variavel__search.update();
-					if (_renda_variavel__section === 'dashboard_ops__section')
-						rebuildDashboard_ops();
-					else if (_renda_variavel__section === 'analise_obs__section')
-						rebuildAnalise_obs();
-				}
-			}
-		}
-	});
-	/*
 		Processa as seleções de observações em 'filters'.
 	*/
 	$(document.getElementById('renda_variavel__search')).on('click', 'div.iSelectKami[name="observacoes"] ul li button.dropdown-item', function (e){
@@ -5002,7 +4361,7 @@ let Renda_variavel = (function(){
 			div_holder = me.parent().parent().parent(),
 			select_name = div_holder.attr('name'),
 			placeholder = {'observacoes': 'Observações'},
-			dashboard_filters = _lista__instancias_arcabouco.getSelected('filters'),
+			dashboard_filters = _instancia_arcabouco.get('filters'),
 			selected_values = {},
 			qtd_selected = 0;
 		//Se o target não for um clique no input, processa a seleção da observação
@@ -5023,7 +4382,7 @@ let Renda_variavel = (function(){
 			dashboard_filters['cenario'][cenario_nome][select_name][me.attr('value')] = (me.find('input[name="negar_valor"]').prop('checked')) ? 1 : 0;	
 		}
 		//Atualiza no sessionStorage
-		_lista__instancias_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
+		_instancia_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
 		//Atualiza o placeholder
 		qtd_selected = div_holder.find('ul button.dropdown-item[selected]').length;
 		div_holder.find('button.dropdown-toggle').html(((qtd_selected > 1) ? `${qtd_selected} items selected` : ((qtd_selected === 1) ? `1 item selected` : `${placeholder[select_name]}`)));
@@ -5035,14 +4394,14 @@ let Renda_variavel = (function(){
 		let div_holder = $(this).parent().parent().parent().parent(),
 			select_name = div_holder.attr('name'),
 			placeholder = {'observacoes': 'Observações'},
-			dashboard_filters = _lista__instancias_arcabouco.getSelected('filters');
+			dashboard_filters = _instancia_arcabouco.get('filters');
 		div_holder.find('ul button.dropdown-item[selected]').each(function (i, el){
 			el.removeAttribute('selected');
 			el.querySelector('input[name="negar_valor"]').checked = false;
 		});
 		for (cenario_nome in dashboard_filters['cenario'])
 			dashboard_filters['cenario'][cenario_nome][select_name] = {};
-		_lista__instancias_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
+		_instancia_arcabouco.updateInstancia_Filters('cenario', dashboard_filters['cenario']);
 		//Atualiza o placeholder
 		div_holder.find('button.dropdown-toggle').html(`${placeholder[select_name]}`);
 	});
@@ -5050,12 +4409,38 @@ let Renda_variavel = (function(){
 		Processa no select de observações, mudança no tipo de query a ser formatada na filtragem. (OR ou AND)
 	*/
 	$(document.getElementById('renda_variavel__search')).on('change', 'div.iSelectKami[name] ul li select.iSelectKami', function (){
-		_lista__instancias_arcabouco.updateInstancia_Filters(this.name, $(this).val());
+		_instancia_arcabouco.updateInstancia_Filters(this.name, $(this).val());
 	});
-	////////////////////////////////////////////////////////////////////////////////////
-	/*----------------------------- Section Analise Obs ------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-
+	/*
+		Processa os cliques na tabela de operações de um arcabouço.
+		Click:
+			- (Ctrl): Selecionar 1 row.
+	*/
+	$(document.getElementById('dashboard_ops__table_trades__place')).on('mousedown', '#dashboard_ops__table_trades tbody tr', function (e){
+		//Ativa a seleção de linhas (Ctrl pressionado)
+		if (e.ctrlKey){
+			e.preventDefault();
+			//Se ja ta selecionado, desmarca
+			if (Global.hasClass(this, 'selected'))
+				$(this).removeClass('selected');
+			else{
+				_dashboard_ops__table_trades_DT__clickState = 1;
+				$(this).addClass('selected');
+			}
+		}
+		//Deseleciona tudo
+		else
+			$(document.getElementById('dashboard_ops__table_trades')).DataTable().rows().nodes().to$().removeClass('selected');
+	}).on('mouseenter', '#dashboard_ops__table_trades tbody tr', function (e){
+		//Seleciona linhas caso esteje segurando (Ctrl e Click)
+		if (_dashboard_ops__table_trades_DT__clickState && e.ctrlKey){
+			e.preventDefault();
+			$(this).addClass('selected');
+		}
+	}).on('mouseup', '#dashboard_ops__table_trades tbody tr', function (e){
+		_dashboard_ops__table_trades_DT__clickState = 0;
+		$(document.getElementById('dashboard_ops__table_trades__actions')).find('button[name="remove_sel"]').toggleClass('d-none', ($(document.getElementById('dashboard_ops__table_trades')).DataTable().rows('.selected').count() <= 0));
+	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -5074,20 +4459,10 @@ let Renda_variavel = (function(){
 			buildArcaboucoInfoOffcanvas();
 		else if (this.name === 'cenarios')
 			buildCenariosModal();
-		else if (this.name === 'lista_ops')
-			buildOperacoesOffcanvas(forceRebuild = false);
 		else if (this.name === 'upload_operacoes')
 			buildUploadOperacoesModal();
 		else if (this.name === 'adicionar_operacoes')
 			buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = false, show = true);
-		else if (this.name === 'section_dashboard_ops'){
-			$(this).parentsUntil('#renda_variavel__menu').last().find('button').html(this.innerHTML);
-			changeSection__Renda_variavel('dashboard_ops__section');
-		}
-		else if (this.name === 'section_analise_obs'){
-			$(this).parentsUntil('#renda_variavel__menu').last().find('button').html(this.innerHTML);
-			changeSection__Renda_variavel('analise_obs__section');
-		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
@@ -5110,8 +4485,7 @@ let Renda_variavel = (function(){
 				//Inicia o offcanvas de Adicionar Operações
 				buildAdicionarOperacoesOffcanvas(firstBuild = true, forceRebuild = true, show = false);
 				//Inicia a lista de instancias (Com uma já salva ou uma nova) e termina de construir o arcabouço Section
-				_lista__instancias_arcabouco.start(result.data);
-				_list_ops__needRebuild = true;
+				_instancia_arcabouco.start(result.data);
 				_arcabouco_info__needRebuild = true;
 			}
 			else

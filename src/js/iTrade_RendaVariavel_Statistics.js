@@ -358,6 +358,8 @@ let RV_Statistics = (function(){
 							hora: list[e].hora,
 							cenario: list[e].cenario,
 							vol: list[e].vol,
+							op: list[e].op,
+							erro: list[e].erro,
 							cts_usado: cts_usado,
 							custo: custo_operacao,
 							resultado_op: (resultLiquido_operacao > 0 ? 1 : (resultLiquido_operacao < 0 ? -1 : 0)),
@@ -436,6 +438,8 @@ let RV_Statistics = (function(){
 								erro: list[e].erro,
 								data: day_used,
 								qtd_trades: 1,
+								vol_total: list[e].vol,
+								erro: list[e].erro,
 								cts_usado: cts_usado,
 								custo: custo_operacao,
 								resultado_op: null,
@@ -464,6 +468,8 @@ let RV_Statistics = (function(){
 								new_list[index]['erro'] = list[e].erro;
 							new_list[index]['cts_usado'] += cts_usado;
 							new_list[index]['custo'] += custo_operacao;
+							new_list[index]['vol_total'] += list[e].vol;
+							new_list[index]['erro'] = new_list[index]['erro'] || list[e].erro;
 							if (resultBruto_operacao > 0){
 								new_list[index]['lucro_bruto']['brl'] += resultBruto_operacao;
 								if (simulation.R !== null)
@@ -550,6 +556,8 @@ let RV_Statistics = (function(){
 								erro: list[e].erro,
 								data: month_used,
 								qtd_trades: 1,
+								vol_total: list[e].vol,
+								erro: list[e].erro,
 								cts_usado: cts_usado,
 								custo: custo_operacao,
 								resultado_op: null,
@@ -578,6 +586,8 @@ let RV_Statistics = (function(){
 								new_list[index]['erro'] = list[e].erro;
 							new_list[index]['cts_usado'] += cts_usado;
 							new_list[index]['custo'] += custo_operacao;
+							new_list[index]['vol_total'] += list[e].vol;
+							new_list[index]['erro'] = new_list[index]['erro'] || list[e].erro;
 							if (resultBruto_operacao > 0){
 								new_list[index]['lucro_bruto']['brl'] += resultBruto_operacao;
 								if (simulation.R !== null)
@@ -934,12 +944,18 @@ let RV_Statistics = (function(){
 						trade__cenario: _ops[o].cenario,
 						//Contratos usados
 						trade__cts: _ops[o].cts_usado,
+						//Vol do trade
+						trade__vol: _ops[o].vol,
+						//Tipo da operação
+						trade__op: _ops[o].op,
+						//Se teve erro na operação
+						trade__erro: _ops[o].erro,
 						//Resultado bruto do trade em BRL
-						result_bruto__brl: _ops[o].result_bruto['brl'],
+						trade__result_bruto__brl: _ops[o].result_bruto['brl'],
 						//Custo do trade
 						trade__custo: _ops[o].custo,
 						//Resultado Liquido do trade em BRL
-						result__brl: _ops[o].result_liquido['brl']
+						trade__result_liquido__brl: _ops[o].result_liquido['brl']
 					});
 				}
 				//////////////////////////////////
@@ -1305,23 +1321,29 @@ let RV_Statistics = (function(){
 				if (_options.get_tradeTableData && !_options.only_General){
 					_dashboard_ops__table_trades.push({
 						//Sequencia do trade, na ordem que vem do BD
-						trade__seq: _temp__table_stats['i_seq']++,
+						dia__seq: _temp__table_stats['i_seq']++,
 						//Data do trade
-						trade__data: _ops[o].data,
+						dia__data: _ops[o].data,
 						//Contratos usados
-						trade__cts: _ops[o].cts_usado,
+						dia__cts: _ops[o].cts_usado,
 						//Trades feitos no dia
-						trade__ops: _ops[o].qtd_trades,
+						dia__qtd_trades: _ops[o].qtd_trades,
+						//Media de Vol no dia
+						dia__vol_media: divide(_ops[o].vol_total, _ops[o].qtd_trades),
+						//Se houve erro no dia
+						dia__erro: _ops[o].erro,
+						//Resultado bruto do dia em S
+						dia__result_bruto__S: _ops[o].result_bruto['S'],
 						//Lucro bruto do dia em BRL
-						lucro_bruto__brl: _ops[o].lucro_bruto['brl'],
+						dia__lucro_bruto__brl: _ops[o].lucro_bruto['brl'],
 						//Prejuizo bruto do dia em BRL
-						prejuizo_bruto__brl: _ops[o].prejuizo_bruto['brl'],
+						dia__prejuizo_bruto__brl: _ops[o].prejuizo_bruto['brl'],
 						//Resultado bruto do dia em BRL
-						result_bruto__brl: _ops[o].result_bruto['brl'],
+						dia__result_bruto__brl: _ops[o].result_bruto['brl'],
 						//Custo do trade
-						trade__custo: _ops[o].custo,
+						dia__custo: _ops[o].custo,
 						//Resultado Liquido do dia em BRL
-						result__brl: _ops[o].result_liquido['brl']
+						dia__result_liquido__brl: _ops[o].result_liquido['brl']
 					});
 				}
 				//////////////////////////////////
@@ -1561,23 +1583,29 @@ let RV_Statistics = (function(){
 				if (_options.get_tradeTableData && !_options.only_General){
 					_dashboard_ops__table_trades.push({
 						//Sequencia do trade, na ordem que vem do BD
-						trade__seq: _temp__table_stats['i_seq']++,
+						mes__seq: _temp__table_stats['i_seq']++,
 						//Data do trade
-						trade__data: _ops[o].data,
+						mes__data: _ops[o].data,
 						//Contratos usados
-						trade__cts: _ops[o].cts_usado,
+						mes__cts: _ops[o].cts_usado,
 						//Trades feitos no mes
-						trade__ops: _ops[o].qtd_trades,
+						mes__qtd_trades: _ops[o].qtd_trades,
+						//Media de Vol no mes
+						mes__vol_media: divide(_ops[o].vol_total, _ops[o].qtd_trades),
+						//Se houve erro no mes
+						mes__erro: _ops[o].erro,
+						//Resultado bruto do mes em S
+						mes__result_bruto__S: _ops[o].result_bruto['S'],
 						//Lucro bruto do mes em BRL
-						lucro_bruto__brl: _ops[o].lucro_bruto['brl'],
+						mes__lucro_bruto__brl: _ops[o].lucro_bruto['brl'],
 						//Prejuizo bruto do mes em BRL
-						prejuizo_bruto__brl: _ops[o].prejuizo_bruto['brl'],
+						mes__prejuizo_bruto__brl: _ops[o].prejuizo_bruto['brl'],
 						//Resultado bruto do mes em BRL
-						result_bruto__brl: _ops[o].result_bruto['brl'],
+						mes__result_bruto__brl: _ops[o].result_bruto['brl'],
 						//Custo do mes
-						trade__custo: _ops[o].custo,
+						mes__custo: _ops[o].custo,
 						//Resultado Liquido do mes em BRL
-						result__brl: _ops[o].result_liquido['brl']
+						mes__result_liquido__brl: _ops[o].result_liquido['brl']
 					});
 				}
 				//////////////////////////////////

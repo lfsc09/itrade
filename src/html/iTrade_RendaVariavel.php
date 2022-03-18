@@ -3,15 +3,6 @@
 		<div class="col d-flex">
 			<div class="container-fluid bg-light p-5 pt-3 rounded">
 				<div class="container-fluid d-flex mb-4 px-0" id="renda_variavel__menu">
-					<div class="btn-group me-2" role="group">
-						<div class="btn-group" role="group">
-							<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-2"></i>Dados Instância </button>
-							<ul class="dropdown-menu">
-								<li><a class="dropdown-item" href="#" name="section_dashboard_ops"><i class="fas fa-chart-line me-2"></i>Dados Instância </a></li>
-								<li><a class="dropdown-item" href="#" name="section_analise_obs"><i class="fas fa-microchip me-2"></i>Análise Observações </a></li>
-							</ul>
-						</div>
-					</div>
 					<button class="btn btn-sm btn-primary me-2" type="button" name="arcaboucos"><i class="fas fa-archive me-2"></i>Arcabouços</button>
 					<button class="btn btn-sm btn-primary me-2" type="button" name="ativos"><i class="fas fa-euro-sign me-2"></i>Ativos</button>
 					<button class="btn btn-sm btn-primary" type="button" name="gerenciamentos"><i class="fas fa-coins me-2"></i>Gerenciamentos</button>
@@ -22,14 +13,13 @@
 						<div class="btn-group" role="group">
 							<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"></button>
 							<ul class="dropdown-menu">
-								<li><a class="dropdown-item" href="#" name="lista_ops"><i class="fas fa-list-ul me-2"></i>Operações</a></li>
 								<li><a class="dropdown-item" href="#" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</a></li>
 							</ul>
 						</div>
 					</div>
 				</div>
 				<div class="row mb-4">
-					<div class="col" id="renda_variavel__instancias"></div>
+					<div class="col" id="renda_variavel__instancia"></div>
 				</div>
 				<div class="row">
 					<div class="col" id="renda_variavel__search">
@@ -232,38 +222,6 @@
 							<div class="card mb-2 rounded-3 shadow-sm">
 								<div class="card-body">
 									<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</div>
-								</div>
-							</div>
-						</div>
-						<div class="d-none" target="building">
-							<div class="card mb-2 rounded-3 shadow-sm">
-								<div class="card-body">
-									<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cog fa-spin me-2"></i>Construindo..</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="col d-none" id="analise_obs__section">
-						<div class="d-none" target="data">
-							<div class="row">
-								<!-- Tabela Resultado por Grupo -->
-								<div class="col">
-									<div class="card rounded-3 shadow-sm">
-										<div class="card-body" id="analise_obs__table_result"></div>
-									</div>
-								</div>
-								<!-- Grafico Dispersão por Grupo -->
-								<div class="col-6">
-									<div class="card rounded-3 shadow-sm">
-										<div class="card-body" id="analise_obs__chart_dispersaoGrupo"></div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="" target="empty">
-							<div class="card mb-2 rounded-3 shadow-sm">
-								<div class="card-body">
-									<div class="container-fluid text-center fw-bold text-muted fs-5"><i class="fas fa-cookie-bite me-2"></i>Nada a analisar</div>
 								</div>
 							</div>
 						</div>
@@ -646,71 +604,6 @@
 		</div>
 	</div>
 </div>
-<div class="offcanvas offcanvas-end" id="lista_ops">
-	<div class="offcanvas-body">
-		<div class="container-fluid">
-			<div class="row"><div class="col p-0"><div id="lista_ops_toasts"></div></div></div>
-			<div class="row">
-				<div class="col p-0">
-					<div class="card mb-2 rounded-3 shadow-sm">
-						<div class="card-body p-2">
-							<div class="container-fluid d-flex justify-content-end px-0">
-								<form class="row m-0 flex-fill" id="lista_ops__search">
-									<div class="col-auto">
-										<label class="form-label m-0 text-muted fw-bold">Data</label>
-										<input type="text" name="data" class="form-control form-control-sm" placeholder="Data">
-									</div>
-									<div class="col-auto" name="ativo">
-										<label class="form-label m-0 text-muted fw-bold">Ativo</label>
-										<select name="ativo" class="form-control form-control-sm init" multiple></select>
-									</div>
-									<div class="col-auto" name="cenario">
-										<label class="form-label m-0 text-muted fw-bold">Cenário</label>
-										<select name="cenario" class="form-control form-control-sm init" multiple></select>
-									</div>
-									<div class="col-auto" name="gerenciamento">
-										<label class="form-label m-0 text-muted fw-bold">Gerenciamento</label>
-										<select name="gerenciamento" class="form-control form-control-sm init" multiple></select>
-									</div>
-								</form>
-							</div>
-						</div>
-					</div>
-					<div class="card mb-2 rounded-3 shadow-sm">
-						<div class="card-body p-2">
-							<div class="container-fluid d-flex justify-content-end px-0" id="lista_ops__actions">
-								<button class="btn btn-sm btn-outline-danger me-2 d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>
-								<button class="btn btn-sm btn-danger" type="button" name="remove_all" title="Duplo Clique"><i class="fas fa-trash-alt me-2"></i>Apagar Tudo</button>
-							</div>
-						</div>
-					</div>
-					<div class="card rounded-3 shadow-sm">
-						<div class="card-body">
-							<table id="lista_ops__table" class="table table-hover w-100">
-								<thead>
-									<tr>
-										<th>#</th>
-										<th>Data</th>
-										<th>Hora</th>
-										<th>Ativo</th>
-										<th>Gerenciamento</th>
-										<th class="text-center">Op.</th>
-										<th>Vol</th>
-										<th>Result.</th>
-										<th>Cenário</th>
-										<th>Obs. Ref</th>
-										<th>Erro</th>
-									</tr>
-								</thead>
-								<tbody></tbody>
-							</table>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
 <div class="modal fade" id="upload_operacoes_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
 	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 		<div class="modal-content">
@@ -728,8 +621,6 @@
 									<label class="form-label m-1 text-muted fw-bold">Fonte do Arquivo</label>
 									<select id="file_format" class="form-select form-select-sm" disabled>
 										<option value="excel">Excel</option>
-										<!-- <option value="profit">Profit</option> -->
-										<!-- <option value="tryd">Tryd</option> -->
 									</select>
 								</div>
 								<div class="col-2">
@@ -831,36 +722,6 @@
 				</div>
 				<div class="col-4">
 					<div class="row">
-						<div class="col-12 ps-0">
-							<div class="card rounded-3 shadow-sm">
-								<div class="card-body">
-									<div class="container-fluid d-flex justify-content-end px-0">
-										<form class="row m-0 flex-fill" id="adicionar_operacoes_offcanvas__contagem">
-											<div class="col-6">
-												<label class="form-label m-0 text-muted fw-bold">Contagem Tendência</label>
-												<div class="input-group">
-													<input type="text" class="form-control form-control-sm" name="c_tendencia" value="" raw_value="0" not_ok="0" disabled>
-													<button class="btn btn-sm btn-outline-secondary" type="button" name="up_c_tendencia"><i class="fas fa-caret-up"></i></button>
-													<button class="btn btn-sm btn-outline-secondary" type="button" name="down_c_tendencia"><i class="fas fa-caret-down"></i></button>
-													<button class="btn btn-sm btn-outline-secondary" type="button" name="restart_c_tendencia"><i class="fas fa-times"></i></button>
-												</div>
-											</div>
-											<div class="col-6">
-												<label class="form-label m-0 text-muted fw-bold">Contagem Pernada</label>
-												<div class="input-group">
-													<input type="text" class="form-control form-control-sm" name="c_pernada" value="" raw_value="0" not_ok="0" disabled>
-													<button class="btn btn-sm btn-outline-secondary" type="button" name="up_c_pernada"><i class="fas fa-caret-up"></i></button>
-													<button class="btn btn-sm btn-outline-secondary" type="button" name="down_c_pernada"><i class="fas fa-caret-down"></i></button>
-													<button class="btn btn-sm btn-outline-secondary" type="button" name="restart_c_pernada"><i class="fas fa-times"></i></button>
-												</div>
-											</div>
-										</form>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="row mt-2">
 						<div class="col-12 ps-0">
 							<div class="card rounded-3 shadow-sm">
 								<div class="card-body">

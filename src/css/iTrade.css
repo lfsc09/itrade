@@ -175,7 +175,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*------------------------------------------------------------------------------------*/
 /*---------------------------------- RENDA VARIÁVEL ----------------------------------*/
 /*------------------------------------------------------------------------------------*/
-#renda_variavel__instancias span {cursor: pointer}
 #renda_variavel__search .form-label {font-size: 11px}
 #renda_variavel__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
 #renda_variavel__search input[name='data'] {width: 175px}
@@ -321,13 +320,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #adicionar_operacoes__extraDados table tbody td {vertical-align: middle; font-size: 12px}
 #adicionar_operacoes__extraDados table tbody td[name='ref'] {font-weight: 600; text-align: center}
 #adicionar_operacoes__extraDados table tbody td[name='nome'] {font-size: 11px; font-weight: 500}
-#adicionar_operacoes_offcanvas__contagem .form-label {font-size: 11px}
-#adicionar_operacoes_offcanvas__contagem input {font-size: 11px; background-color: #fff; text-align: center; font-weight: bold}
-#adicionar_operacoes_offcanvas__contagem input.not_ok {color: #dc3545}
-#adicionar_operacoes_offcanvas__contagem button.disabled {color: #6c757d !important; background-color: transparent !important}
-#adicionar_operacoes_offcanvas__contagem button[name='up_c_tendencia'], #adicionar_operacoes_offcanvas__contagem button[name='up_c_pernada'] {width: 50px; color: #198754; background-color: #bce1d0; border-color: #ced4da}
-#adicionar_operacoes_offcanvas__contagem button[name='down_c_tendencia'], #adicionar_operacoes_offcanvas__contagem button[name='down_c_pernada'] {width: 50px; color: #dc3545; background-color: #f1bac0; border-color: #ced4da}
-#adicionar_operacoes_offcanvas__contagem button[name='restart_c_tendencia'], #adicionar_operacoes_offcanvas__contagem button[name='restart_c_pernada'] {width: 50px; color: #dc3545; background-color: #fff; border-color: #ced4da}
 /*---------------------------------- Arcabouco Info ----------------------------------*/
 #arcabouco_info {width: 500px}
 #arcabouco_info .arcabouco_info__observacao {font-size: .8em}
@@ -339,30 +331,6 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #arcabouco_info .arcabouco_info__stats table td code {font-size: .8em; color: #212529}
 #arcabouco_info .arcabouco_info__stats table tr.divider td {padding-top: 15px}
 #arcabouco_info .arcabouco_info__stats table tr td span.media_por_dia {font-size: 12px}
-/*------------------------------------ Lista Ops -------------------------------------*/
-#lista_ops {width: 950px}
-#lista_ops__search .form-label {font-size: 11px}
-#lista_ops__search input[name='data'] {width: 175px}
-#lista_ops__search select[name='ativo'].init, #lista_ops__search select[name='cenario'].init, #lista_ops__search select[name='gerenciamento'].init {height: 30px}
-#lista_ops__search div[name='ativo'] {width: 190px}
-#lista_ops__search div[name='cenario'] {width: 190px}
-#lista_ops__search div[name='gerenciamento'] {width: 190px}
-#lista_ops__table {font-size: 11px}
-#lista_ops__table tbody td{vertical-align: middle}
-#lista_ops__table tr.selected {background: #cfe2ff}
-#lista_ops__table tbody td[name='sequencia'] {width: 5%}
-#lista_ops__table tbody td[name='data'] {width: 8%}
-#lista_ops__table tbody td[name='hora'] {width: 8%}
-#lista_ops__table tbody td[name='ativo'] {width: 8%}
-#lista_ops__table tbody td[name='gerenciamento'] {width: 8%; text-align: center}
-#lista_ops__table tbody td[name='op'] {width: 10%; text-align: center}
-#lista_ops__table tbody td[name='resultado'] {width: 8%; text-align: center}
-#lista_ops__table tbody td[name='vol'] {width: 8%}
-#lista_ops__table tbody td[name='cenario'] {width: 10%}
-#lista_ops__table tbody td[name='erro'] {width: 5%; text-align: center}
-#lista_ops__table_wrapper {font-size: 13px}
-#lista_ops__table_wrapper input {font-size: 11px}
-#lista_ops__table_filter {display: none}
 /*---------------------------------- Dashboard Ops -----------------------------------*/
 #dashboard_ops__table_stats__byCenario {font-size: 12px}
 #dashboard_ops__table_stats__byCenario span.data-small {font-weight: bold; font-size: 11px}
@@ -396,6 +364,39 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_trades_paginate {font-size: 12px}
 #dashboard_ops__table_trades_filter input, #dashboard_ops__table_trades_paginate input {font-size: 12px}
 #dashboard_ops__table_trades tbody td{vertical-align: middle; font-size: 9px}
+#dashboard_ops__table_trades tr.selected {background: #cfe2ff}
+#dashboard_ops__table_trades tbody tr td[name='trade__seq'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='trade__data'] {width: 6%}
+#dashboard_ops__table_trades tbody tr td[name='trade__hora'] {width: 6%}
+#dashboard_ops__table_trades tbody tr td[name='trade__op'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='trade__cts'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='trade__vol'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='trade__result_bruto__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='trade__custo'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='trade__result_liquido__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='trade__erro'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='dia__seq'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='dia__qtd_trades'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='dia__cts'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='dia__vol_media'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='dia__lucro_bruto__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='dia__prejuizo_bruto__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='dia__result_bruto__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='dia__result_bruto__S'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='dia__custo'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='dia__result_liquido__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='dia__erro'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='mes__seq'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='mes__qtd_trades'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='mes__cts'] {width: 5%}
+#dashboard_ops__table_trades tbody tr td[name='mes__vol_media'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='mes__lucro_bruto__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='mes__prejuizo_bruto__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='mes__result_bruto__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='mes__result_bruto__S'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='mes__custo'] {width: 8%}
+#dashboard_ops__table_trades tbody tr td[name='mes__result_liquido__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='mes__erro'] {width: 5%}
 /*------------------------------------------------------------------------------------*/
 /*------------------------------- CONTROLE FINANCEIRO --------------------------------*/
 /*------------------------------------------------------------------------------------*/
