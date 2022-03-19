@@ -4,6 +4,8 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Renda Variavel --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	//Variavel de controle de Timeout para clicks nos botões
+	let _timeout_button__hold = 0;
 	//////////////////////////////////
 	//Usuários
 	//////////////////////////////////
@@ -963,6 +965,7 @@ let Renda_variavel = (function(){
 			{name: 'trade__result_bruto__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
 			{name: 'trade__custo', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__custo},
 			{name: 'trade__result_liquido__brl', orderable: true, render: _dashboard_ops__table_trades_DT_ext.result__brl},
+			{name: 'trade__observacoes', orderable: false},
 			{name: 'trade__erro', orderable: true, render: _dashboard_ops__table_trades_DT_ext.trade__erro}
 		],
 		'2': [
@@ -1010,6 +1013,7 @@ let Renda_variavel = (function(){
 				trade__result_bruto__brl: 'fw-bold',
 				trade__custo: 'fw-bold text-danger',
 				trade__result_liquido__brl: 'fw-bold',
+				trade__observacoes: 'text-muted fw-bold text-break',
 				trade__erro: 'text-center',
 				//Por Dia
 				dia__seq: 'text-muted fw-bold',
@@ -1042,9 +1046,13 @@ let Renda_variavel = (function(){
 				row.children[i].setAttribute('name', _dashboard_ops__table_trades_DT['columns'][i]['name']);
 				row.children[i].setAttribute('class', classes_by_column[_dashboard_ops__table_trades_DT['columns'][i]['name']]);
 			}
+			if (!row.hasAttribute('operacao'))
+				row.setAttribute('operacao', data[12]);
 		},
 		initComplete: function (){
-			$(document.getElementById('dashboard_ops__table_trades__actions')).append(`<button class="btn btn-sm btn-outline-danger d-none" type="button" name="remove_sel" title="Duplo Clique"><i class="fas fa-trash me-2"></i>Apagar Selecionado</button>`);
+			$(document.getElementById('dashboard_ops__table_trades__actions'))
+				.append(`<button class="btn btn-sm btn-outline-primary btn-nohover" type="button" name="extract_sel" hold_time="1500"><span><i class="fas fa-file-export me-2"></i>Exportar Toda</span></button>`)
+				.append(`<button class="btn btn-sm btn-outline-danger btn-nohover ms-2" type="button" name="remove_sel" hold_time="3000"><span><i class="fas fa-trash me-2"></i>Apagar Tudo</span></button>`);
 		},
 		lengthChange: false,
 		info: false,
@@ -2942,6 +2950,7 @@ let Renda_variavel = (function(){
 						`<th>Bruto BRL</th>`+
 						`<th>Custo</th>`+
 						`<th>Líquido BRL</th>`+
+						`<th>Obs.</th>`+
 						`<th>Erro</th>`+
 						`</tr>`;
 			}
@@ -2983,7 +2992,7 @@ let Renda_variavel = (function(){
 			let html = ``;
 			if (periodo_calc === '1'){
 				for (let o in trades){
-					html += `<tr>`+
+					html += `<tr operacao="${trades[o].trade__id}">`+
 							`<td name="trade__seq">${trades[o].trade__seq}</td>`+
 							`<td name="trade__data">${Global.convertDate(trades[o].trade__data)}</td>`+
 							`<td name="trade__hora">${trades[o].trade__hora}</td>`+
@@ -2994,6 +3003,7 @@ let Renda_variavel = (function(){
 							`<td name="trade__result_bruto__brl">${trades[o].trade__result_bruto__brl}</td>`+
 							`<td name="trade__custo">${trades[o].trade__custo}</td>`+
 							`<td name="trade__result_liquido__brl">${trades[o].trade__result_liquido__brl}</td>`+
+							`<td name="trade__observacoes">${trades[o].trade__observacoes}</td>`+
 							`<td name="trade__erro">${trades[o].trade__erro}</td>`+
 							`</tr>`;
 				}
@@ -3048,40 +3058,48 @@ let Renda_variavel = (function(){
 						trades[o].trade__op,
 						trades[o].trade__cts,
 						trades[o].trade__vol,
-						trades[o].result_bruto__brl,
+						trades[o].trade__result_bruto__brl,
 						trades[o].trade__custo,
-						trades[o].result__brl,
+						trades[o].trade__result_liquido__brl,
+						trades[o].trade__observacoes,
 						trades[o].trade__erro,
+						trades[o].trade__id
 					]);
 				}
 			}
 			else if (periodo_calc === '2'){
 				for (let o in trades){
 					data.push([
-						trades[o].trade__seq,
-						Global.convertDate(trades[o].trade__data),
-						trades[o].trade__ops,
-						trades[o].trade__cts,
-						trades[o].lucro_bruto__brl,
-						trades[o].prejuizo_bruto__brl,
-						trades[o].result_bruto__brl,
-						trades[o].trade__custo,
-						trades[o].result__brl
+						trades[o].dia__seq,
+						Global.convertDate(trades[o].dia__data),
+						trades[o].dia__qtd_trades,
+						trades[o].dia__cts,
+						trades[o].dia__vol_media,
+						trades[o].dia__lucro_bruto__brl,
+						trades[o].dia__prejuizo_bruto__brl,
+						trades[o].dia__result_bruto__brl,
+						trades[o].dia__result_bruto__S,
+						trades[o].dia__custo,
+						trades[o].dia__result_liquido__brl,
+						trades[o].dia__erro
 					]);
 				}
 			}
 			else if (periodo_calc === '3'){
 				for (let o in trades){
 					data.push([
-						trades[o].trade__seq,
-						Global.convertDate(trades[o].trade__data),
-						trades[o].trade__ops,
-						trades[o].trade__cts,
-						trades[o].lucro_bruto__brl,
-						trades[o].prejuizo_bruto__brl,
-						trades[o].result_bruto__brl,
-						trades[o].trade__custo,
-						trades[o].result__brl
+						trades[o].mes__seq,
+						Global.convertDate(trades[o].mes__data),
+						trades[o].mes__qtd_trades,
+						trades[o].mes__cts,
+						trades[o].mes__vol_media,
+						trades[o].mes__lucro_bruto__brl,
+						trades[o].mes__prejuizo_bruto__brl,
+						trades[o].mes__result_bruto__brl,
+						trades[o].mes__result_bruto__S,
+						trades[o].mes__custo,
+						trades[o].mes__result_liquido__brl,
+						trades[o].mes__erro
 					]);
 				}
 			}
@@ -4430,7 +4448,7 @@ let Renda_variavel = (function(){
 		}
 		//Deseleciona tudo
 		else
-			$(document.getElementById('dashboard_ops__table_trades')).DataTable().rows().nodes().to$().removeClass('selected');
+			_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().rows().nodes().to$().removeClass('selected');
 	}).on('mouseenter', '#dashboard_ops__table_trades tbody tr', function (e){
 		//Seleciona linhas caso esteje segurando (Ctrl e Click)
 		if (_dashboard_ops__table_trades_DT__clickState && e.ctrlKey){
@@ -4439,8 +4457,71 @@ let Renda_variavel = (function(){
 		}
 	}).on('mouseup', '#dashboard_ops__table_trades tbody tr', function (e){
 		_dashboard_ops__table_trades_DT__clickState = 0;
-		$(document.getElementById('dashboard_ops__table_trades__actions')).find('button[name="remove_sel"]').toggleClass('d-none', ($(document.getElementById('dashboard_ops__table_trades')).DataTable().rows('.selected').count() <= 0));
+		if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().rows('.selected').count() > 0){
+			$(document.getElementById('dashboard_ops__table_trades__actions'))
+				.find('button[name="extract_sel"] span').html(`<i class="fas fa-file-export me-2"></i>Exportar Selecionado`).end()
+				.find('button[name="remove_sel"] span').html(`<i class="fas fa-trash me-2"></i>Apagar Selecionado`);
+		}
+		else{
+			$(document.getElementById('dashboard_ops__table_trades__actions'))
+				.find('button[name="extract_sel"] span').html(`<i class="fas fa-file-export me-2"></i>Exportar Toda`).end()
+				.find('button[name="remove_sel"] span').html(`<i class="fas fa-trash me-2"></i>Apagar Toda`);
+		}
+	}).on('mousedown', '#dashboard_ops__table_trades__actions button[name]', function (){
+		let time_to_hold = parseInt(this.getAttribute('hold_time')),
+			button_name = this.name;
+		_timeout_button__hold = setTimeout(() => {
+			if (button_name === 'extract_sel'){
+
+			}
+			else if (button_name === 'remove_sel'){
+				let remove_data = {id_arcabouco: _instancia_arcabouco.get('id'), operacoes: []};
+				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().rows('.selected').nodes().each(function (tr){
+					remove_data['operacoes'].push(tr.getAttribute('operacao'));
+				});
+				if (remove_data['operacoes'].length === 0){
+					Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: 'Nenhuma operação selecionada.', delay: 4000});
+					return false;
+				}
+			}
+		}, time_to_hold);
+	}).on('mouseup', '#dashboard_ops__table_trades__actions button[name]', function (){
+		clearTimeout(_timeout_button__hold);
 	});
+	/*
+		Processa a remocao/exportacao de toda tabela ou das operações selecionadas com double click.
+	*/
+	// $(document.getElementById('lista_ops__actions')).on('mousedown', 'button[name]', function (){
+	// 	let remove_data = {};
+	// 	//Remove todas as operações do arcabouço
+	// 	if (this.name === 'remove_all')
+	// 		remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
+	// 	else if (this.name === 'remove_sel'){
+			
+	// 	}
+	// 	if (!Global.isObjectEmpty(remove_data)){
+	// 		Global.connect({
+	// 			data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
+	// 			success: function (result){
+	// 				if (result.status){
+	// 					Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'success', body: 'Operações Apagadas.', delay: 4000});
+	// 					_lista__operacoes.update(result['data']['operacoes']);
+	// 					_lista__arcaboucos.update(result['data']['arcabouco'][0]);
+	// 					buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+	// 					buildOperacoesOffcanvas(forceRebuild = true);
+	// 					//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+	// 					_renda_variavel__search.update();
+	// 					if (_renda_variavel__section === 'dashboard_ops__section')
+	// 						rebuildDashboard_ops();
+	// 					else if (_renda_variavel__section === 'analise_obs__section')
+	// 						rebuildAnalise_obs();
+	// 				}
+	// 				else
+	// 					Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'danger', body: result.error, delay: 4000});
+	// 			}
+	// 		});
+	// 	}
+	// });
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////

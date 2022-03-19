@@ -170,6 +170,47 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 .table tbody th.subheader, .table tfoot th.subheader {font-size: 11px}
 /*------------------------------------- BOOTSTRAP ------------------------------------*/
 .btn:focus {box-shadow: none}
+.btn-outline-primary.btn-nohover:hover {color: #0d6efd; background-color: unset}
+.btn-outline-primary.btn-nohover:active {
+	background: linear-gradient(to right, #0d6efd 50%, transparent 0);
+	background-size: 200% 100%;
+	background-position: right;
+	animation: makeItfadeIn 1.3s .2s forwards;
+}
+.btn-outline-primary.btn-nohover:active span {
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	background-image: linear-gradient(90deg, #fff, #fff 50%, #0d6efd 0);
+	background-position: 100%;
+	background-size: 200% 100%;
+	position: relative;
+	text-decoration: none;
+	animation: makeItfadeIn 1.3s .2s forwards;
+}
+.btn-outline-danger.btn-nohover:hover {color: #dc3545; background-color: unset}
+.btn-outline-danger.btn-nohover:active {
+	background: linear-gradient(to right, #dc3545 50%, transparent 0);
+	background-size: 200% 100%;
+	background-position: right;
+	animation: makeItfadeIn 2.8s .2s forwards;
+}
+.btn-outline-danger.btn-nohover:active span {
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	background-image: linear-gradient(90deg, #fff, #fff 50%, #dc3545 0);
+	background-position: 100%;
+	background-size: 200% 100%;
+	position: relative;
+	text-decoration: none;
+	animation: makeItfadeIn 2.8s .2s forwards;
+}
+@keyframes makeItfadeIn {
+  	100% {
+    	background-position: left;
+  	}
+}
 /*----------------------------- INSERT MODAL (GENÉRICO) ------------------------------*/
 #insert_modal_form, #insert_modal_form input {font-size: .9em}
 /*------------------------------------------------------------------------------------*/
@@ -374,6 +415,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #dashboard_ops__table_trades tbody tr td[name='trade__result_bruto__brl'] {width: 10%}
 #dashboard_ops__table_trades tbody tr td[name='trade__custo'] {width: 8%}
 #dashboard_ops__table_trades tbody tr td[name='trade__result_liquido__brl'] {width: 10%}
+#dashboard_ops__table_trades tbody tr td[name='trade__observacoes'] {width: 10%}
 #dashboard_ops__table_trades tbody tr td[name='trade__erro'] {width: 5%}
 #dashboard_ops__table_trades tbody tr td[name='dia__seq'] {width: 5%}
 #dashboard_ops__table_trades tbody tr td[name='dia__qtd_trades'] {width: 5%}

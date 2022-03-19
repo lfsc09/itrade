@@ -10,12 +10,7 @@
 					<button class="btn btn-sm btn-outline-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
 					<div class="btn-group" role="group">
 						<button class="btn btn-sm btn-outline-primary" type="button" name="adicionar_operacoes"><i class="fab fa-buffer me-2"></i>Adicionar Operações</button>
-						<div class="btn-group" role="group">
-							<button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown"></button>
-							<ul class="dropdown-menu">
-								<li><a class="dropdown-item" href="#" name="upload_operacoes"><i class="fas fa-cloud-upload-alt me-2"></i>Upload Operações</a></li>
-							</ul>
-						</div>
+						<button class="btn btn-sm btn-outline-primary" type="button" name="upload_operacoes"><i class="fas fa-cloud-upload-alt"></i></button>
 					</div>
 				</div>
 				<div class="row mb-4">
