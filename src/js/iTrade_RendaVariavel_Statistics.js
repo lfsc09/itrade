@@ -491,7 +491,7 @@ let RV_Statistics = (function(){
 						stop_tipo_parada['dia']['condicao'] = list[e].data;
 						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
 							//Busca apenas os 'tipo_parada' de 'No Dia'
-							if (simulation['tipo_parada'][tp].tipo_parada.test(/[sg]d[1-9]/)){
+							if (/[sg]d[1-9]/.test(simulation['tipo_parada'][tp]['tipo_parada'])){
 								stop_tipo_parada['dia']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
 									current: 0.0,
 									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
@@ -504,7 +504,7 @@ let RV_Statistics = (function(){
 						stop_tipo_parada['sem']['condicao'] = current_week_year;
 						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
 							//Busca apenas os 'tipo_parada' de 'Na Semana'
-							if (simulation['tipo_parada'][tp].tipo_parada.test(/[sg]s[1-9]/)){
+							if (/[sg]s[1-9]/.test(simulation['tipo_parada'][tp]['tipo_parada'])){
 								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
 									dia: { condicao: null, current: 0.0 },
 									current: 0.0,
