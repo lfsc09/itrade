@@ -172,38 +172,16 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 .btn:focus {box-shadow: none}
 .btn-outline-primary.btn-nohover:hover {color: #0d6efd; background-color: unset}
 .btn-outline-primary.btn-nohover:active {
-	background: linear-gradient(to right, #0d6efd 50%, transparent 0);
+	background: linear-gradient(to right, #0d6efd4d 50%, transparent 0);
 	background-size: 200% 100%;
 	background-position: right;
-	animation: makeItfadeIn 1.3s .2s forwards;
-}
-.btn-outline-primary.btn-nohover:active span {
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
-	background-image: linear-gradient(90deg, #fff, #fff 50%, #0d6efd 0);
-	background-position: 100%;
-	background-size: 200% 100%;
-	position: relative;
-	text-decoration: none;
 	animation: makeItfadeIn 1.3s .2s forwards;
 }
 .btn-outline-danger.btn-nohover:hover {color: #dc3545; background-color: unset}
 .btn-outline-danger.btn-nohover:active {
-	background: linear-gradient(to right, #dc3545 50%, transparent 0);
+	background: linear-gradient(to right, #dc35454d 50%, transparent 0);
 	background-size: 200% 100%;
 	background-position: right;
-	animation: makeItfadeIn 2.8s .2s forwards;
-}
-.btn-outline-danger.btn-nohover:active span {
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
-	background-image: linear-gradient(90deg, #fff, #fff 50%, #dc3545 0);
-	background-position: 100%;
-	background-size: 200% 100%;
-	position: relative;
-	text-decoration: none;
 	animation: makeItfadeIn 2.8s .2s forwards;
 }
 @keyframes makeItfadeIn {
@@ -216,6 +194,9 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*------------------------------------------------------------------------------------*/
 /*---------------------------------- RENDA VARIÁVEL ----------------------------------*/
 /*------------------------------------------------------------------------------------*/
+#renda_variavel__search > div.row > div.col:first-child {width: 5% !important; flex: 0 0 auto}
+#renda_variavel__search > div.row > div.col:last-child {width: 95% !important; flex: 0 0 auto}
+#renda_variavel__search_build {width: 100%; height: 100%}
 #renda_variavel__search .form-label {font-size: 11px}
 #renda_variavel__search .slider-styled.filter-hora {width: 100px; margin-top: 11px}
 #renda_variavel__search input[name='data'] {width: 175px}
@@ -313,6 +294,18 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #cenarios_modal__cenarios .accordion-button-with-input::after {margin-left: 1rem}
 #cenarios_modal__cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
 /*--------------------------------- Upload Operações ---------------------------------*/
+#upload_operacoes_modal__tips {
+	font-size: .7em;
+	height: 54px;
+	position: relative;
+	transition: height 0.5s;
+	-webkit-transition: height 0.5s;
+	overflow: hidden;
+	cursor: pointer
+}
+#upload_operacoes_modal__tips:focus{height: 520px}
+#upload_operacoes_modal__tips table tbody td {vertical-align: middle}
+#upload_operacoes_modal__tips table {font-size: 1em}
 #upload_operacoes_modal .form-label {font-size: 12px}
 #table_upload_operacoes {font-size: 12px}
 #table_upload_operacoes tbody td{vertical-align: middle}
@@ -320,13 +313,15 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #table_upload_operacoes th.error {color: #842029;}
 #table_upload_operacoes td[name='sequencia'] {width: 3%}
 #table_upload_operacoes td[name='data'] {width: 6%}
+#table_upload_operacoes td[name='hora'] {width: 5%}
 #table_upload_operacoes td[name='ativo'] {width: 6%; text-align: center}
-#table_upload_operacoes td[name='op'] {width: 4%; text-align: center}
 #table_upload_operacoes td[name='gerenciamento'] {width: 10%; text-align: center}
+#table_upload_operacoes td[name='op'] {width: 4%; text-align: center}
 #table_upload_operacoes td[name='vol'] {width: 4%; text-align: center}
 #table_upload_operacoes td[name='cts'] {width: 4%; text-align: center}
-#table_upload_operacoes td[name='hora'] {width: 5%}
+#table_upload_operacoes td[name='escalada'] {width: 4%; text-align: center}
 #table_upload_operacoes td[name='resultado'] {width: 7%; text-align: center}
+#table_upload_operacoes td[name='cenario'] {text-align: center}
 #table_upload_operacoes td[name='observacoes'] {width: 15%}
 #table_upload_operacoes td[name='erro'] {width: 2%; text-align: center}
 /*-------------------------------- Adicionar Operações -------------------------------*/

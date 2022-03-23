@@ -20,6 +20,9 @@
 					<div class="col" id="renda_variavel__search">
 						<div class="row">
 							<div class="col">
+								<button class="btn btn-primary" type="button" id="renda_variavel__search_build"><i class="fas fa-magic"></i></button>
+							</div>
+							<div class="col">
 								<div class="card mb-2 rounded-3 shadow-sm">
 									<div class="card-body p-2">
 										<div class="container-fluid d-flex justify-content-end px-0">
@@ -99,41 +102,68 @@
 														<ul class="dropdown-menu overflow-auto">
 															<li><h6 class="dropdown-header text-decoration-underline">No Dia</h6></li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">N stops (Total)</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="d1" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">N (Total)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="sd1" name="valor_parada" placeholder="Stops" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gd1" name="valor_parada" placeholder="Gains" onclick="this.select()">
+																</div>
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">N stops (Sequencia)</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="d2" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">N (Sequencia)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="sd2" name="valor_parada" placeholder="Stops" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gd2" name="valor_parada" placeholder="Gains" onclick="this.select()">
+																</div>
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">R$ no Negativo</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="d3" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">R$ (Final)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="sd3" name="valor_parada" placeholder="Perda" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gd3" name="valor_parada" placeholder="Ganho" onclick="this.select()">
+																</div>
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">R$ de Perda Bruta</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="d4" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">R$ (Bruto)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="sd4" name="valor_parada" placeholder="Perda" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gd4" name="valor_parada" placeholder="Ganho" onclick="this.select()">
+																</div>
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">R no Negativo</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="d5" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">Quantidade R (Final)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="sd5" name="valor_parada" placeholder="Perda" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gd5" name="valor_parada" placeholder="Ganhos" onclick="this.select()">
+																</div>
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">R de Perda Bruta</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="d6" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">Quantidade R (Bruto)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="sd6" name="valor_parada" placeholder="Perda" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gd6" name="valor_parada" placeholder="Ganhos" onclick="this.select()">
+																</div>
 															</li>
 															<li><h6 class="dropdown-header text-decoration-underline">Na Semana</h6></li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">N dias stop cheio (Total)</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="s1" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">N dias (Cheio)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="ss1" name="valor_parada" placeholder="Stops" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gs1" name="valor_parada" placeholder="Gains" onclick="this.select()">
+																</div>
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">N dias stop (Total)</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="s2" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">N dias (Total)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="ss2" name="valor_parada" placeholder="Stops" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gs2" name="valor_parada" placeholder="Gains" onclick="this.select()">
+																</div>
 															</li>
 															<li class="not-selectable">
-																<label class="text-muted fw-bold">N dias stop (Sequencia)</label>
-																<input class="form-control form-control-sm" type="input" tipo_parada="s3" name="valor_parada" onclick="this.select()">
+																<label class="text-muted fw-bold">N dias (Sequencia)</label>
+																<div class="input-group">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="ss3" name="valor_parada" placeholder="Stops" onclick="this.select()">
+																	<input class="form-control form-control-sm" type="input" tipo_parada="gs3" name="valor_parada" placeholder="Gains" onclick="this.select()">
+																</div>
 															</li>
 														</ul>
 													</div>
@@ -563,6 +593,12 @@
 			<div class="row">
 				<div class="col p-0" id="arcabouco_info_place"></div>
 			</div>
+			<div class="row mt-2">
+				<div class="col p-0" id="arcabouco_info__actions">
+					<button class="btn btn-sm col-12 btn-outline-primary btn-nohover" type="button" name="extract_all" hold_time="1500"><span><i class="fas fa-file-export me-2" aria-hidden="true"></i>Exportar Tudo</span></button>
+					<button class="btn btn-sm col-12 mt-2 btn-outline-danger btn-nohover" type="button" name="remove_all" hold_time="3000"><span><i class="fas fa-trash me-2" aria-hidden="true"></i>Apagar Tudo</span></button>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
@@ -609,23 +645,82 @@
 			<div class="modal-body">
 				<div class="container-fluid">
 					<div class="row"><div class="col p-0"><div id="upload_operacoes_modal_toasts"></div></div></div>
-					<div class="row">
+					<div class="row" tabindex="-1" id="upload_operacoes_modal__tips">
+						<div class="col bg-light p-3">
+							<dl class="row m-0">
+								<dt class="col-sm-3 mt-2">Campos Reconhecidos / <kbd class="bg-primary">Obrigatórios</kbd></dt>
+								<dd class="col-sm-9">
+									<table class="table text-muted m-0">
+										<tbody>
+											<tr>
+												<td><kbd class="bg-primary">data</kbd></td>
+												<td>Apenas no formato <code>dd/mm/aaaa</code> ou <code>aaaa-mm-dd</code></td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">hora</kbd></td>
+												<td>Apenas no formato <code>hh:mm:ss</code> ou <code>hh:mm</code></td>
+											</tr>
+											<tr>
+												<td><kbd>sequencia</kbd></td>
+												<td>&nbsp;</td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">ativo</kbd></td>
+												<td class="fw-bold">
+													<p class="mb-1">Se acompanhado das colunas <kbd>ativo_custo</kbd> <kbd>ativo_valor_tick</kbd> <kbd>ativo_pts_tick</kbd> irá auto-cadastrar, se não estiver cadastrado</p>
+													<p class="m-0">Se vier apenas o nome do ativo, este já deve estar cadastrado</p>
+												</td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">gerenciamento</kbd></td>
+												<td class="fw-bold">Gerenciamentos passados já devem estar cadastrados</td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">op</kbd></td>
+												<td>Deverá ser <code>'1'</code> para Compras e <code>'2'</code> para Vendas</td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">vol</kbd></td>
+												<td>&nbsp;</td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">cts</kbd></td>
+												<td>&nbsp;</td>
+											</tr>
+											<tr>
+												<td><kbd>escalada</kbd></td>
+												<td>Informar <code>'1'</code> se a operação foi escalada 1 vez, <code>'2'</code> para 2 vezes...</td>
+											</tr>
+											<tr>
+												<td><kbd>erro</kbd></td>
+												<td>Informar <code>'1'</code> se a operação foi errada</td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">resultado</kbd></td>
+												<td>Usar <code>'.'</code> nas casas decimais</td>
+											</tr>
+											<tr>
+												<td><kbd class="bg-primary">cenario</kbd></td>
+												<td class="fw-bold">Cenários passados já devem estar cadastrados</td>
+											</tr>
+											<tr>
+												<td><kbd>observacoes</kbd></td>
+												<td>Se informado, separar os números por <code>','</code></td>
+											</tr>
+											<tr>
+												<td><kbd>gerenciamento_acoes</kbd></td>
+												<td>&nbsp;</td>
+											</tr>
+										</tbody>
+									</table>
+								</dd>
+							</dl>
+						</div>
+					</div>
+					<div class="row mt-3">
 						<div class="col bg-light p-3">
 							<div class="row">
-								<div class="col-2">
-									<label class="form-label m-1 text-muted fw-bold">Fonte do Arquivo</label>
-									<select id="file_format" class="form-select form-select-sm" disabled>
-										<option value="excel">Excel</option>
-									</select>
-								</div>
-								<div class="col-2">
-									<label class="form-label m-1 text-muted fw-bold">Operações de</label>
-									<select id="table_layout" class="form-select form-select-sm" disabled>
-										<option value="scalp">Scalp</option>
-										<option value="tendencia">Tendência</option>
-									</select>
-								</div>
-								<div class="col-8">
+								<div class="col-12">
 									<label class="form-label m-1 text-muted fw-bold">Arquivo</label>
 									<input class="form-control form-control-sm col" type="file" id="upload_operacoes_modal_file">
 								</div>

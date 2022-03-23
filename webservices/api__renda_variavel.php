@@ -755,7 +755,16 @@
 			 	$stmt->bind_param('ii', $params['id_arcabouco'], $params['id_arcabouco']);
 			 	$stmt->execute();
 		 		$result_raw = $stmt->get_result();
+		 		//O usuario tem acesso
 		 		if ($result_raw->num_rows > 0){
+		 			//Adiciona automaticamente os ativos (Vindos do Upload de Arquivo)
+		 			if (array_key_exists('ativos', $params) && !empty($params['ativos'])){
+		 				foreach ($params['ativos'] as $ativo){
+		 					$stmt = $mysqli->prepare("INSERT INTO rv__ativos (id_usuario,nome,custo,valor_tick,pts_tick) VALUES (?,?,?,?,?)");
+							$stmt->bind_param('isddd', $id_usuario, $ativo['nome'], $ativo['custo'], $ativo['valor_tick'], $ativo['pts_tick']);
+							$stmt->execute();
+		 				}
+		 			}
 		 			$ult_seq = $result_raw->fetch_assoc()['ult_seq'];
 		 			$operacoes_ja_cadastradas = [];
 		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, resultado, cenario, observacoes)

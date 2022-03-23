@@ -4,265 +4,153 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Renda Variavel --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
-	//Variavel de controle de Timeout para clicks nos botões
-	let _timeout_button__hold = 0;
-	//////////////////////////////////
-	//Usuários
-	//////////////////////////////////
-	//Controla a lista de usuarios cadastrados
-	let	_lista__usuarios = {
-		//Lista dos usuários cadastrados
-		usuarios: [],
-		update: function (data){
-			//Atualiza o Array
-			this.usuarios = data;
-		}
-	}
-	//////////////////////////////////
-	//Ativos
-	//////////////////////////////////
-	//Controla a lista de ativos cadastrados
-	let	_lista__ativos = {
-		//Lista de ativos cadastrados do usuario
-		ativos: [],
-		update: function (data){
-			//Atualiza o Array
-			this.ativos = data;
-		}
-	}
-	//////////////////////////////////
-	//Gerenciamentos
-	//////////////////////////////////
-	//Controla a lista de gerenciamentos cadastrados
-	let	_lista__gerenciamentos = {
-		//Lista de gerenciamentos cadastrados do usuario
-		gerenciamentos: [],
-		update: function (data){
-			//Atualiza o Array
-			this.gerenciamentos = data;
-		}
-	}
-	//////////////////////////////////
-	//Arcabouços
-	//////////////////////////////////
-	//Controla a lista de arcabouços cadastrados
-	let	_lista__arcaboucos = {
-		//Lista de arcabouços cadastrados do usuário
-		arcaboucos: {},
-		create: function (data){
-			//Atualiza o objeto
-			this.arcaboucos = {};
-			for (let a in data){
-				//Reordena a lista de usuarios
-				data[a]['usuarios'].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
-				this.arcaboucos[data[a].id] = data[a];
-			}
-		},
-		update: function (data){
-			//Atualiza o objeto
-			data['usuarios'].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
-			this.arcaboucos[data.id] = data;
-			_instancia_arcabouco.updateArcabouco_Info(data.id);
-		},
-		remove: function (id){
-			//Atualiza o objeto
-			delete this.arcaboucos[id];
-			//Atualiza na lista de instancias
-			return _instancia_arcabouco.removeAll_by_idArcabouco(id);
-		}
-	}
-	//////////////////////////////////
-	//Cenários
-	//////////////////////////////////
-	//Controla a lista de cenários do arcabouço selecionado
-	let _lista__cenarios = {
-		//Lista de cenarios do arcabouço
-		cenarios: {},
-		create: function (data){
-			//Atualiza o objeto
-			this.cenarios = {};
-			for (let cn in data)
-				this.cenarios[data[cn].id] = data[cn];
-		},
-		update: function (data){
-			//Atualiza o objeto
-			this.cenarios[data.id] = data;
-		},
-		remove: function (id){
-			//Atualiza o objeto
-			delete this.cenarios[id];
-		}
-	}
-	//////////////////////////////////
-	//Operações
-	//////////////////////////////////
-	//Controla a lista de operações da instancia
-	let	_lista__operacoes = {
-		//Lista de operacoes
-		operacoes: [],
-		update: function (data){
-			//Atualiza o Array
-			this.operacoes = data;
-		}
-	}
-	//////////////////////////////////
-	//Instancias de Arcabouços e Operações
-	//////////////////////////////////
-	//Controla a instancia de arcabouço selecionada
-	let	_instancia_arcabouco = {
-		//Instancia de arcabouço selecionada
-		instancia: {},
-		//Cores para a instancia
-		colors: {
-			// class: ['--bs-blue', '--bs-indigo', '--bs-green', '--bs-orange', '--bs-yellow'],
-			// code: ['#0d6efd', '#6610f2', '#198754', '#fd7e14', '#ffc107'],
-			// code_transparent: ['rgba(13, 110, 253, 0.1)', 'rgba(102, 16, 242, 0.2)', 'rgba(25, 135, 84, 0.2)', 'rgba(253, 126, 20, 0.2)', 'rgba(255, 193, 7, 0.2)']
-			class: '--bs-blue',
-			code: '#0d6efd',
-			code_transparent: 'rgba(13, 110, 253, 0.1)'
-		},
-		/*
-			Inicia a instancia:
-				- Inicia do zero se não haver nada no sessionStorage.
-					- Pega o primeiro arcabouço.
-					- Inicia o arcabouço section com os cenarios e operações desse arcabouço.
-					- Atualiza o _lista__operacoes.operacoes e _lista__cenarios.cenarios.
-				- Se houver algo no sessionStorage pega oque tem la.
-					- Verifica se a instancia deve ser removida, caso seu arcabouço não exista mais.
-						- Inicia como se fosse do zero.
-					- Senão inicia com a instancia selecionada.
-						- Se os dados trazidos são do arcabouço da instancia, inicia com eles.
-					 	- Senão dai re-baixa os dados corretos.
-		*/
-		start: function (allData){
-			this.instancia = Global.browserStorage__Sync.get('instancia', 'sessionStorage');
-			//Se ha instancia no sessionStorage
-			if (!Global.isObjectEmpty(this.instancia)){
-				//Verifica se o arcabouço da instancia ainda existe
-				if (!(this.instancia.id) in _lista__arcaboucos.arcaboucos)
-					this.instancia = {};
-				//Se ainda existe
-				if (!Global.isObjectEmpty(this.instancia)){
-					rebuild__instanciaArcabouco_HTML();
-					//Verifica se os dados (cenarios + operacoes) são do arcabouço da instancia selecionada
-					if (this.instancia.id === allData['arcaboucos'][0].id){
-						//Inicia o arcabouço section com os cenarios e operações que vieram.
-						_lista__cenarios.create(allData['cenarios']);
-						_lista__operacoes.update(allData['operacoes']);
-						//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
-						if (_renda_variavel__search.init()){
-							//Constroi o dashboard_ops section
-							rebuildDashboard_ops();
+	/*
+		Realiza a abertura e leitura do arquivo csv. (Importar operações)
+		IMPORTANTE:
+			- Primeira linha deve ser o Header contendo os nomes das colunas.
+			- O header deve seguir o padrão e ordem esperado.
+	*/
+	let _csv_handler = {
+		reader: {
+			instance: new FileReader(),
+			processData: function (allText, options){
+			 	let allTextLines = allText.split(/\r\n|\n/),
+			 		lines = [];
+			    for (let i=0; i<allTextLines.length; i++)
+		            lines.push(allTextLines[i].split(';'));
+		        return lines;
+			},
+			processCell: function (line, column, columnName){
+				if (!(column in line))
+					return '';
+				//Processa coluna Data
+				if (columnName === 'data'){
+					if (!(/^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/.test(line[column])) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])\-(0[1-9]|1\d|2\d|3[01])$/.test(line[column])))
+						return '';
+					if (line[column].indexOf('-') !== -1){
+						let frag_date = line[column].split('-');
+						return `${frag_date[2]}/${frag_date[1]}/${frag_date[0]}`;
+					}
+					else
+						return line[column];
+				}
+				else if (columnName === 'hora'){
+					if (!(/^(0\d|1\d|2[0-3])\:([0-5]\d)(\:([0-5]\d))?$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'sequencia' || columnName === 'ativo' || columnName === 'gerenciamento')
+					return line[column];
+				else if (columnName === 'op'){
+					if (!(/^(1|2)$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'vol' || columnName === 'cts'){
+					if (!(/^(\d+)$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'escalada' || columnName === 'erro'){
+					if (!(/^(0|1)$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'resultado'){
+					if (!(/^(\-?\d+|\-?\d+\.\d+|\-?\d+\,\d+)$/.test(line[column])))
+						return '';
+					if (line[column].indexOf(',') !== -1)
+						return str(line[column]).replace(/\,+/g, '.');
+					return line[column];
+				}
+				else if (columnName === 'cenario' || columnName === 'observacoes' || columnName === 'ativo_custo' || columnName === 'ativo_valor_tick' || columnName === 'ativo_pts_tick' || columnName === 'gerenciamento_acoes')
+					return line[column];
+			},
+			cleanData: function (obj){
+				let expected_header = ['data', 'hora', 'sequencia', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'escalada', 'erro', 'resultado', 'cenario', 'observacoes', 'ativo_custo', 'ativo_valor_tick', 'ativo_pts_tick', 'gerenciamento_acoes'],
+					required_header = ['data', 'hora', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'resultado', 'cenario'],
+					headerMap = [],
+					headerSize = 0,
+					error_lines = 0,
+					cleanedData = [];
+				for (let line=0; line<obj.length; line++){
+					//Identificacao e mapeamento dos headers
+					if (line === 0){
+						for (let h=0; h<obj[line].length; h++){
+							if (!expected_header.includes(obj[line][h])){
+								Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: `A coluna '${obj[line][h]}', não pode ser processada.`, delay: 4000});
+								return null;
+							}
+							headerMap[h] = obj[line][h];
+						}
+						for (let rh=0; rh<required_header.length; rh++){
+							if (!headerMap.includes(required_header[rh])){
+								Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: `A coluna '${required_header[rh]}' é obrigatória.`, delay: 4000});
+								return null;
+							}
 						}
 					}
-					else{
-						Global.connect({
-							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: this.instancia.id}},
-							success: function (result){
-								if (result.status){
-									//Inicia o arcabouço section com os cenarios e operações que vieram.
-									_lista__cenarios.create(result.data['cenarios']);
-									_lista__operacoes.update(result.data['operacoes']);
-									//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
-									if (_renda_variavel__search.init()){
-										//Constroi o dashboard_ops section
-										rebuildDashboard_ops();
-									}
-								}
-								else
-									Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
-							}
+					else if (obj[line].length === headerMap.length){
+						cleanedData.push({
+							data: this.processCell(obj[line], headerMap.indexOf('data'), 'data'),
+							hora: this.processCell(obj[line], headerMap.indexOf('hora'), 'hora'),
+							sequencia: this.processCell(obj[line], headerMap.indexOf('sequencia'), 'sequencia'),
+							ativo: this.processCell(obj[line], headerMap.indexOf('ativo'), 'ativo'),
+							gerenciamento: this.processCell(obj[line], headerMap.indexOf('gerenciamento'), 'gerenciamento'),
+							op: this.processCell(obj[line], headerMap.indexOf('op'), 'op'),
+							vol: this.processCell(obj[line], headerMap.indexOf('vol'), 'vol'),
+							cts: this.processCell(obj[line], headerMap.indexOf('cts'), 'cts'),
+							escalada: this.processCell(obj[line], headerMap.indexOf('escalada'), 'escalada'),
+							erro: this.processCell(obj[line], headerMap.indexOf('erro'), 'erro'),
+							resultado: this.processCell(obj[line], headerMap.indexOf('resultado'), 'resultado'),
+							cenario: this.processCell(obj[line], headerMap.indexOf('cenario'), 'cenario'),
+							observacoes: this.processCell(obj[line], headerMap.indexOf('observacoes'), 'observacoes'),
+							ativo_custo: this.processCell(obj[line], headerMap.indexOf('ativo_custo'), 'ativo_custo'),
+							ativo_valor_tick: this.processCell(obj[line], headerMap.indexOf('ativo_valor_tick'), 'ativo_valor_tick'),
+							ativo_pts_tick: this.processCell(obj[line], headerMap.indexOf('ativo_pts_tick'), 'ativo_pts_tick'),
+							gerenciamento_acoes: this.processCell(obj[line], headerMap.indexOf('gerenciamento_acoes'), 'gerenciamento_acoes')
 						});
 					}
+					else
+						error_lines++;
 				}
+				if (error_lines)
+					Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'warning', body: `${error_lines} foram ignoradas, por quantidade de colunas diferente.`, delay: 4000});
+				return cleanedData;
 			}
-			//Se não há uma instancia ainda, inicia do Zero
-			if (Global.isObjectEmpty(this.instancia)) {
-				//Pega o primeiro arcabouço e joga na lista.
-				this.instancia = {
-					id: allData['arcaboucos'][0].id,
-					nome: allData['arcaboucos'][0].nome,
-					color: this.colors.class,
-					chartColor: this.colors.code,
-					chartColor_Transparent: this.colors.code_transparent,
-					filters: {},
-					simulations: {}
-				};
-				rebuild__instanciaArcabouco_HTML();
-				Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
-				//Inicia o arcabouço section com os cenarios e operações desse arcabouço.
-				_lista__cenarios.create(allData['cenarios']);
-				_lista__operacoes.update(allData['operacoes']);
-				//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
-				if (_renda_variavel__search.init()){
-					//Constroi o dashboard_ops section
-					rebuildDashboard_ops();
+		},
+		writer: {
+			header: ['data', 'hora', 'sequencia', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'escalada', 'erro', 'resultado', 'cenario', 'observacoes', 'ativo_custo', 'ativo_valor_tick', 'ativo_pts_tick', 'gerenciamento_acoes'],
+			separator: ';',
+			write: function(stringData, filename){
+				let a = document.createElement('a'),
+					blob = null,
+					mimeType = 'application/octet-stream';
+				//IE 10
+				if (navigator.msSaveBlob)
+					return navigator.msSaveBlob(new Blob([stringData], { type: mimeType }), filename);
+				//html5 A[download]
+				else if ('download' in a){
+					//\uFEFF Boom byte para ao abrir no excel com acentuacoes corretas
+					blob = new Blob(['\uFEFF' + stringData], { type: 'text/csv;charset=utf-8;' });
+					//a.href = 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURIComponent(stringData);
+					a.href = URL.createObjectURL(blob);
+					a.setAttribute('download', filename);
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					return true;
 				}
-			}
-		},
-		//Retorna a instancia ou um atributo da instancia
-		get: function (key = ''){
-			if (!Global.isObjectEmpty(this.instancia)){
-				if (key !== '')
-					return this.instancia[key];
-				return this.instancia;
-			}
-			return null;
-		},
-		//Seleciona uma nova instancia
-		select: function (inst){
-			//Não gera nova instancia se é do mesmo arcabouço
-			if (!('id' in inst) || inst.id === this.instancia.id)
-				return false;
-			//Nova instancia com os dados passados
-			this.instancia = {
-				id: inst.id,
-				nome: inst.nome || '----',
-				color: this.colors.class,
-				chartColor: this.colors.code,
-				chartColor_Transparent: this.colors.code_transparent,
-				filters: {},
-				simulations: {}
-			}
-			//Reconstroi o HTML
-			rebuild__instanciaArcabouco_HTML();
-			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
-			return true;
-		},
-		//Atualiza os 'filters' da instancia selecionada
-		updateInstancia_Filters: function (key, value, rebuildSection = true){
-			if (value !== '')
-				this.instancia['filters'][key] = value;
-			else
-				delete this.instancia['filters'][key];
-			if (rebuildSection){
-				//Constroi o dashboard_ops section
-				rebuildDashboard_ops();
-			}
-			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
-		},
-		//Atualiza os 'simulations' da instancia selecionada
-		updateInstancia_Simulations: function (key, value, rebuildSection = true){
-			if (value !== '')
-				this.instancia['simulations'][key] = value;
-			else
-				delete this.instancia['simulations'][key];
-			if (rebuildSection){
-				//Constroi o dashboard_ops section
-				rebuildDashboard_ops();
-			}
-			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
-		},
-		//Atualiza a instancia selecionada
-		updateArcabouco_Info: function (id_arcabouco){
-			let was_updated = false;
-			if (this.instancia.id == id_arcabouco){
-				this.instancia.nome = _lista__arcaboucos.arcaboucos[id_arcabouco].nome;
-				was_updated = true;
-			}
-			if (was_updated){
-				rebuild__instanciaArcabouco_HTML();
-				Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
+				//do iframe dataURL download (old ch+FF):
+				else{
+					var f = document.createElement('iframe');
+					document.body.appendChild(f);
+					f.src = 'data:' + mimeType + ',' + encodeURIComponent(stringData);
+					setTimeout(function() {
+						document.body.removeChild(f);
+					}, 333);
+					return true;
+				}
 			}
 		}
 	}
@@ -574,6 +462,7 @@ let Renda_variavel = (function(){
 				gerenciamento_in_operacoes = {},
 				cenarios_in_operacoes = {},
 				cenarios_by_nome = {},
+				data_in_operacoes = {},
 				select_options_html = '';
 			//Monta uma lista de cenarios usando o nome como chave
 			for (let cn in _lista__cenarios.cenarios)
@@ -582,6 +471,7 @@ let Renda_variavel = (function(){
 				ativos_in_operacoes[_lista__operacoes.operacoes[op].ativo] = null;
 				gerenciamento_in_operacoes[_lista__operacoes.operacoes[op].gerenciamento] = null;
 				cenarios_in_operacoes[_lista__operacoes.operacoes[op].cenario] = null;
+				data_in_operacoes[_lista__operacoes.operacoes[op].data] = null;
 			}
 			//////////////////////////////////
 			//Filtro da Data
@@ -592,6 +482,10 @@ let Renda_variavel = (function(){
 				data_final = ('data_final' in dashboard_filters) ? dashboard_filters['data_final'] : data_final_total;
 			me.filters.data.data('daterangepicker').range = {
 				'Today': [data_inicial_total, data_final_total]
+			}
+			me.filters.data.data('daterangepicker').isCustomDate = function (date){
+				if (date.format('YYYY-MM-DD') in data_in_operacoes)
+					return 'has-bt-data';
 			}
 			me.filters.data.data('daterangepicker').minDate = moment(data_inicial, 'DD/MM/YYYY');
 			me.filters.data.data('daterangepicker').maxDate = moment(data_final, 'DD/MM/YYYY');
@@ -699,6 +593,279 @@ let Renda_variavel = (function(){
 			me.simulations.R_filter_ops.prop('checked', (('R_filter_ops' in dashboard_simulations) ? dashboard_simulations['R_filter_ops'] == '1' : false));
 		}
 	}
+	let _search_build__button = {
+		element: $(document.getElementById('renda_variavel__search_build')),
+		needRebuild: false,
+		changeState: function (needRebuild = false){
+			if (needRebuild)
+				this.element.removeClass('btn-primary').addClass('btn-warning');
+			else
+				this.element.removeClass('btn-warning').addClass('btn-primary');
+			this.needRebuild = needRebuild;
+		}
+	}
+	//Variavel de controle de Timeout para clicks nos botões
+	let _timeout_button__hold = 0;
+	//////////////////////////////////
+	//Usuários
+	//////////////////////////////////
+	//Controla a lista de usuarios cadastrados
+	let	_lista__usuarios = {
+		//Lista dos usuários cadastrados
+		usuarios: [],
+		update: function (data){
+			//Atualiza o Array
+			this.usuarios = data;
+		}
+	}
+	//////////////////////////////////
+	//Ativos
+	//////////////////////////////////
+	//Controla a lista de ativos cadastrados
+	let	_lista__ativos = {
+		//Lista de ativos cadastrados do usuario
+		ativos: [],
+		update: function (data){
+			//Atualiza o Array
+			this.ativos = data;
+		}
+	}
+	//////////////////////////////////
+	//Gerenciamentos
+	//////////////////////////////////
+	//Controla a lista de gerenciamentos cadastrados
+	let	_lista__gerenciamentos = {
+		//Lista de gerenciamentos cadastrados do usuario
+		gerenciamentos: [],
+		update: function (data){
+			//Atualiza o Array
+			this.gerenciamentos = data;
+		}
+	}
+	//////////////////////////////////
+	//Arcabouços
+	//////////////////////////////////
+	//Controla a lista de arcabouços cadastrados
+	let	_lista__arcaboucos = {
+		//Lista de arcabouços cadastrados do usuário
+		arcaboucos: {},
+		create: function (data){
+			//Atualiza o objeto
+			this.arcaboucos = {};
+			for (let a in data){
+				//Reordena a lista de usuarios
+				data[a]['usuarios'].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
+				this.arcaboucos[data[a].id] = data[a];
+			}
+		},
+		update: function (data){
+			//Atualiza o objeto
+			data['usuarios'].sort((a,b) => (a.criador < b.criador) ? 1 : a.usuario.localeCompare(b.usuario));
+			this.arcaboucos[data.id] = data;
+			_instancia_arcabouco.updateArcabouco_Info(data.id);
+		},
+		remove: function (id){
+			//Atualiza o objeto
+			delete this.arcaboucos[id];
+			//Atualiza na lista de instancias
+			return _instancia_arcabouco.removeAll_by_idArcabouco(id);
+		}
+	}
+	//////////////////////////////////
+	//Cenários
+	//////////////////////////////////
+	//Controla a lista de cenários do arcabouço selecionado
+	let _lista__cenarios = {
+		//Lista de cenarios do arcabouço
+		cenarios: {},
+		create: function (data){
+			//Atualiza o objeto
+			this.cenarios = {};
+			for (let cn in data)
+				this.cenarios[data[cn].id] = data[cn];
+		},
+		update: function (data){
+			//Atualiza o objeto
+			this.cenarios[data.id] = data;
+		},
+		remove: function (id){
+			//Atualiza o objeto
+			delete this.cenarios[id];
+		}
+	}
+	//////////////////////////////////
+	//Operações
+	//////////////////////////////////
+	//Controla a lista de operações da instancia
+	let	_lista__operacoes = {
+		//Lista de operacoes
+		operacoes: [],
+		update: function (data){
+			//Atualiza o Array
+			this.operacoes = data;
+		}
+	}
+	//////////////////////////////////
+	//Instancias de Arcabouços e Operações
+	//////////////////////////////////
+	//Controla a instancia de arcabouço selecionada
+	let	_instancia_arcabouco = {
+		//Instancia de arcabouço selecionada
+		instancia: {},
+		//Cores para a instancia
+		colors: {
+			// class: ['--bs-blue', '--bs-indigo', '--bs-green', '--bs-orange', '--bs-yellow'],
+			// code: ['#0d6efd', '#6610f2', '#198754', '#fd7e14', '#ffc107'],
+			// code_transparent: ['rgba(13, 110, 253, 0.1)', 'rgba(102, 16, 242, 0.2)', 'rgba(25, 135, 84, 0.2)', 'rgba(253, 126, 20, 0.2)', 'rgba(255, 193, 7, 0.2)']
+			class: '--bs-blue',
+			code: '#0d6efd',
+			code_transparent: 'rgba(13, 110, 253, 0.1)'
+		},
+		/*
+			Inicia a instancia:
+				- Inicia do zero se não haver nada no sessionStorage.
+					- Pega o primeiro arcabouço.
+					- Inicia o arcabouço section com os cenarios e operações desse arcabouço.
+					- Atualiza o _lista__operacoes.operacoes e _lista__cenarios.cenarios.
+				- Se houver algo no sessionStorage pega oque tem la.
+					- Verifica se a instancia deve ser removida, caso seu arcabouço não exista mais.
+						- Inicia como se fosse do zero.
+					- Senão inicia com a instancia selecionada.
+						- Se os dados trazidos são do arcabouço da instancia, inicia com eles.
+					 	- Senão dai re-baixa os dados corretos.
+		*/
+		start: function (allData){
+			this.instancia = Global.browserStorage__Sync.get('instancia', 'sessionStorage');
+			//Se ha instancia no sessionStorage
+			if (!Global.isObjectEmpty(this.instancia)){
+				//Verifica se o arcabouço da instancia ainda existe
+				if (!(this.instancia.id) in _lista__arcaboucos.arcaboucos)
+					this.instancia = {};
+				//Se ainda existe
+				if (!Global.isObjectEmpty(this.instancia)){
+					rebuild__instanciaArcabouco_HTML();
+					//Verifica se os dados (cenarios + operacoes) são do arcabouço da instancia selecionada
+					if (this.instancia.id === allData['arcaboucos'][0].id){
+						//Inicia o arcabouço section com os cenarios e operações que vieram.
+						_lista__cenarios.create(allData['cenarios']);
+						_lista__operacoes.update(allData['operacoes']);
+						//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
+						if (_renda_variavel__search.init()){
+							//Constroi o dashboard_ops section
+							rebuildDashboard_ops();
+						}
+					}
+					else{
+						Global.connect({
+							data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: this.instancia.id}},
+							success: function (result){
+								if (result.status){
+									//Inicia o arcabouço section com os cenarios e operações que vieram.
+									_lista__cenarios.create(result.data['cenarios']);
+									_lista__operacoes.update(result.data['operacoes']);
+									//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
+									if (_renda_variavel__search.init()){
+										//Constroi o dashboard_ops section
+										rebuildDashboard_ops();
+									}
+								}
+								else
+									Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
+							}
+						});
+					}
+				}
+			}
+			//Se não há uma instancia ainda, inicia do Zero
+			if (Global.isObjectEmpty(this.instancia)) {
+				//Pega o primeiro arcabouço e joga na lista.
+				this.instancia = {
+					id: allData['arcaboucos'][0].id,
+					nome: allData['arcaboucos'][0].nome,
+					color: this.colors.class,
+					chartColor: this.colors.code,
+					chartColor_Transparent: this.colors.code_transparent,
+					filters: {},
+					simulations: {}
+				};
+				rebuild__instanciaArcabouco_HTML();
+				Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
+				//Inicia o arcabouço section com os cenarios e operações desse arcabouço.
+				_lista__cenarios.create(allData['cenarios']);
+				_lista__operacoes.update(allData['operacoes']);
+				//Inicia o 'renda_variavel__search' com os 'filters' e 'simulations'
+				if (_renda_variavel__search.init()){
+					//Constroi o dashboard_ops section
+					rebuildDashboard_ops();
+				}
+			}
+		},
+		//Retorna a instancia ou um atributo da instancia
+		get: function (key = ''){
+			if (!Global.isObjectEmpty(this.instancia)){
+				if (key !== '')
+					return this.instancia[key];
+				return this.instancia;
+			}
+			return null;
+		},
+		//Seleciona uma nova instancia
+		select: function (inst){
+			//Não gera nova instancia se é do mesmo arcabouço
+			if (!('id' in inst) || inst.id === this.instancia.id)
+				return false;
+			//Nova instancia com os dados passados
+			this.instancia = {
+				id: inst.id,
+				nome: inst.nome || '----',
+				color: this.colors.class,
+				chartColor: this.colors.code,
+				chartColor_Transparent: this.colors.code_transparent,
+				filters: {},
+				simulations: {}
+			}
+			//Reconstroi o HTML
+			rebuild__instanciaArcabouco_HTML();
+			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
+			return true;
+		},
+		//Atualiza os 'filters' da instancia selecionada
+		updateInstancia_Filters: function (key, value, rebuildSection = true){
+			if (value !== '')
+				this.instancia['filters'][key] = value;
+			else
+				delete this.instancia['filters'][key];
+			if (rebuildSection){
+				//Marca o _search_build__button para reconstruir o Dashboard_ops
+				_search_build__button.changeState(needRebuild = true);
+			}
+			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
+		},
+		//Atualiza os 'simulations' da instancia selecionada
+		updateInstancia_Simulations: function (key, value, rebuildSection = true){
+			if (value !== '')
+				this.instancia['simulations'][key] = value;
+			else
+				delete this.instancia['simulations'][key];
+			if (rebuildSection){
+				//Marca o _search_build__button para reconstruir o Dashboard_ops
+				_search_build__button.changeState(needRebuild = true);
+			}
+			Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
+		},
+		//Atualiza a instancia selecionada
+		updateArcabouco_Info: function (id_arcabouco){
+			let was_updated = false;
+			if (this.instancia.id == id_arcabouco){
+				this.instancia.nome = _lista__arcaboucos.arcaboucos[id_arcabouco].nome;
+				was_updated = true;
+			}
+			if (was_updated){
+				rebuild__instanciaArcabouco_HTML();
+				Global.browserStorage__Sync.set('instancia', this.instancia, 'sessionStorage');
+			}
+		}
+	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Lista Arcabouços --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -762,127 +929,13 @@ let Renda_variavel = (function(){
 	//Informa se o 'arcabouco_info' precisa ser reconstruido
 	let _arcabouco_info__needRebuild = false;
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------------- Operações Upload -------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Realiza a abertura e leitura do arquivo csv. (Importar operações)
-	*/
-	let _csv_reader = {
-		reader: new FileReader(),
-		processData: function (allText, options){
-		 	let allTextLines = allText.split(/\r\n|\n/),
-		 		lines = [];
-		    if (options.file_format === 'excel' || options.file_format === 'profit'){
-			    for (let i=0; i<allTextLines.length; i++)
-		            lines.push(allTextLines[i].split(';'));
-		    }
-		    else if (options.file_format === 'tryd'){
-		    	for (let i=0; i<allTextLines.length; i++){
-		    		let broken_lines = allTextLines[i].split("\",\"");
-		    		if (broken_lines.length > 1){
-			    		broken_lines[0] = broken_lines[0].replace(/^\"/, '');
-			    		broken_lines[broken_lines.length-1] = broken_lines[broken_lines.length-1].replace(/\",?/, '');
-			            lines.push(broken_lines);
-		    		}
-		    	}
-		    }
-	        return lines;
-		},
-		cleanData: function (obj, options){
-			let newData = [],
-				dataMap = [],
-				data_limit = -1;
-			for (let line=0; line<obj.length; line++){
-				if (options.file_format === 'excel'){
-					//Primeira linha Header do arquivo (Deve ser Data, para identificacao do Header)
-					if (obj[line][0] === 'Data'){
-						data_limit = obj[line].length;
-						for (let a=0; a<obj[line].length; a++)
-							dataMap[a] = obj[line][a];
-					}
-					else if (obj[line].length === data_limit){
-						let operacao = ((dataMap.indexOf('Op') !== -1) ? obj[line][dataMap.indexOf('Op')].toLowerCase() : '');
-						newData.push({
-							ativo: obj[line][dataMap.indexOf('Ativo')],
-							op: ((operacao === '') ? 0 : (operacao === 'c') ? 1 : 2),
-							gerenciamento: obj[line][dataMap.indexOf('R:R')],
-							vol: ((dataMap.indexOf('Vol') !== -1) ? (obj[line][dataMap.indexOf('Vol')].replace(/\.+/g, '')).replace(/\,+/g, '.') : ''),
-							cts: obj[line][dataMap.indexOf('Cts')],
-							cenario: obj[line][dataMap.indexOf('Padrao')],
-							observacoes: ((dataMap.indexOf('Observacoes') !== -1)?obj[line][dataMap.indexOf('Observacoes')].split(',') : []),
-							erro: ((dataMap.indexOf('Erro') !== -1) ? obj[line][dataMap.indexOf('Erro')] : ''),
-							data: obj[line][dataMap.indexOf('Data')],
-							hora: obj[line][dataMap.indexOf('Hora')],
-							resultado: ((dataMap.indexOf('Resultado') !== -1) ? (obj[line][dataMap.indexOf('Resultado')].replace(/\.+/g, '')).replace(/\,+/g, '.') : ''),
-						});
-					}
-				}
-				else if (options.file_format === 'profit'){
-					//Primeira coluna do cabecalho (Subconta) ou (Ativo)
-					if (obj[line][0] === 'Ativo'){
-						data_limit = obj[line].length;
-						for (let a=0; a<obj[line].length; a++)
-							dataMap[a] = obj[line][a];
-					}
-					else if (obj[line].length === data_limit){
-						let operacao = obj[line][dataMap.indexOf('Lado')],
-							preco_compra = parseFloat((obj[line][dataMap.indexOf('Preço Compra')].replace(/\.+/g, '')).replace(/\,+/g, '.')),
-							preco_venda = parseFloat((obj[line][dataMap.indexOf('Preço Venda')].replace(/\.+/g, '')).replace(/\,+/g, '.'));
-						if (options.table_layout === 'scalp'){
-							newData.push({
-								ativo: obj[line][dataMap.indexOf('Ativo')],
-								op: ((operacao === 'C') ? 1 : 2),
-								gerenciamento: '',
-								vol: '',
-								//Profit mostra Qtd Compra e Qtd Venda. Em uma Compra eu quero saber quando eu vendi (qtd. de saída). Em uma Venda o contrário.
-								cts: ((operacao === 'C') ? obj[line][dataMap.indexOf('Qtd Venda')] : obj[line][dataMap.indexOf('Qtd Compra')]),
-								cenario: '',
-								observacoes: [],
-								erro: '',
-								data: obj[line][dataMap.indexOf('Abertura')].split(' ')[0],
-								hora: obj[line][dataMap.indexOf('Abertura')].split(' ')[1],
-								resultado: ((operacao === 'C') ? preco_compra : preco_venda)
-							});
-						}
-					}
-				}
-				else if (options.file_format === 'tryd'){
-					//Primeira coluna do cabecalho (Papel)
-					if (obj[line][0] === 'Papel'){
-						data_limit = obj[line].length;
-						for (let a=0; a<obj[line].length; a++)
-							dataMap[a] = obj[line][a];
-					}
-					else if (obj[line].length === data_limit){
-						let operacao = obj[line][dataMap.indexOf('C/V')],
-							preco_compra = (obj[line][dataMap.indexOf('Prc Médio Cpa')].replace(/\.+/g, '')).replace(/\,+/g, '.'),
-							preco_venda = (obj[line][dataMap.indexOf('Prc Médio Vda')].replace(/\.+/g, '')).replace(/\,+/g, '.');
-						if (options.table_layout === 'scalp'){
-							newData.push({
-								ativo: obj[line][dataMap.indexOf('Papel')],
-								op: ((operacao === 'C') ? 1 : 2),
-								gerenciamento: '',
-								vol: '',
-								cts: obj[line][dataMap.indexOf('Qtd')],
-								cenario: '',
-								observacoes: [],
-								erro: '',
-								data: obj[line][dataMap.indexOf('Data')],
-								hora: obj[line][dataMap.indexOf('Abertura')],
-								resultado: ((operacao === 'C') ? preco_compra : preco_venda)
-							});
-						}
-					}
-				}
-			}
-			return newData;
-		}
-	}
-	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Operações Adicionar -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	//Informa qual tipo de bloco deve construir seguindo o inicial: (Com ações do gerenciamento) | (Sem ações do gerenciamento)
 	let _new_bloco__type__com_acoes = null;
+	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------- Operações Upload -------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////
 	/*---------------------------- Section Dashboard Ops -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -1052,7 +1105,7 @@ let Renda_variavel = (function(){
 		initComplete: function (){
 			$(document.getElementById('dashboard_ops__table_trades__actions'))
 				.append(`<button class="btn btn-sm btn-outline-primary btn-nohover" type="button" name="extract_sel" hold_time="1500"><span><i class="fas fa-file-export me-2"></i>Exportar Toda</span></button>`)
-				.append(`<button class="btn btn-sm btn-outline-danger btn-nohover ms-2" type="button" name="remove_sel" hold_time="3000"><span><i class="fas fa-trash me-2"></i>Apagar Tudo</span></button>`);
+				.append(`<button class="btn btn-sm btn-outline-danger btn-nohover ms-2" type="button" name="remove_sel" hold_time="3000"><span><i class="fas fa-trash me-2"></i>Apagar Toda</span></button>`);
 		},
 		lengthChange: false,
 		info: false,
@@ -1812,126 +1865,6 @@ let Renda_variavel = (function(){
 		return data;
 	}
 	////////////////////////////////////////////////////////////////////////////////////
-	/*------------------------------- Operações Upload -------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Constroi o modal de Upload de Operações.
-	*/
-	function buildUploadOperacoesModal(){
-		let modal = $(document.getElementById('upload_operacoes_modal'));
-		document.getElementById('upload_operacoes_modal_file').value = '';
-		document.getElementById('file_format').selectedIndex = 0;
-		document.getElementById('table_layout').selectedIndex = 0;
-		resetUploadOperacaoTable();
-		modal.modal('show');
-	}
-	/*
-		Apaga tudo em 'table_upload_operacoes'.
-	*/
-	function resetUploadOperacaoTable(){
-		let table = $(document.getElementById('table_upload_operacoes'));
-		table.find('thead').empty();
-		table.find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
-	}
-	/*
-		Adiciona uma linha na tabela de upload de operações.
-	*/
-	function buildUploadOperacaoTable(data = []){
-		let tbody_html = ``,
-			thead_html = ``,
-			table = $(document.getElementById('table_upload_operacoes')),
-			table_layout = $(document.getElementById('table_layout')).val(),
-			op_dic = ['', 'C', 'V'],
-			cenarios_dic = [],
-			ativos_dic = {'': {nome: '', custo: '', valor_tick: '', pts_tick: ''}},
-			gerenciamentos_dic = {'': {nome: '', acoes: ''}},
-			error = false;
-		for (let cn in _lista__cenarios.cenarios)
-			cenarios_dic.push(_lista__cenarios.cenarios[cn].nome);
-		for (let at in _lista__ativos.ativos){
-			ativos_dic[_lista__ativos.ativos[at].nome] = {
-				nome: _lista__ativos.ativos[at].nome,
-				custo: _lista__ativos.ativos[at].custo,
-				valor_tick: _lista__ativos.ativos[at].valor_tick,
-				pts_tick: _lista__ativos.ativos[at].pts_tick
-			}
-		}
-		for (let ge in _lista__gerenciamentos.gerenciamentos){
-			gerenciamentos_dic[_lista__gerenciamentos.gerenciamentos[ge].nome] = {
-				nome: _lista__gerenciamentos.gerenciamentos[ge].nome,
-				acoes_text: JSON.stringify(_lista__gerenciamentos.gerenciamentos[ge].acoes)
-			}
-		}
-		//Constroi o THEAD
-		if (table_layout === 'scalp'){
-			thead_html += `<tr>`+
-						  `<th name="sequencia">#</th>`+
-						  `<th name="data">Data</th>`+
-						  `<th name="ativo">Ativo</th>`+
-						  `<th name="op">Op.</th>`+
-						  `<th name="gerenciamento">Gerencimento</th>`+
-						  `<th name="vol">Vol</th>`+
-						  `<th name="cts">Cts</th>`+
-						  `<th name="hora">Hora</th>`+
-						  `<th name="resultado">Resultado</th>`+
-						  `<th name="cenario">Cenário</th>`+
-						  `<th name="observacoes">Observações</th>`+
-						  `<th name="erro">Erro</th>`+
-						  `</tr>`;
-		}
-		//Constroi o TBODY
-		for (let i=0; i<data.length; i++){
-			//Layout de Scalp
-			if (table_layout === 'scalp'){
-				let error_line = [],
-					op_ativo_index = (data[i].ativo in ativos_dic) ? data[i].ativo : '',
-					op_gerenciamento_index = (data[i].gerenciamento in gerenciamentos_dic) ? data[i].gerenciamento : '',
-					op_cenario = (cenarios_dic.includes(data[i].cenario)) ? data[i].cenario : '',
-					op_observacoes = (op_cenario !== '') ? data[i].observacoes.map(s => s.trim()).join(',') : '';
-				if (data[i].data === '' || op_ativo_index === '' || op_gerenciamento_index === '' || data[i].op === '' || data[i].cts === '' || data[i].resultado === '' || data[i].saida === ''){
-					if (data[i].data === '')
-						error_line.push('data');
-					if (op_ativo_index === '')
-						error_line.push('ativo');
-					if (op_gerenciamento_index === '')
-						error_line.push('gerenciamento');
-					if (data[i].op === '')
-						error_line.push('op');
-					if (data[i].cts === '')
-						error_line.push('cts');
-					if (data[i].resultado === '')
-						error_line.push('resultado');
-					if (data[i].saida === '')
-						error_line.push('saida');
-					error = true;
-				}
-				tbody_html += `<tr ${((error_line) ? `class="error"` : ``)}>`+
-							`<td name="sequencia" value="${i+1}">${i+1}</td>`+
-							`<td name="data" value="${Global.convertDate(data[i].data)}" ${((error_line.includes('data')) ? `class="error"` : ``)}>${data[i].data}</td>`+
-							`<td name="ativo" value="${ativos_dic[op_ativo_index].nome}" custo="${ativos_dic[op_ativo_index].custo}" valor_tick="${ativos_dic[op_ativo_index].valor_tick}" pts_tick="${ativos_dic[op_ativo_index].pts_tick}" ${((error_line.includes('ativo')) ? `class="error"` : ``)}>${ativos_dic[op_ativo_index].nome}</td>`+
-							`<td name="op" value="${data[i].op}" ${((error_line.includes('op')) ? `class="error"` : ``)}>${op_dic[data[i].op]}</td>`+
-							`<td name="gerenciamento" value="${gerenciamentos_dic[op_gerenciamento_index].nome}" acoes='${gerenciamentos_dic[op_gerenciamento_index].acoes_text}' ${((error_line.includes('gerenciamento')) ? `class="error"` : ``)}>${gerenciamentos_dic[op_gerenciamento_index].nome}</td>`+
-							`<td name="vol" value="${data[i].vol}">${data[i].vol}</td>`+
-							`<td name="cts" value="${data[i].cts}" ${((error_line.includes('cts')) ? `class="error"` : ``)}>${data[i].cts}</td>`+
-							`<td name="hora" value="${data[i].hora}">${data[i].hora}</td>`+
-							`<td name="resultado" value="${data[i].resultado}" ${((error_line.includes('resultado')) ? `class="error"` : ``)}>${data[i].resultado}</td>`+
-							`<td name="cenario" value="${op_cenario}">${op_cenario}</td>`+
-							`<td name="observacoes" value="${op_observacoes}">${op_observacoes}</td>`+
-							`<td name="erro" value="${data[i].erro}">${(data[i].erro == 1) ? `<i class="fas fa-exclamation-triangle text-warning"></i>` : ''}</td>`+
-							`</tr>`;
-			}
-		}
-		table.find('thead').empty().append(thead_html);
-		table.find('tbody').empty().append(tbody_html).promise().then(function (){
-			if (error){
-				Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Alguns campos devem serem preenchidos.', delay: 4000});
-				$(document.getElementById('upload_operacoes_modal_enviar')).prop('disabled', true);
-			}
-			else
-				$(document.getElementById('upload_operacoes_modal_enviar')).prop('disabled', false);
-		});
-	}
-	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Operações Adicionar -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -2009,23 +1942,23 @@ let Renda_variavel = (function(){
 		}
 		let default_cenario = $(document.getElementById('adicionar_operacoes_offcanvas__form_default')).find('input[name="cenario"]').val();
 		if ((bloco === null && default_cenario === '') || (bloco !== null && bloco_vazio && default_cenario === ''))
-			buildAdicionarOperacoes__ExtraDados(null, -1);
+			buildAdicionarOperacoes__ExtraDados(-1);
 	}
 	/*
 		Constroi o setor de Extra Dados, com as informações de Observações do cenário escolhido em 'adicionar_operacoes__extraDados'.
 	*/
-	function buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario){
+	function buildAdicionarOperacoes__ExtraDados(id_cenario){
 		let html = ``;
 		if (id_cenario !== -1){
 			html += `<table class="table table-sm table-borderless m-0">`+
 					`<thead><tr>`+
 					`<th colspan="2" class="pb-3">Observações</th>`+
 					`</tr></thead><tbody>`;
-			for (let o in _lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes']){
-				if (_lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes'][o].inativo == 0){
+			for (let o in _lista__cenarios['cenarios'][id_cenario]['observacoes']){
+				if (_lista__cenarios['cenarios'][id_cenario]['observacoes'][o].inativo == 0){
 					html += `<tr>`+
-							`<td name="ref">${_lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes'][o].ref}</td>`+
-							`<td name="nome">${_lista__cenarios['cenarios'][id_arcabouco][id_cenario]['observacoes'][o].nome}</td>`+
+							`<td name="ref">${_lista__cenarios['cenarios'][id_cenario]['observacoes'][o].ref}</td>`+
+							`<td name="nome">${_lista__cenarios['cenarios'][id_cenario]['observacoes'][o].nome}</td>`+
 							`</tr>`;
 				}
 			}
@@ -2034,6 +1967,139 @@ let Renda_variavel = (function(){
 		if (html === ``)
 			html = `<div class="container-fluid p-4 text-center text-muted fw-bold"><i class="fas fa-cookie-bite me-2" aria-hidden="true"></i>Nada a mostrar</div>`;
 		$(document.getElementById('adicionar_operacoes__extraDados')).empty().append(html);
+	}
+	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------- Operações Upload -------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Constroi o modal de Upload de Operações.
+	*/
+	function buildUploadOperacoesModal(){
+		let modal = $(document.getElementById('upload_operacoes_modal'));
+		document.getElementById('upload_operacoes_modal_file').value = '';
+		resetUploadOperacaoTable();
+		modal.modal('show');
+	}
+	/*
+		Apaga tudo em 'table_upload_operacoes'.
+	*/
+	function resetUploadOperacaoTable(){
+		let table = $(document.getElementById('table_upload_operacoes'));
+		table.find('thead').empty();
+		table.find('tbody').empty().append(`<tr class="text-center text-muted fw-bold fs-6"><td class="border-0"><i class="fas fa-cookie-bite me-2"></i>Nada a mostrar</td></tr>`);
+	}
+	/*
+		Adiciona uma linha na tabela de upload de operações.
+	*/
+	function buildUploadOperacaoTable(data = []){
+		let tbody_html = ``,
+			thead_html = ``,
+			table = $(document.getElementById('table_upload_operacoes')),
+			cenarios_cadastrados = [],
+			ativos_cadastrados = {},
+			gerenciamentos_cadastrados = {'': {nome: '', acoes: ''}},
+			op_dic = ['', 'c', 'v'],
+			error = false;
+		for (let cn in _lista__cenarios.cenarios)
+			cenarios_cadastrados.push(_lista__cenarios.cenarios[cn].nome);
+		for (let at in _lista__ativos.ativos){
+			ativos_cadastrados[_lista__ativos.ativos[at].nome] = {
+				nome: _lista__ativos.ativos[at].nome,
+				custo: _lista__ativos.ativos[at].custo,
+				valor_tick: _lista__ativos.ativos[at].valor_tick,
+				pts_tick: _lista__ativos.ativos[at].pts_tick
+			}
+		}
+		for (let ge in _lista__gerenciamentos.gerenciamentos){
+			gerenciamentos_cadastrados[_lista__gerenciamentos.gerenciamentos[ge].nome] = {
+				nome: _lista__gerenciamentos.gerenciamentos[ge].nome,
+				acoes_text: JSON.stringify(_lista__gerenciamentos.gerenciamentos[ge].acoes)
+			}
+		}
+		//Constroi o THEAD
+		thead_html += `<tr>`+
+					  `<th name="sequencia">#</th>`+
+					  `<th name="data">Data</th>`+
+					  `<th name="hora">Hora</th>`+
+					  `<th name="ativo">Ativo</th>`+
+					  `<th name="gerenciamento">Gerencimento</th>`+
+					  `<th name="op">Op.</th>`+
+					  `<th name="vol">Vol</th>`+
+					  `<th name="cts">Cts</th>`+
+					  `<th name="escalada">Esc.</th>`+
+					  `<th name="resultado">Resultado</th>`+
+					  `<th name="cenario">Cenário</th>`+
+					  `<th name="observacoes">Observações</th>`+
+					  `<th name="erro">Erro</th>`+
+					  `</tr>`;
+		//Constroi o TBODY
+		for (let i=0; i<data.length; i++){
+			let error_line = [],
+				op_ativo_index = (data[i].ativo in ativos_cadastrados) ? data[i].ativo : '',
+				op_used_ativo = {nome: '', custo: '', valor_tick: '', pts_tick: ''},
+				op_gerenciamento_index = (data[i].gerenciamento in gerenciamentos_cadastrados) ? data[i].gerenciamento : '',
+				op_cenario = (cenarios_cadastrados.includes(data[i].cenario)) ? data[i].cenario : '',
+				op_observacoes = (op_cenario !== '') ? data[i].observacoes.split(',').map(s => s.trim()).join(',') : '';
+			//Se o ativo está cadastrado, pega a info cadastrada
+			if (op_ativo_index !== ''){
+				op_used_ativo['nome'] = ativos_cadastrados[op_ativo_index].nome;
+				op_used_ativo['custo'] = ativos_cadastrados[op_ativo_index].custo;
+				op_used_ativo['valor_tick'] = ativos_cadastrados[op_ativo_index].valor_tick;
+				op_used_ativo['pts_tick'] = ativos_cadastrados[op_ativo_index].pts_tick;
+			}
+			//Senao pega a info passada no CSV
+			else{
+				op_used_ativo['nome'] = data[i].ativo;
+				op_used_ativo['custo'] = data[i].custo;
+				op_used_ativo['valor_tick'] = data[i].valor_tick;
+				op_used_ativo['pts_tick'] = data[i].pts_tick;
+			}
+			if (data[i].data === '' || data[i].hora === '' || op_used_ativo['nome'] === '' || op_used_ativo['custo'] === '' || op_used_ativo['valor_tick'] === '' || op_used_ativo['pts_tick'] === '' || op_gerenciamento_index === '' || data[i].op === '' || data[i].vol === '' || data[i].cts === '' || data[i].resultado === '' || op_cenario === ''){
+				if (data[i].data === '')
+					error_line.push('data');
+				if (data[i].hora === '')
+					error_line.push('hora');
+				if (op_used_ativo['nome'] === '' || op_used_ativo['custo'] === '' || op_used_ativo['valor_tick'] === '' || op_used_ativo['pts_tick'] === '')
+					error_line.push('ativo');
+				if (op_gerenciamento_index === '')
+					error_line.push('gerenciamento');
+				if (data[i].op === '')
+					error_line.push('op');
+				if (data[i].vol === '')
+					error_line.push('vol');
+				if (data[i].cts === '')
+					error_line.push('cts');
+				if (data[i].resultado === '')
+					error_line.push('resultado');
+				if (op_cenario === '')
+					error_line.push('cenario');
+				error = true;
+			}
+			tbody_html += `<tr ${((error_line) ? `class="error"` : ``)}>`+
+						`<td name="sequencia" value="${i+1}">${i+1}</td>`+
+						`<td name="data" value="${Global.convertDate(data[i].data)}" ${((error_line.includes('data')) ? `class="error"` : ``)}>${data[i].data}</td>`+
+						`<td name="hora" value="${data[i].hora}" ${((error_line.includes('hora')) ? `class="error"` : ``)}>${data[i].hora}</td>`+
+						`<td name="ativo" value="${op_used_ativo.nome}" custo="${op_used_ativo.custo}" valor_tick="${op_used_ativo.valor_tick}" pts_tick="${op_used_ativo.pts_tick}" ${((error_line.includes('ativo')) ? `class="error"` : ``)}>${op_used_ativo.nome}</td>`+
+						`<td name="gerenciamento" value="${gerenciamentos_cadastrados[op_gerenciamento_index].nome}" acoes='${gerenciamentos_cadastrados[op_gerenciamento_index].acoes_text}' ${((error_line.includes('gerenciamento')) ? `class="error"` : ``)}>${gerenciamentos_cadastrados[op_gerenciamento_index].nome}</td>`+
+						`<td name="op" value="${data[i].op}" ${((error_line.includes('op')) ? `class="error"` : ``)}>${op_dic[data[i].op]}</td>`+
+						`<td name="vol" value="${data[i].vol}" ${((error_line.includes('vol')) ? `class="error"` : ``)}>${data[i].vol}</td>`+
+						`<td name="cts" value="${data[i].cts}" ${((error_line.includes('cts')) ? `class="error"` : ``)}>${data[i].cts}</td>`+
+						`<td name="escalada" value="${data[i].escalada}">${data[i].escalada}</td>`+
+						`<td name="resultado" value="${data[i].resultado}" ${((error_line.includes('resultado')) ? `class="error"` : ``)}>${data[i].resultado}</td>`+
+						`<td name="cenario" value="${op_cenario}" ${((error_line.includes('cenario')) ? `class="error"` : ``)}>${op_cenario}</td>`+
+						`<td name="observacoes" value="${op_observacoes}">${op_observacoes}</td>`+
+						`<td name="erro" value="${data[i].erro}">${(data[i].erro == 1) ? `<i class="fas fa-exclamation-triangle text-warning"></i>` : ''}</td>`+
+						`</tr>`;
+		}
+		table.find('thead').empty().append(thead_html);
+		table.find('tbody').empty().append(tbody_html).promise().then(function (){
+			if (error){
+				Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Alguns campos devem serem preenchidos.', delay: 4000});
+				$(document.getElementById('upload_operacoes_modal_enviar')).prop('disabled', true);
+			}
+			else
+				$(document.getElementById('upload_operacoes_modal_enviar')).prop('disabled', false);
+		});
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*--------------------------- Section Dashboard Ops ------------------------------*/
@@ -3534,6 +3600,43 @@ let Renda_variavel = (function(){
 			$(this).toggleClass('d-none', (cenario !== '' && this.getAttribute('cenario') != cenario));
 		});
 	});
+	$(document.getElementById('arcabouco_info__actions')).on('mousedown', 'button[name]', function (){
+		let time_to_hold = parseInt(this.getAttribute('hold_time')),
+			button_name = this.name;
+		_timeout_button__hold = setTimeout(() => {
+			if (button_name === 'extract_all'){
+				let stringData = `${_csv_handler.writer['header'].join(_csv_handler.writer['separator'])}\n`;
+				for (let op=0; op<_lista__operacoes.operacoes.length; op++){
+					for (let column_index=0; column_index<_csv_handler.writer['header'].length; column_index++)
+						stringData += _lista__operacoes.operacoes[op][_csv_handler.writer['header'][column_index]] + ((column_index + 1 < _csv_handler.writer['header'].length) ? _csv_handler.writer['separator'] : '');
+					if (op + 1 < _lista__operacoes.operacoes.length)
+						stringData += '\n';
+				}
+				_csv_handler.writer.write(stringData, `${_instancia_arcabouco.get('nome')}.csv`);
+			}
+			else if (button_name === 'remove_all'){
+				let remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
+				Global.connect({
+					data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
+					success: function (result){
+						if (result.status){
+							Global.toast.create({location: document.getElementById('master_toasts'), title: 'Sucesso', time: 'Now', body: 'Operações Apagadas.', delay: 4000});
+							_lista__operacoes.update(result['data']['operacoes']);
+							_lista__arcaboucos.update(result['data']['arcabouco'][0]);
+							buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+							//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+							_renda_variavel__search.update();
+							rebuildDashboard_ops();
+						}
+						else
+							Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
+					}
+				});
+			}
+		}, time_to_hold);
+	}).on('mouseup', 'button[name]', function (){
+		clearTimeout(_timeout_button__hold);
+	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Lista Cenarios --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -3782,119 +3885,6 @@ let Renda_variavel = (function(){
 			cenario_div.find('button[salvar_cenario]').removeClass('disabled');
 	});
 	////////////////////////////////////////////////////////////////////////////////////
-	/*-------------------------------- Operações Upload ------------------------------*/
-	////////////////////////////////////////////////////////////////////////////////////
-	/*
-		Processa o fechamento do modal 'upload_operacoes_modal', para reconstrucao do arcabouço section.
-	*/
-	$(document.getElementById('upload_operacoes_modal')).on('hidden.bs.modal', function (){
-		if (_dashboard_ops__needRebuild){
-			_dashboard_ops__needRebuild = false;
-			//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-			_renda_variavel__search.update();
-			rebuildDashboard_ops();
-			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
-		}
-	});
-	/*
-		Processa a importação de um arquivo de operações.
-	*/
-	$(document.getElementById('upload_operacoes_modal_file')).change(function (){
-		let file_import = this;
-		_csv_reader.reader.onload = function fileReadCompleted(){
-			let file_format = $(document.getElementById('file_format')).val(),
-				table_layout = $(document.getElementById('table_layout')).val(),
-				data_lines = _csv_reader.processData(_csv_reader.reader.result, {file_format: file_format}),
-				csvData = null;
-			if (data_lines.length){
-				csvData = _csv_reader.cleanData(data_lines, {file_format: file_format, table_layout: table_layout});
-				if (csvData.length)
-					buildUploadOperacaoTable(csvData);
-				else
-					Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Número de colunas muda em certas linhas)', delay: 4000});
-			}
-			else
-				Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Arquivo Vazio)', delay: 4000});
-			file_import.value = '';
-		};
-		_csv_reader.reader.readAsText(this.files[0], 'ISO-8859-2');
-	});
-	/*
-		Envia as operações para serem registradas no BD.
-	*/
-	$(document.getElementById('upload_operacoes_modal_enviar')).click(function (){
-		let table = $(document.getElementById('table_upload_operacoes')),
-			insert_data = {id_arcabouco: _instancia_arcabouco.get('id'), operacoes: []};
-		$(document.getElementById('table_upload_operacoes')).find('tbody tr').each(function (t, tr){
-			tr = $(tr);
-			let sequencia = tr.find('td[name="sequencia"]').attr('value'),
-				data = tr.find('td[name="data"]').attr('value'),
-				ativo = tr.find('td[name="ativo"]').attr('value'),
-				op = tr.find('td[name="op"]').attr('value'),
-				gerenciamento = tr.find('td[name="gerenciamento"]').attr('value'),
-				vol = tr.find('td[name="vol"]').attr('value'),
-				cts = tr.find('td[name="cts"]').attr('value'),
-				hora = tr.find('td[name="hora"]').attr('value'),
-				erro = tr.find('td[name="erro"]').attr('value'),
-				resultado = tr.find('td[name="resultado"]').attr('value'),
-				cenario = tr.find('td[name="cenario"]').attr('value'),
-				observacoes = tr.find('td[name="observacoes"]').attr('value'),
-				ativo_custo = tr.find('td[name="ativo"]').attr('custo'),
-				ativo_valor_tick = tr.find('td[name="ativo"]').attr('valor_tick'),
-				ativo_pts_tick = tr.find('td[name="ativo"]').attr('pts_tick'),
-				gerenciamento_acoes = tr.find('td[name="gerenciamento"]').attr('acoes');
-			insert_data['operacoes'].push({
-				sequencia: sequencia,
-				data: data,
-				ativo: ativo,
-				op: op,
-				gerenciamento: gerenciamento,
-				vol: vol,
-				cts: cts,
-				hora: hora,
-				erro: erro,
-				resultado: resultado,
-				cenario: cenario,
-				observacoes: observacoes,
-				ativo_custo: ativo_custo,
-				ativo_valor_tick: ativo_valor_tick,
-				ativo_pts_tick: ativo_pts_tick,
-				gerenciamento_acoes: gerenciamento_acoes
-			});
-		});
-		if (insert_data['operacoes'].length){
-			Global.connect({
-				data: {module: 'renda_variavel', action: 'insert_operacoes', params: JSON.stringify(insert_data)},
-				success: function (result){
-					if (result.status){
-						_dashboard_ops__needRebuild = true;
-						_arcabouco_info__needRebuild = true;
-						_lista__operacoes.update(result['data']['operacoes']);
-						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
-						if (result.hold_ops.length === 0){
-							Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
-							document.getElementById('upload_operacoes_modal_file').value = '';
-							document.getElementById('file_format').selectedIndex = 0;
-							document.getElementById('table_layout').selectedIndex = 0;
-							resetUploadOperacaoTable();
-						}
-						else{
-							Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'warning', body: 'Essas operações já foram adicionadas.', delay: 4000});
-							$(document.getElementById('table_upload_operacoes')).find('tbody tr').each(function (t, tr){
-								tr = $(tr);
-								let seq = tr.find('td[name="sequencia"]').attr('value');
-								if (!result.hold_ops.includes(seq))
-									tr.remove();
-							});
-						}
-					}
-					else
-						Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
-				}
-			});
-		}
-	});
-	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Operações Adicionar ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
@@ -3924,7 +3914,6 @@ let Renda_variavel = (function(){
 			default_cts = form.find('input[name="cts"]').val(),
 			default_cenario = form.find('input[name="cenario"]').val(),
 			id_cenario = -1,
-			id_arcabouco = _instancia_arcabouco.get('id'),
 			gerenciamentos_a_criar = [],
 			default_gerenciamentos = form.find('select[name="gerenciamento"]').val(),
 			ult_seq = (parseInt(tbody.find('tr').last().attr('sequencia')) || 0) + 1,
@@ -3952,10 +3941,10 @@ let Renda_variavel = (function(){
 				ativo_index = a;
 		}
 		//Verifica se o cenario está cadastrado
-		for (let cn in _lista__cenarios['cenarios'][id_arcabouco]){
-			if (default_cenario.localeCompare(_lista__cenarios['cenarios'][id_arcabouco][cn]['nome'], undefined, {sensitivity: 'base'}) === 0){
+		for (let cn in _lista__cenarios['cenarios']){
+			if (default_cenario.localeCompare(_lista__cenarios['cenarios'][cn]['nome'], undefined, {sensitivity: 'base'}) === 0){
 				id_cenario = cn;
-				default_cenario = _lista__cenarios['cenarios'][id_arcabouco][cn]['nome'];
+				default_cenario = _lista__cenarios['cenarios'][cn]['nome'];
 			}
 		}
 		//Tabela não foi iniciada ainda
@@ -4011,7 +4000,7 @@ let Renda_variavel = (function(){
 			tbody.parent().parent().parent().css('height', `${table_size}px`);
 		});
 		if (id_cenario !== -1)
-			buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario);
+			buildAdicionarOperacoes__ExtraDados(id_cenario);
 	});
 	/*
 		Ao focar na data, se o campo não estiver ja preenchido, copia do de cima em 'table_adicionar_operacoes'.
@@ -4028,13 +4017,12 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('table_adicionar_operacoes')).on('focus', 'input[name="cenario"]', function (){
 		if (this.value !== ''){
-			let id_arcabouco = _instancia_arcabouco.get('id'),
-				id_cenario = -1;
-			for (let cn in _lista__cenarios['cenarios'][id_arcabouco]){
-				if (this.value.localeCompare(_lista__cenarios['cenarios'][id_arcabouco][cn]['nome'], undefined, {sensitivity: 'base'}) === 0)
+			let id_cenario = -1;
+			for (let cn in _lista__cenarios['cenarios']){
+				if (this.value.localeCompare(_lista__cenarios['cenarios'][cn]['nome'], undefined, {sensitivity: 'base'}) === 0)
 					id_cenario = cn;
 			}
-			buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario);
+			buildAdicionarOperacoes__ExtraDados(id_cenario);
 		}
 	});
 	/*
@@ -4125,15 +4113,14 @@ let Renda_variavel = (function(){
 			}
 			//Trata o cenário, para mostrar suas observações ao lado
 			if (this.name === 'cenario'){
-				let id_arcabouco = _instancia_arcabouco.get('id'),
-					id_cenario = -1;
-				for (let cn in _lista__cenarios['cenarios'][id_arcabouco]){
-					if (this.value.localeCompare(_lista__cenarios['cenarios'][id_arcabouco][cn]['nome'], undefined, {sensitivity: 'base'}) === 0)
+				let id_cenario = -1;
+				for (let cn in _lista__cenarios['cenarios']){
+					if (this.value.localeCompare(_lista__cenarios['cenarios'][cn]['nome'], undefined, {sensitivity: 'base'}) === 0)
 						id_cenario = cn;
 				}
 				if (id_cenario !== -1)
-					this.value = _lista__cenarios['cenarios'][id_arcabouco][id_cenario].nome;
-				buildAdicionarOperacoes__ExtraDados(id_arcabouco, id_cenario);
+					this.value = _lista__cenarios['cenarios'][id_cenario].nome;
+				buildAdicionarOperacoes__ExtraDados(id_cenario);
 			}
 			//Trata as observações para remover ',' sobrando
 			if (this.name === 'observacoes' && this.value !== '')
@@ -4367,9 +4354,139 @@ let Renda_variavel = (function(){
 		else
 			fixTDBlocos__Table();
 	});
+////////////////////////////////////////////////////////////////////////////////////
+	/*-------------------------------- Operações Upload ------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Processa o fechamento do modal 'upload_operacoes_modal', para reconstrucao do arcabouço section.
+	*/
+	$(document.getElementById('upload_operacoes_modal')).on('hidden.bs.modal', function (){
+		if (_dashboard_ops__needRebuild){
+			_dashboard_ops__needRebuild = false;
+			//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+			_renda_variavel__search.update();
+			rebuildDashboard_ops();
+			buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+		}
+	});
+	/*
+		Processa a importação de um arquivo de operações.
+	*/
+	$(document.getElementById('upload_operacoes_modal_file')).change(function (){
+		let file_import = this;
+		_csv_handler.reader['instance'].onload = function fileReadCompleted(){
+			let data_lines = _csv_handler.reader.processData(_csv_handler.reader['instance'].result),
+				csvData = null;
+			if (data_lines.length){
+				csvData = _csv_handler.reader.cleanData(data_lines);
+				if (csvData !== null && csvData.length)
+					buildUploadOperacaoTable(csvData);
+			}
+			else
+				Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Arquivo Vazio)', delay: 4000});
+			file_import.value = '';
+		};
+		_csv_handler.reader['instance'].readAsText(this.files[0], 'ISO-8859-2');
+	});
+	/*
+		Envia as operações para serem registradas no BD.
+	*/
+	$(document.getElementById('upload_operacoes_modal_enviar')).click(function (){
+		let table = $(document.getElementById('table_upload_operacoes')),
+			ativos_cadastrados = {},
+			insert_data = {id_arcabouco: _instancia_arcabouco.get('id'), operacoes: [], ativos: {}};
+		for (let at in _lista__ativos.ativos)
+			ativos_cadastrados[_lista__ativos.ativos[at].nome] = null;
+		$(document.getElementById('table_upload_operacoes')).find('tbody tr').each(function (t, tr){
+			tr = $(tr);
+			let data = tr.find('td[name="data"]').attr('value'),
+				hora = tr.find('td[name="hora"]').attr('value'),
+				ativo = tr.find('td[name="ativo"]').attr('value'),
+				gerenciamento = tr.find('td[name="gerenciamento"]').attr('value'),
+				op = tr.find('td[name="op"]').attr('value'),
+				vol = tr.find('td[name="vol"]').attr('value'),
+				cts = tr.find('td[name="cts"]').attr('value'),
+				escalada = tr.find('td[name="escalada"]').attr('value'),
+				resultado = tr.find('td[name="resultado"]').attr('value'),
+				cenario = tr.find('td[name="cenario"]').attr('value'),
+				observacoes = tr.find('td[name="observacoes"]').attr('value'),
+				erro = tr.find('td[name="erro"]').attr('value'),
+				ativo_custo = tr.find('td[name="ativo"]').attr('custo'),
+				ativo_valor_tick = tr.find('td[name="ativo"]').attr('valor_tick'),
+				ativo_pts_tick = tr.find('td[name="ativo"]').attr('pts_tick'),
+				gerenciamento_acoes = tr.find('td[name="gerenciamento"]').attr('acoes');
+			insert_data['operacoes'].push({
+				data: data,
+				hora: hora,
+				ativo: ativo,
+				gerenciamento: gerenciamento,
+				op: op,
+				vol: vol,
+				cts: cts,
+				escalada: escalada,
+				resultado: resultado,
+				cenario: cenario,
+				observacoes: observacoes,
+				erro: erro,
+				ativo_custo: ativo_custo,
+				ativo_valor_tick: ativo_valor_tick,
+				ativo_pts_tick: ativo_pts_tick,
+				gerenciamento_acoes: gerenciamento_acoes
+			});
+			//Verifica ativos não cadastrados
+			if (!(ativo in ativos_cadastrados) && !(ativo in insert_data['ativos'])){
+				insert_data['ativos'][ativo] = {
+					nome: ativo,
+					custo: ativo_custo,
+					valor_tick: ativo_valor_tick,
+					pts_tick: ativo_pts_tick
+				}
+			}
+		});
+		if (insert_data['operacoes'].length){
+			Global.connect({
+				data: {module: 'renda_variavel', action: 'insert_operacoes', params: JSON.stringify(insert_data)},
+				success: function (result){
+					if (result.status){
+						_dashboard_ops__needRebuild = true;
+						_arcabouco_info__needRebuild = true;
+						_lista__operacoes.update(result['data']['operacoes']);
+						_lista__arcaboucos.update(result['data']['arcabouco'][0]);
+						if (result.hold_ops.length === 0){
+							Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
+							document.getElementById('upload_operacoes_modal_file').value = '';
+							document.getElementById('file_format').selectedIndex = 0;
+							document.getElementById('table_layout').selectedIndex = 0;
+							resetUploadOperacaoTable();
+						}
+						else{
+							Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'warning', body: 'Essas operações já foram adicionadas.', delay: 4000});
+							$(document.getElementById('table_upload_operacoes')).find('tbody tr').each(function (t, tr){
+								tr = $(tr);
+								let seq = tr.find('td[name="sequencia"]').attr('value');
+								if (!result.hold_ops.includes(seq))
+									tr.remove();
+							});
+						}
+					}
+					else
+						Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+				}
+			});
+		}
+	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------- Section Dashboard Ops ----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Processa a reconstrução do Dashboard_ops.
+	*/
+	$(document.getElementById('renda_variavel__search_build')).on('click', function (){
+		if (_search_build__button.needRebuild){
+			_search_build__button.changeState(needRebuild = false);
+			rebuildDashboard_ops();
+		}
+	});
 	/*
 		Processa as seleções de observações em 'filters'.
 	*/
@@ -4471,57 +4588,76 @@ let Renda_variavel = (function(){
 		let time_to_hold = parseInt(this.getAttribute('hold_time')),
 			button_name = this.name;
 		_timeout_button__hold = setTimeout(() => {
+			let ops = RV_Statistics.generate__DashboardOps(_lista__operacoes.operacoes, _instancia_arcabouco.get('filters'), _instancia_arcabouco.get('simulations'), { only_FilterOps: true }),
+				selectedRows = {};
 			if (button_name === 'extract_sel'){
-
+				let stringData = `${_csv_handler.writer['header'].join(_csv_handler.writer['separator'])}\n`;
+				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().rows('.selected').nodes().each(function (tr){
+					selectedRows[tr.getAttribute('operacao')] = null;
+				});
+				if (!Global.isObjectEmpty(selectedRows)){
+					let sel_total = Object.keys(selectedRows).length,
+						sel_i = 0;
+					for (let op=0; op<ops.filtered_ops.length; op++){
+						if (ops.filtered_ops[op].id in selectedRows){
+							for (let column_index=0; column_index<_csv_handler.writer['header'].length; column_index++)
+								stringData += ops.filtered_ops[op][_csv_handler.writer['header'][column_index]] + ((column_index + 1 < _csv_handler.writer['header'].length) ? _csv_handler.writer['separator'] : '');
+							if (sel_i < sel_total)
+								stringData += '\n';
+							sel_i++;
+						}
+					}
+				}
+				else{
+					for (let op=0; op<ops.filtered_ops.length; op++){
+						for (let column_index=0; column_index<_csv_handler.writer['header'].length; column_index++)
+							stringData += ops.filtered_ops[op][_csv_handler.writer['header'][column_index]] + ((column_index + 1 < _csv_handler.writer['header'].length) ? _csv_handler.writer['separator'] : '');
+						if (op + 1 < ops.filtered_ops.length)
+							stringData += '\n';
+					}
+				}
+				_csv_handler.writer.write(stringData, `${_instancia_arcabouco.get('nome')}.csv`);
 			}
 			else if (button_name === 'remove_sel'){
 				let remove_data = {id_arcabouco: _instancia_arcabouco.get('id'), operacoes: []};
 				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().rows('.selected').nodes().each(function (tr){
-					remove_data['operacoes'].push(tr.getAttribute('operacao'));
+					selectedRows[tr.getAttribute('operacao')] = null;
 				});
+				if (!Global.isObjectEmpty(selectedRows)){
+					for (let op in ops.filtered_ops){
+						if (ops.filtered_ops[op].id in selectedRows)
+							remove_data['operacoes'].push(ops.filtered_ops[op].id);
+					}
+				}
+				else{
+					for (let op in ops.filtered_ops)
+						remove_data['operacoes'].push(ops.filtered_ops[op].id);
+				}
 				if (remove_data['operacoes'].length === 0){
 					Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: 'Nenhuma operação selecionada.', delay: 4000});
 					return false;
 				}
+				Global.connect({
+					data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
+					success: function (result){
+						if (result.status){
+							Global.toast.create({location: document.getElementById('master_toasts'), title: 'Sucesso', time: 'Now', body: 'Operações Apagadas.', delay: 4000});
+							_lista__operacoes.update(result['data']['operacoes']);
+							_lista__arcaboucos.update(result['data']['arcabouco'][0]);
+							buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
+							//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
+							_renda_variavel__search.update();
+							rebuildDashboard_ops();
+						}
+						else
+							Global.toast.create({location: document.getElementById('master_toasts'), title: 'Erro', time: 'Now', body: result.error, delay: 4000});
+					}
+				});
 			}
 		}, time_to_hold);
 	}).on('mouseup', '#dashboard_ops__table_trades__actions button[name]', function (){
 		clearTimeout(_timeout_button__hold);
 	});
-	/*
-		Processa a remocao/exportacao de toda tabela ou das operações selecionadas com double click.
-	*/
-	// $(document.getElementById('lista_ops__actions')).on('mousedown', 'button[name]', function (){
-	// 	let remove_data = {};
-	// 	//Remove todas as operações do arcabouço
-	// 	if (this.name === 'remove_all')
-	// 		remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
-	// 	else if (this.name === 'remove_sel'){
-			
-	// 	}
-	// 	if (!Global.isObjectEmpty(remove_data)){
-	// 		Global.connect({
-	// 			data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
-	// 			success: function (result){
-	// 				if (result.status){
-	// 					Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'success', body: 'Operações Apagadas.', delay: 4000});
-	// 					_lista__operacoes.update(result['data']['operacoes']);
-	// 					_lista__arcaboucos.update(result['data']['arcabouco'][0]);
-	// 					buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
-	// 					buildOperacoesOffcanvas(forceRebuild = true);
-	// 					//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
-	// 					_renda_variavel__search.update();
-	// 					if (_renda_variavel__section === 'dashboard_ops__section')
-	// 						rebuildDashboard_ops();
-	// 					else if (_renda_variavel__section === 'analise_obs__section')
-	// 						rebuildAnalise_obs();
-	// 				}
-	// 				else
-	// 					Global.toast.create({location: document.getElementById('lista_ops_toasts'), color: 'danger', body: result.error, delay: 4000});
-	// 			}
-	// 		});
-	// 	}
-	// });
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- Menu Top -----------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////

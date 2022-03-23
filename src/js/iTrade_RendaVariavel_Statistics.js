@@ -124,16 +124,38 @@ let RV_Statistics = (function(){
 	let checkTipo_Paradas = function (stop_tipo_parada, resultLiquido_operacao, simulation){
 		//Verifica se a operação pode ser executada dados os tipos de parada 'Na Semana'
 		for (let tp_value in stop_tipo_parada['sem'].tipo_parada){
-			//Parada N dias Stop Cheio (Total)
-			if (tp_value === 's1'){
+			//Parada N dias Stop (Cheio)
+			if (tp_value === 'ss1'){
+				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
+					return false;
+			}
+			//Parada N dias Gain (Cheio)
+			else if (tp_value === 'gs1'){
 				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
 					return false;
 			}
 			//Parada N dias Stop (Total)
-			else if (tp_value === 's2'){
+			else if (tp_value === 'ss2'){
 				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
 					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
 						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0){
+							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
+								return false;
+						}
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current = 0.0;
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao = stop_tipo_parada['dia'].condicao;
+					}
+					stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current += resultLiquido_operacao;
+				}
+				else
+					return false;
+			}
+			//Parada N dias Gain (Total)
+			else if (tp_value === 'gs2'){
+				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
+					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current > 0){
 							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
 							if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
 								return false;
@@ -147,15 +169,38 @@ let RV_Statistics = (function(){
 					return false;
 			}
 			//Parada N dias Stop (Sequencia)
-			else if (tp_value === 's3'){
+			else if (tp_value === 'ss3'){
 				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
 					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+						//Se o dia foi negativo
 						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0){
 							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
 							if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
 								return false;
 						}
-						else
+						//Zera apenas com dias positivos, Empates não contam
+						else if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current > 0)
+							stop_tipo_parada['sem']['tipo_parada'][tp_value].current = 0;
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current = 0.0;
+						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao = stop_tipo_parada['dia'].condicao;
+					}
+					stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current += resultLiquido_operacao;
+				}
+				else
+					return false;
+			}
+			//Parada N dias Gain (Sequencia)
+			else if (tp_value === 'gs3'){
+				if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current < stop_tipo_parada['sem']['tipo_parada'][tp_value].max){
+					if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+						//Se o dia foi positivo
+						if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current > 0){
+							stop_tipo_parada['sem']['tipo_parada'][tp_value].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada'][tp_value].current >= stop_tipo_parada['sem']['tipo_parada'][tp_value].max)
+								return false;
+						}
+						//Zera apenas com dias negativos, Empates não contam
+						else if (stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current < 0)
 							stop_tipo_parada['sem']['tipo_parada'][tp_value].current = 0;
 						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].current = 0.0;
 						stop_tipo_parada['sem']['tipo_parada'][tp_value]['dia'].condicao = stop_tipo_parada['dia'].condicao;
@@ -169,18 +214,39 @@ let RV_Statistics = (function(){
 		//Verifica se a operação pode ser executada dados os tipos de parada 'No Dia'
 		for (let tp_value in stop_tipo_parada['dia'].tipo_parada){
 			//Parada N Stops (Total)
-			if (tp_value === 'd1'){
+			if (tp_value === 'sd1'){
 				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
 					//Se for um Stop
-					if (resultLiquido_operacao < 1)
+					if (resultLiquido_operacao < 0)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
-					//Atualiza o 's1' os dias com stop cheio
-					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+					//Atualiza o 'ss1' os dias com stop cheio
+					if ('ss1' in stop_tipo_parada['sem']['tipo_parada']){
 						//Se caso atingiu o limite diario, atualiza as paradas semanais
 						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
-							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['ss1'].current += 1;
+							}
+						}
+					}
+				}
+				//Foi atingido o limite diário
+				else
+					return false;
+			}
+			//Parada N Gain (Total)
+			else if (tp_value === 'gd1'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+					//Se for um Gain
+					if (resultLiquido_operacao > 0)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
+					//Atualiza o 'gs1' os dias com gain cheio
+					if ('gs1' in stop_tipo_parada['sem']['tipo_parada']){
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+							if (stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['gs1'].current += 1;
 							}
 						}
 					}
@@ -190,20 +256,45 @@ let RV_Statistics = (function(){
 					return false;
 			}
 			//Parada N Stops (Sequencia)
-			else if (tp_value === 'd2'){
+			else if (tp_value === 'sd2'){
 				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
 					//Se for um Stop
-					if (resultLiquido_operacao < 1)
+					if (resultLiquido_operacao < 0)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
-					else
+					//Zera apenas com Gain, Empates não contam
+					else if (resultLiquido_operacao > 0)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current = 0;
-					//Atualiza o 's1' os dias com stop cheio
-					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+					//Atualiza o 'ss1' os dias com stop cheio
+					if ('ss1' in stop_tipo_parada['sem']['tipo_parada']){
 						//Se caso atingiu o limite diario, atualiza as paradas semanais
 						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
-							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['ss1'].current += 1;
+							}
+						}
+					}
+				}
+				//Foi atingido o limite diário
+				else
+					return false;
+			}
+			//Parada N Gains (Sequencia)
+			else if (tp_value === 'gd2'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+					//Se for um Gain
+					if (resultLiquido_operacao > 0)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += 1;
+					//Zera apenas com Stop, Empates não contam
+					else if (resultLiquido_operacao < 0)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current = 0;
+					//Atualiza o 'gs1' os dias com gain cheio
+					if ('gs1' in stop_tipo_parada['sem']['tipo_parada']){
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+							if (stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['gs1'].current += 1;
 							}
 						}
 					}
@@ -213,16 +304,35 @@ let RV_Statistics = (function(){
 					return false;
 			}
 			//Parada X Valor no Negativo
-			else if (tp_value === 'd3'){
+			else if (tp_value === 'sd3'){
 				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
 					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-					//Atualiza o 's1' os dias com stop cheio
-					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+					//Atualiza o 'ss1' os dias com stop cheio
+					if ('ss1' in stop_tipo_parada['sem']['tipo_parada']){
 						//Se caso atingiu o limite diario, atualiza as paradas semanais
 						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
-							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['ss1'].current += 1;
+							}
+						}
+					}
+				}
+				//Foi atingido o limite diário
+				else
+					return false;
+			}
+			//Parada X Valor no Positivo
+			else if (tp_value === 'gd3'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					//Atualiza o 'gs1' os dias com gain cheio
+					if ('gs1' in stop_tipo_parada['sem']['tipo_parada']){
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+							if (stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['gs1'].current += 1;
 							}
 						}
 					}
@@ -232,18 +342,39 @@ let RV_Statistics = (function(){
 					return false;
 			}
 			//Parada X Valor de Perda Bruta
-			else if (tp_value === 'd4'){
+			else if (tp_value === 'sd4'){
 				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
 					//Se for um Stop
-					if (resultLiquido_operacao < 1)
+					if (resultLiquido_operacao < 0)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-					//Atualiza o 's1' os dias com stop cheio
-					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+					//Atualiza o 'ss1' os dias com stop cheio
+					if ('ss1' in stop_tipo_parada['sem']['tipo_parada']){
 						//Se caso atingiu o limite diario, atualiza as paradas semanais
 						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
-							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['ss1'].current += 1;
+							}
+						}
+					}
+				}
+				//Foi atingido o limite diário
+				else
+					return false;
+			}
+			//Parada X Valor de Ganho Bruta
+			else if (tp_value === 'gd4'){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * (-1)){
+					//Se for um Gain
+					if (resultLiquido_operacao > 0)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					//Atualiza o 'gs1' os dias com gain cheio
+					if ('gs1' in stop_tipo_parada['sem']['tipo_parada']){
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max){
+							if (stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['gs1'].current += 1;
 							}
 						}
 					}
@@ -253,16 +384,35 @@ let RV_Statistics = (function(){
 					return false;
 			}
 			//Parada X R's no Negativo
-			else if (tp_value === 'd5' && simulation.R !== null){
+			else if (tp_value === 'sd5' && simulation.R !== null){
 				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
 					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-					//Atualiza o 's1' os dias com stop cheio
-					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+					//Atualiza o 'ss1' os dias com stop cheio
+					if ('ss1' in stop_tipo_parada['sem']['tipo_parada']){
 						//Se caso atingiu o limite diario, atualiza as paradas semanais
 						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
-							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['ss1'].current += 1;
+							}
+						}
+					}
+				}
+				//Foi atingido o limite diário
+				else
+					return false;
+			}
+			//Parada X R's no Positivo
+			else if (tp_value === 'gd5' && simulation.R !== null){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R){
+					stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					//Atualiza o 'gs1' os dias com gain cheio
+					if ('gs1' in stop_tipo_parada['sem']['tipo_parada']){
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R){
+							if (stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['gs1'].current += 1;
 							}
 						}
 					}
@@ -272,18 +422,39 @@ let RV_Statistics = (function(){
 					return false;
 			}
 			//Parada X R's de Perda Bruta
-			else if (tp_value === 'd6' && simulation.R !== null){
+			else if (tp_value === 'sd6' && simulation.R !== null){
 				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current > stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
 					//Se for um Stop
-					if (resultLiquido_operacao < 1)
+					if (resultLiquido_operacao < 0)
 						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
-					//Atualiza o 's1' os dias com stop cheio
-					if ('s1' in stop_tipo_parada['sem']['tipo_parada']){
+					//Atualiza o 'ss1' os dias com stop cheio
+					if ('ss1' in stop_tipo_parada['sem']['tipo_parada']){
 						//Se caso atingiu o limite diario, atualiza as paradas semanais
 						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current <= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R * (-1)){
-							if (stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
-								stop_tipo_parada['sem']['tipo_parada']['s1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
-								stop_tipo_parada['sem']['tipo_parada']['s1'].current += 1;
+							if (stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['ss1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['ss1'].current += 1;
+							}
+						}
+					}
+				}
+				//Foi atingido o limite diário
+				else
+					return false;
+			}
+			//Parada X R's de Ganho Bruto
+			else if (tp_value === 'gd6' && simulation.R !== null){
+				if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current < stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R){
+					//Se for um Gain
+					if (resultLiquido_operacao > 0)
+						stop_tipo_parada['dia']['tipo_parada'][tp_value].current += resultLiquido_operacao;
+					//Atualiza o 'gs1' os dias com gain cheio
+					if ('gs1' in stop_tipo_parada['sem']['tipo_parada']){
+						//Se caso atingiu o limite diario, atualiza as paradas semanais
+						if (stop_tipo_parada['dia']['tipo_parada'][tp_value].current >= stop_tipo_parada['dia']['tipo_parada'][tp_value].max * simulation.R){
+							if (stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao !== stop_tipo_parada['dia'].condicao){
+								stop_tipo_parada['sem']['tipo_parada']['gs1']['dia'].condicao = stop_tipo_parada['dia'].condicao;
+								stop_tipo_parada['sem']['tipo_parada']['gs1'].current += 1;
 							}
 						}
 					}
@@ -299,7 +470,7 @@ let RV_Statistics = (function(){
 		Recebe a lista de operações (Por Trade), e agrupa dependendo do escolhido. (Por Trade 'Default', Por Dia, Por Mes)
 		Já calcula as informações de resultado necessárias.
 	*/
-	let groupData_byPeriodo = function (list, filters, simulation){
+	let groupData_byPeriodo = function (list, filters, simulation, options){
 		let new_list = [],
 			stop_tipo_parada = {
 				dia: { condicao: null, tipo_parada: {} },
@@ -320,7 +491,7 @@ let RV_Statistics = (function(){
 						stop_tipo_parada['dia']['condicao'] = list[e].data;
 						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
 							//Busca apenas os 'tipo_parada' de 'No Dia'
-							if (simulation['tipo_parada'][tp].tipo_parada.includes('d')){
+							if (simulation['tipo_parada'][tp].tipo_parada.test(/[sg]d[1-9]/)){
 								stop_tipo_parada['dia']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
 									current: 0.0,
 									max: parseFloat(simulation['tipo_parada'][tp].valor_parada)
@@ -333,7 +504,7 @@ let RV_Statistics = (function(){
 						stop_tipo_parada['sem']['condicao'] = current_week_year;
 						for (let tp = 0; tp < simulation['tipo_parada'].length; tp++){
 							//Busca apenas os 'tipo_parada' de 'Na Semana'
-							if (simulation['tipo_parada'][tp].tipo_parada.includes('s')){
+							if (simulation['tipo_parada'][tp].tipo_parada.test(/[sg]s[1-9]/)){
 								stop_tipo_parada['sem']['tipo_parada'][simulation['tipo_parada'][tp].tipo_parada] = {
 									dia: { condicao: null, current: 0.0 },
 									current: 0.0,
@@ -352,29 +523,52 @@ let RV_Statistics = (function(){
 					//Calcula o resultado liquido aplicando os custos
 					let resultLiquido_operacao = resultBruto_operacao - custo_operacao;
 					if (checkTipo_Paradas(stop_tipo_parada, resultLiquido_operacao, simulation)){
-						new_list.push({
-							id: list[e].id,
-							erro: list[e].erro,
-							data: list[e].data,
-							hora: list[e].hora,
-							cenario: list[e].cenario,
-							vol: list[e].vol,
-							op: list[e].op,
-							erro: list[e].erro,
-							cts_usado: cts_usado,
-							custo: custo_operacao,
-							observacoes: list[e].observacoes,
-							resultado_op: (resultLiquido_operacao > 0 ? 1 : (resultLiquido_operacao < 0 ? -1 : 0)),
-							result_bruto: {
-								brl: resultBruto_operacao,
-								R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--',
-								S: (op_resultBruto_Unitario['result'].brl != 0 ? divide(divide(op_resultBruto_Unitario['result'].brl, list[e].vol), op_resultBruto_Unitario['menor_alvo']) : 0),
-							},
-							result_liquido: {
-								brl: resultLiquido_operacao,
-								R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
-							}
-						});
+						if (options.only_FilterOps){
+							new_list.push({
+								id: list[e].id,
+								sequencia: list[e].sequencia,
+								gerenciamento: list[e].gerenciamento,
+								escalada: list[e].escalada,
+								data: list[e].data,
+								hora: list[e].hora,
+								ativo: list[e].ativo,
+								op: list[e].op,
+								vol: list[e].vol,
+								cts: cts_usado,
+								erro: list[e].erro,
+								cenario: list[e].cenario,
+								observacoes: list[e].observacoes,
+								resultado: resultBruto_operacao,
+								ativo_custo: list[e].ativo_custo,
+								ativo_valor_tick: list[e].ativo_valor_tick,
+								ativo_pts_tick: list[e].ativo_pts_tick,
+								gerenciamento_acoes: list[e].gerenciamento_acoes
+							});
+						}
+						else{
+							new_list.push({
+								id: list[e].id,
+								data: list[e].data,
+								hora: list[e].hora,
+								cenario: list[e].cenario,
+								vol: list[e].vol,
+								op: list[e].op,
+								erro: list[e].erro,
+								cts_usado: cts_usado,
+								custo: custo_operacao,
+								observacoes: list[e].observacoes,
+								resultado_op: (resultLiquido_operacao > 0 ? 1 : (resultLiquido_operacao < 0 ? -1 : 0)),
+								result_bruto: {
+									brl: resultBruto_operacao,
+									R: (simulation.R !== null) ? divide(resultBruto_operacao, simulation.R) : '--',
+									S: (op_resultBruto_Unitario['result'].brl != 0 ? divide(divide(op_resultBruto_Unitario['result'].brl, list[e].vol), op_resultBruto_Unitario['menor_alvo']) : 0),
+								},
+								result_liquido: {
+									brl: resultLiquido_operacao,
+									R: (simulation.R !== null) ? divide(resultLiquido_operacao, simulation.R) : '--'
+								}
+							});
+						}
 					}
 				}
 			}
@@ -735,10 +929,10 @@ let RV_Statistics = (function(){
 		/*------------------------------------ Vars --------------------------------------*/
 		//Opções passadas ao executar o generate
 		let _options = {
-			run_byCenario: ('run_byCenario' in options) ? options.run_byCenario : true,
+			get_byCenario: ('get_byCenario' in options) ? options.get_byCenario : true,
 			get_graficoData: ('get_graficoData' in options) ? options.get_graficoData : true,
 			get_tradeTableData: ('get_tradeTableData' in options) ? options.get_tradeTableData : true,
-			only_General: ('only_General' in options) ? options.only_General : false
+			only_FilterOps: ('only_FilterOps' in options) ? options.only_FilterOps : false
 		}
 		//Modifca alguns valores do 'filters' e 'simulation'
 		let _filters = {
@@ -926,7 +1120,12 @@ let RV_Statistics = (function(){
 		let _dashboard_ops__table_stats__byCenario = {}
 		//Variaveis temporarias usadas em '_dashboard_ops__table_stats__byCenario'
 		let _temp__table_stats__byCenario = {}
-		let _ops = groupData_byPeriodo(ops, _filters, _simulation);
+		let _ops = groupData_byPeriodo(ops, _filters, _simulation, _options);
+		if (_options.only_FilterOps){
+			return {
+				filtered_ops: _ops
+			}
+		}
 		/*----------------------------- Percorre as operações ----------------------------*/
 		/*----------------------------------- Por Trade ----------------------------------*/
 		if (_simulation.periodo_calc === '1'){
@@ -934,7 +1133,7 @@ let RV_Statistics = (function(){
 				//////////////////////////////////
 				//Resultados do Trade
 				//////////////////////////////////
-				if (_options.get_tradeTableData && !_options.only_General){
+				if (_options.get_tradeTableData){
 					_dashboard_ops__table_trades.push({
 						trade__id: _ops[o].id,
 						//Sequencia do trade, na ordem que vem do BD
@@ -1054,7 +1253,7 @@ let RV_Statistics = (function(){
 				//////////////////////////////////
 				//Estatisticas para os Gráficos
 				//////////////////////////////////
-				if (_options.get_graficoData && !_options.only_General){
+				if (_options.get_graficoData){
 					//Para o gráfico de Resultados por Trade
 					_dashboard_ops__chart_data['resultados_normalizado']['labels'].push(parseInt(o) + 1);
 					_dashboard_ops__chart_data['resultados_normalizado']['data'].push(_ops[o].result_liquido['brl']);
@@ -1067,7 +1266,7 @@ let RV_Statistics = (function(){
 				//////////////////////////////////
 				//Estatisticas por Cenario
 				//////////////////////////////////
-				if (_options.run_byCenario && !_options.only_General){
+				if (_options.get_byCenario){
 					if (!(_ops[o].cenario in _dashboard_ops__table_stats__byCenario)){
 						_dashboard_ops__table_stats__byCenario[_ops[o].cenario] = {
 							//Total de dias operados
@@ -1204,7 +1403,7 @@ let RV_Statistics = (function(){
 			//////////////////////////////////
 			//Estatisticas por Cenario
 			//////////////////////////////////
-			if (_options.run_byCenario && !_options.only_General){
+			if (_options.get_byCenario){
 				for (let cenario in _dashboard_ops__table_stats__byCenario){
 					//Termina de processar estatisticas de '_temp__table_stats__byCenario'
 					_temp__table_stats__byCenario[cenario]['mediaGain'] = divide(_temp__table_stats__byCenario[cenario]['mediaGain'], (_dashboard_ops__table_stats__byCenario[cenario]['trades__positivo'] + _dashboard_ops__table_stats__byCenario[cenario]['trades__empate']));
@@ -1248,7 +1447,7 @@ let RV_Statistics = (function(){
 			//////////////////////////////////
 			//Estatisticas para os Gráficos
 			//////////////////////////////////
-			if (_options.get_graficoData && !_options.only_General){
+			if (_options.get_graficoData){
 				//////////////////////////////////
 				//Gráfico de Evolução Patrimonial
 				//////////////////////////////////
@@ -1351,7 +1550,7 @@ let RV_Statistics = (function(){
 				//////////////////////////////////
 				//Resultados do Trade
 				//////////////////////////////////
-				if (_options.get_tradeTableData && !_options.only_General){
+				if (_options.get_tradeTableData){
 					_dashboard_ops__table_trades.push({
 						//Sequencia do trade, na ordem que vem do BD
 						dia__seq: _temp__table_stats['i_seq']++,
@@ -1465,7 +1664,7 @@ let RV_Statistics = (function(){
 				//////////////////////////////////
 				//Estatisticas para os Gráficos
 				//////////////////////////////////
-				if (_options.get_graficoData && !_options.only_General){
+				if (_options.get_graficoData){
 					//Para o gráfico de Resultados por Trade
 					_dashboard_ops__chart_data['resultados_normalizado']['labels'].push(parseInt(o) + 1);
 					_dashboard_ops__chart_data['resultados_normalizado']['data'].push(_ops[o].result_liquido['brl']);
@@ -1537,7 +1736,7 @@ let RV_Statistics = (function(){
 			//////////////////////////////////
 			//Estatisticas para os Gráficos
 			//////////////////////////////////
-			if (_options.get_graficoData && !_options.only_General){
+			if (_options.get_graficoData){
 				//////////////////////////////////
 				//Gráfico de Evolução Patrimonial
 				//////////////////////////////////
@@ -1641,7 +1840,7 @@ let RV_Statistics = (function(){
 				//////////////////////////////////
 				//Resultados do Trade
 				//////////////////////////////////
-				if (_options.get_tradeTableData && !_options.only_General){
+				if (_options.get_tradeTableData){
 					_dashboard_ops__table_trades.push({
 						//Sequencia do trade, na ordem que vem do BD
 						mes__seq: _temp__table_stats['i_seq']++,
@@ -1753,7 +1952,7 @@ let RV_Statistics = (function(){
 				//////////////////////////////////
 				//Estatisticas para os Gráficos
 				//////////////////////////////////
-				if (_options.get_graficoData && !_options.only_General){
+				if (_options.get_graficoData){
 					//Para o gráfico de Resultados por Trade
 					_dashboard_ops__chart_data['resultados_normalizado']['labels'].push(parseInt(o) + 1);
 					_dashboard_ops__chart_data['resultados_normalizado']['data'].push(_ops[o].result_liquido['brl']);
@@ -1825,7 +2024,7 @@ let RV_Statistics = (function(){
 			//////////////////////////////////
 			//Estatisticas para os Gráficos
 			//////////////////////////////////
-			if (_options.get_graficoData && !_options.only_General){
+			if (_options.get_graficoData){
 				//////////////////////////////////
 				//Gráfico de Evolução Patrimonial
 				//////////////////////////////////
