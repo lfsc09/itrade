@@ -8,6 +8,7 @@
 					<button class="btn btn-sm btn-primary" type="button" name="gerenciamentos"><i class="fas fa-coins me-2"></i>Gerenciamentos</button>
 					<button class="btn btn-sm btn-outline-primary ms-auto me-2" type="button" name="arcabouco_info"><i class="fas fa-info-circle me-2"></i>Info</button>
 					<button class="btn btn-sm btn-outline-primary me-2" type="button" name="cenarios"><i class="fas fa-tasks me-2"></i>Gerir Cenários</button>
+					<button class="btn btn-sm btn-outline-primary me-2" type="button" name="builds"><i class="fas fa-flask me-2"></i>Builds</button>
 					<div class="btn-group" role="group">
 						<button class="btn btn-sm btn-outline-primary" type="button" name="adicionar_operacoes"><i class="fab fa-buffer me-2"></i>Adicionar Operações</button>
 						<button class="btn btn-sm btn-outline-primary" type="button" name="upload_operacoes"><i class="fas fa-cloud-upload-alt"></i></button>
@@ -628,6 +629,66 @@
 					</div>
 					<div class="row mt-3">
 						<div class="col" id="cenarios_modal__cenarios"></div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer"></div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="builds_modal" tabindex="-1" aria-hidden="true" data-bs-keyboard="false">
+	<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+		<div class="modal-content h-100">
+			<div class="modal-header">
+				<h5 class="modal-title">Rodar Builds</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<div class="container-fluid">
+					<div class="row"><div class="col"><div id="builds_modal_toasts"></div></div></div>
+					<div class="row mt-3">
+						<div class="col" id="builds_modal__runs">
+							<div class="card text-center">
+								<div class="card-header d-flex align-items-center">
+									<div class="col-5">
+										<p class="m-1 text-start fw-bold"><code>Build Tipo Parada 1</code></p>
+										<div class="progress"><div class="progress-bar bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div></div>
+									</div>
+									<button type="button" class="btn btn-sm btn-outline-secondary align-self-stretch ms-auto" info_build><i class="fas fa-info-circle" aria-hidden="true"></i></button>
+									<button type="button" class="btn btn-sm btn-primary ms-2" build="tipo_parada__1" run_build sd1="3" sd2="3" ss1="3" ss2="3" ss3="3" gd1="5" gd2="5" gs1="3" gs2="3" gs3="3">Rodar Build<i class="fas fa-vial ms-2" aria-hidden="true"></i></button>
+								</div>
+								<div class="card-body d-none">
+									<table class="table table-borderless text-muted m-0" name="tipo_parada__1">
+										<tbody>
+											<tr>
+												<td>Gerar dados para testar uma combinação de gerenciamentos de saida usando os filtros aplicados.</td>
+												<td>
+													<p><kbd>N (Total)</kbd></p>
+													<p><kbd>N (Sequencia)</kbd></p>
+													<p><kbd>N dias (Cheio)</kbd></p>
+													<p><kbd>N dias (Total)</kbd></p>
+													<p class="m-0"><kbd>N dias (Sequencia)</kbd></p>
+												</td>
+												<td>
+													<p><kbd class="bg-success">0 - Máx</kbd></p>
+													<p><kbd class="bg-success">0 - Máx</kbd></p>
+													<p><kbd class="bg-success">0 - 3</kbd></p>
+													<p><kbd class="bg-success">0 - 3</kbd></p>
+													<p class="m-0"><kbd class="bg-success">0 - 3</kbd></p>
+												</td>
+												<td>
+													<p><kbd class="bg-danger">0 - 3</kbd></p>
+													<p><kbd class="bg-danger">0 - 3</kbd></p>
+													<p><kbd class="bg-danger">0 - 3</kbd></p>
+													<p><kbd class="bg-danger">0 - 3</kbd></p>
+													<p class="m-0"><kbd class="bg-danger">0 - 3</kbd></p>
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

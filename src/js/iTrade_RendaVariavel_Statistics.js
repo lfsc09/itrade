@@ -470,7 +470,7 @@ let RV_Statistics = (function(){
 		Recebe a lista de operações (Por Trade), e agrupa dependendo do escolhido. (Por Trade 'Default', Por Dia, Por Mes)
 		Já calcula as informações de resultado necessárias.
 	*/
-	let groupData_byPeriodo = function (list, filters, simulation, options){
+	let groupData_byPeriodo = function (list, filters, simulation, options = {}){
 		let new_list = [],
 			stop_tipo_parada = {
 				dia: { condicao: null, tipo_parada: {} },
@@ -523,7 +523,7 @@ let RV_Statistics = (function(){
 					//Calcula o resultado liquido aplicando os custos
 					let resultLiquido_operacao = resultBruto_operacao - custo_operacao;
 					if (checkTipo_Paradas(stop_tipo_parada, resultLiquido_operacao, simulation)){
-						if (options.only_FilterOps){
+						if ('only_FilterOps' in options && options.only_FilterOps){
 							new_list.push({
 								id: list[e].id,
 								sequencia: list[e].sequencia,
@@ -2087,33 +2087,33 @@ let RV_Statistics = (function(){
 				BBollinger(_dashboard_ops__chart_data['drawdowns'], 1, NaN, 2, true, 'sup');
 			}
 			//////////////////////////////////
-				//Enche o dataset base com vazio para regular o zoom dos graficos com poucos elementos
-				//////////////////////////////////
-				if (_dashboard_ops__chart_data['evolucao_patrimonial']['labels'].length < 30){
-					let diff_to_fill = 30 - _dashboard_ops__chart_data['evolucao_patrimonial']['labels'].length;
-					for (let es=0; es<diff_to_fill; es++)
-						_dashboard_ops__chart_data['evolucao_patrimonial']['labels'].push('');
-				}
-				if (_dashboard_ops__chart_data['resultados_normalizado']['labels'].length < 50){
-					let diff_to_fill = 50 - _dashboard_ops__chart_data['resultados_normalizado']['labels'].length;
-					for (let es=0; es<diff_to_fill; es++)
-						_dashboard_ops__chart_data['resultados_normalizado']['labels'].push('');
-				}
-				if (_dashboard_ops__chart_data['resultado_por_hora']['labels'].length < 10){
-					let diff_to_fill = 10 - _dashboard_ops__chart_data['resultado_por_hora']['labels'].length;
-					for (let es=0; es<diff_to_fill; es++)
-						_dashboard_ops__chart_data['resultado_por_hora']['labels'].push('');
-				}
-				if (_dashboard_ops__chart_data['sequencia_de_resultados']['labels'].length < 10){
-					let diff_to_fill = 10 - _dashboard_ops__chart_data['sequencia_de_resultados']['labels'].length;
-					for (let es=0; es<diff_to_fill; es++)
-						_dashboard_ops__chart_data['sequencia_de_resultados']['labels'].push('');
-				}
-				if (_dashboard_ops__chart_data['drawdowns']['labels'].length < 10){
-					let diff_to_fill = 10 - _dashboard_ops__chart_data['drawdowns']['labels'].length;
-					for (let es=0; es<diff_to_fill; es++)
-						_dashboard_ops__chart_data['drawdowns']['labels'].push('');
-				}
+			//Enche o dataset base com vazio para regular o zoom dos graficos com poucos elementos
+			//////////////////////////////////
+			if (_dashboard_ops__chart_data['evolucao_patrimonial']['labels'].length < 30){
+				let diff_to_fill = 30 - _dashboard_ops__chart_data['evolucao_patrimonial']['labels'].length;
+				for (let es=0; es<diff_to_fill; es++)
+					_dashboard_ops__chart_data['evolucao_patrimonial']['labels'].push('');
+			}
+			if (_dashboard_ops__chart_data['resultados_normalizado']['labels'].length < 50){
+				let diff_to_fill = 50 - _dashboard_ops__chart_data['resultados_normalizado']['labels'].length;
+				for (let es=0; es<diff_to_fill; es++)
+					_dashboard_ops__chart_data['resultados_normalizado']['labels'].push('');
+			}
+			if (_dashboard_ops__chart_data['resultado_por_hora']['labels'].length < 10){
+				let diff_to_fill = 10 - _dashboard_ops__chart_data['resultado_por_hora']['labels'].length;
+				for (let es=0; es<diff_to_fill; es++)
+					_dashboard_ops__chart_data['resultado_por_hora']['labels'].push('');
+			}
+			if (_dashboard_ops__chart_data['sequencia_de_resultados']['labels'].length < 10){
+				let diff_to_fill = 10 - _dashboard_ops__chart_data['sequencia_de_resultados']['labels'].length;
+				for (let es=0; es<diff_to_fill; es++)
+					_dashboard_ops__chart_data['sequencia_de_resultados']['labels'].push('');
+			}
+			if (_dashboard_ops__chart_data['drawdowns']['labels'].length < 10){
+				let diff_to_fill = 10 - _dashboard_ops__chart_data['drawdowns']['labels'].length;
+				for (let es=0; es<diff_to_fill; es++)
+					_dashboard_ops__chart_data['drawdowns']['labels'].push('');
+			}
 			/*------------------------------- Retorno dos Dados ------------------------------*/
 			return {
 				dashboard_ops__table_stats: _dashboard_ops__table_stats,
@@ -2123,8 +2123,166 @@ let RV_Statistics = (function(){
 			}
 		}
 	}
+	/*
+		Gera as estatisticas e dados de uma Run da Build 'tipo_parada__1'.
+		Input:
+			- ops: Lista de operações. (Seguira a ordem da lista passada)
+			- filters: Filtros a serem aplicados na lista de operações.
+			- simulation: Dados de simulação para serem substituidos na lista de operações.
+			- options: Opções opcionais a serem passadas para a funcao.
+	*/
+	let get_stats__build__tipo_parada__1 = function (ops = [], filters = {}, simulation = {}){
+		/*------------------------------------ Vars --------------------------------------*/
+		//Modifca alguns valores do 'filters' e 'simulation'
+		let _filters = {
+			data_inicial: ('data_inicial' in filters) ? filters.data_inicial : null,
+			data_final: ('data_final' in filters) ? filters.data_final : null,
+			hora_inicial: ('hora_inicial' in filters) ? filters.hora_inicial : null,
+			hora_final: ('hora_final' in filters) ? filters.hora_final : null,
+			ativo: ('ativo' in filters) ? filters.ativo : [],
+			gerenciamento: ('gerenciamento' in filters) ? filters.gerenciamento : null,
+			cenario: ('cenario' in filters) ? filters.cenario : {},
+			observacoes_query_union: ('observacoes_query_union' in filters) ? filters.observacoes_query_union : 'AND'
+		};
+		let _simulation = {
+			periodo_calc: ('periodo_calc' in simulation) ? simulation.periodo_calc : '1',
+			tipo_cts: ('tipo_cts' in simulation) ? simulation.tipo_cts : '1',
+			cts: ('cts' in simulation) ? simulation.cts : null,
+			usa_custo: ('usa_custo' in simulation) ? simulation.usa_custo == 1 : true,
+			ignora_erro: ('ignora_erro' in simulation) ? simulation.ignora_erro == 1 : false,
+			tipo_parada: ('tipo_parada' in simulation) ? simulation.tipo_parada : [],
+			valor_inicial: ('valor_inicial' in simulation) ? parseFloat(simulation.valor_inicial) : null,
+			R: ('R' in simulation && simulation.R != 0) ? simulation.R : null,
+			R_filter_ops: ('R_filter_ops' in simulation && simulation.R_filter_ops == '1') ? true : false
+		};
+		//Variaveis para a tabela de estatistica geral
+		let _run_stats = {
+			//Quantidade total de trades
+			trades__total: 0,
+			//Quantidade total de trades positivos
+			trades__positivo: 0,
+			//Quantidade % de trades positivos
+			trades__positivo_perc: 0.0,
+			//Quantidade total de trades negativos
+			trades__negativo: 0,
+			//Quantidade % de trades negativos
+			trades__negativo_perc: 0.0,
+			//Quantidade total de trades empatados
+			trades__empate: 0,
+			//Lucro total em R$ das operações
+			result__lucro_brl: 0.0,
+			//Edge das operações
+			stats__edge: 0.0,
+			//Breakeven das operações
+			stats__breakeven: 0.0,
+			//Fator de Lucro das operações
+			stats__fatorLucro: 0.0,
+			//Expectativa média em R$ a se esperar em futuras operações
+			stats__expect_brl: 0.0,
+			//Quantidade total de drawdowns passados
+			stats__drawdown_qtd: 0,
+			//Drawdown corrente (Caso haja)
+			stats__drawdown: 0.0,
+			//Periodo do drawdown corrente
+			stats__drawdown_periodo: 0,
+			//Topo histórico alcançado na lista de operações
+			stats__drawdown_topoHistorico: 0.0,
+		}
+		//Variaveis temporarias usadas em '_run_stats'
+		let _temp__run_stats = {
+			i_seq: 1,
+			lucro_corrente: {brl: 0.0},
+			mediaGain: 0.0,
+			mediaLoss: 0.0,
+			drawdowns: [],
+			sorted_drawdowns: [],
+			drawdowns_index: 0
+		}
+		let _ops = groupData_byPeriodo(ops, _filters, _simulation, {});
+		/*----------------------------- Percorre as operações ----------------------------*/
+		for (let o in _ops){
+			//////////////////////////////////
+			//Estatisticas
+			//////////////////////////////////
+			//Se for uma operação 'Positiva'
+			if (_ops[o].resultado_op === 1){
+				_run_stats['trades__positivo']++;
+				_temp__run_stats['mediaGain'] += _ops[o].result_liquido['brl'];
+			}
+			//Se for uma operação 'Negativa'
+			else if (_ops[o].resultado_op === -1){
+				_run_stats['trades__negativo']++;
+				_temp__run_stats['mediaLoss'] += _ops[o].result_liquido['brl'];
+			}
+			//Se for uma operação 'Empate (0x0)'
+			else if (_ops[o].resultado_op === 0){
+				_run_stats['trades__empate']++;
+				_temp__run_stats['mediaGain'] += _ops[o].result_liquido['brl'];
+			}
+			//Calcula o lucro corrente após cada operação
+			_temp__run_stats['lucro_corrente']['brl'] += _ops[o].result_liquido['brl'];
+			//Para o Drawdown
+			//Atualiza o topo historico
+			if (_temp__run_stats['lucro_corrente']['brl'] > _run_stats['stats__drawdown_topoHistorico']){
+				_run_stats['stats__drawdown_topoHistorico'] = _temp__run_stats['lucro_corrente']['brl'];
+				_run_stats['stats__drawdown'] = 0;
+				_run_stats['stats__drawdown_periodo'] = 0;
+				if (_temp__run_stats['drawdowns'][_temp__run_stats['drawdowns_index']] !== undefined)
+					_temp__run_stats['drawdowns_index']++;
+			}
+			//Se estiver abaixo do topo, está em drawdown
+			else if (_temp__run_stats['lucro_corrente']['brl'] < _run_stats['stats__drawdown_topoHistorico']){
+				if (_temp__run_stats['drawdowns'][_temp__run_stats['drawdowns_index']] === undefined){
+					_temp__run_stats['drawdowns'][_temp__run_stats['drawdowns_index']] = {
+						brl: 0,
+						periodo: 0
+					}
+					_temp__run_stats['sorted_drawdowns'][_temp__run_stats['drawdowns_index']] = {
+						brl: 0,
+						periodo: 0
+					}
+				}
+				let lucro__topo_diff = Math.abs(_run_stats['stats__drawdown_topoHistorico'] - Math.abs(_temp__run_stats['lucro_corrente']['brl']));
+				if (lucro__topo_diff > _temp__run_stats['drawdowns'][_temp__run_stats['drawdowns_index']]['brl']){
+					_temp__run_stats['drawdowns'][_temp__run_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+					_temp__run_stats['sorted_drawdowns'][_temp__run_stats['drawdowns_index']]['brl'] = lucro__topo_diff;
+				}
+				_temp__run_stats['drawdowns'][_temp__run_stats['drawdowns_index']]['periodo']++;
+				_temp__run_stats['sorted_drawdowns'][_temp__run_stats['drawdowns_index']]['periodo']++;
+				_run_stats['stats__drawdown'] = lucro__topo_diff;
+				_run_stats['stats__drawdown_periodo']++;
+			}
+		}
+		/*------------------------ Termina processamento dos Dados -----------------------*/
+		//////////////////////////////////
+		//Estatisticas
+		//////////////////////////////////
+		//Termina de processar estatisticas de '_temp__run_stats'
+		_temp__run_stats['mediaGain'] = divide(_temp__run_stats['mediaGain'], (_run_stats['trades__positivo'] + _run_stats['trades__empate']));
+		_temp__run_stats['mediaLoss'] = divide(_temp__run_stats['mediaLoss'], _run_stats['trades__negativo']);
+
+		//Termina de processar estatisticas do '_run_stats'
+
+		_run_stats['trades__total']                  = _ops.length;
+		_run_stats['trades__positivo_perc']          = (divide(_run_stats['trades__positivo'], _run_stats['trades__total']) * 100);
+		_run_stats['trades__negativo_perc']          = (divide(_run_stats['trades__negativo'], _run_stats['trades__total']) * 100);
+
+		_run_stats['result__lucro_brl']              = _temp__run_stats['lucro_corrente']['brl'];
+
+		_run_stats['stats__breakeven']               = (divide(Math.abs(_temp__run_stats['mediaLoss']), (_temp__run_stats['mediaGain'] + Math.abs(_temp__run_stats['mediaLoss']))) * 100);
+		_run_stats['stats__edge']                    = _run_stats['trades__positivo_perc'] - _run_stats['stats__breakeven'];
+		_run_stats['stats__fatorLucro']              = divide((_run_stats['trades__positivo_perc'] * _temp__run_stats['mediaGain']), (_run_stats['trades__negativo_perc'] * _temp__run_stats['mediaLoss']));
+
+		_temp__run_stats['sorted_drawdowns'].sort((a, b) => a.brl - b.brl);
+
+		_run_stats['stats__drawdown_qtd']            = _temp__run_stats['drawdowns'].length;
+		_run_stats['stats__drawdown_medio']          = divide(_temp__run_stats['drawdowns'].reduce((total, dd) => total + dd.brl, 0), _temp__run_stats['drawdowns'].length);
+		/*------------------------------- Retorno dos Dados ------------------------------*/
+		return _run_stats;
+	}
 	/*--------------------------------------------------------------------------------*/
 	return {
 		generate__DashboardOps: generate__DashboardOps,
+		get_stats__build__tipo_parada__1: get_stats__build__tipo_parada__1
 	}
 })();

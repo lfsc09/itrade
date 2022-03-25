@@ -293,6 +293,14 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 #cenarios_modal__cenarios table tbody td[name='inativo']{width: 15%}
 #cenarios_modal__cenarios .accordion-button-with-input::after {margin-left: 1rem}
 #cenarios_modal__cenarios .accordion-button[data-bs-toggle]:focus {box-shadow: none}
+/*-------------------------------------- Builds --------------------------------------*/
+#builds_modal__runs div.progress {width: 100%; height: 4px}
+#builds_modal__runs div.card-header p {font-size: .8em}
+#builds_modal__runs table {font-size: .8em}
+#builds_modal__runs table tbody td {vertical-align: middle}
+#builds_modal__runs table[name='tipo_parada__1'] tbody td:nth-child(2) {width: 20%}
+#builds_modal__runs table[name='tipo_parada__1'] tbody td:nth-child(3) {width: 12%}
+#builds_modal__runs table[name='tipo_parada__1'] tbody td:nth-child(4) {width: 10%}
 /*--------------------------------- Upload Operações ---------------------------------*/
 #upload_operacoes_modal__tips {
 	font-size: .7em;
@@ -304,8 +312,8 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 	cursor: pointer
 }
 #upload_operacoes_modal__tips:focus{height: 520px}
-#upload_operacoes_modal__tips table tbody td {vertical-align: middle}
 #upload_operacoes_modal__tips table {font-size: 1em}
+#upload_operacoes_modal__tips table tbody td {vertical-align: middle}
 #upload_operacoes_modal .form-label {font-size: 12px}
 #table_upload_operacoes {font-size: 12px}
 #table_upload_operacoes tbody td{vertical-align: middle}

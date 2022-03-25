@@ -5,123 +5,10 @@ let Renda_variavel = (function(){
 	/*-------------------------------- Renda Variavel --------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	/*
-		Realiza a abertura e leitura do arquivo csv. (Importar operações)
-		IMPORTANTE:
-			- Primeira linha deve ser o Header contendo os nomes das colunas.
-			- O header deve seguir o padrão e ordem esperado.
+		Handle para escrever arquivos CSV.
 	*/
 	let _csv_handler = {
-		reader: {
-			instance: new FileReader(),
-			processData: function (allText, options){
-			 	let allTextLines = allText.split(/\r\n|\n/),
-			 		lines = [];
-			    for (let i=0; i<allTextLines.length; i++)
-		            lines.push(allTextLines[i].split(';'));
-		        return lines;
-			},
-			processCell: function (line, column, columnName){
-				if (!(column in line))
-					return '';
-				//Processa coluna Data
-				if (columnName === 'data'){
-					if (!(/^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/.test(line[column])) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])\-(0[1-9]|1\d|2\d|3[01])$/.test(line[column])))
-						return '';
-					if (line[column].indexOf('-') !== -1){
-						let frag_date = line[column].split('-');
-						return `${frag_date[2]}/${frag_date[1]}/${frag_date[0]}`;
-					}
-					else
-						return line[column];
-				}
-				else if (columnName === 'hora'){
-					if (!(/^(0\d|1\d|2[0-3])\:([0-5]\d)(\:([0-5]\d))?$/.test(line[column])))
-						return '';
-					return line[column];
-				}
-				else if (columnName === 'sequencia' || columnName === 'ativo' || columnName === 'gerenciamento')
-					return line[column];
-				else if (columnName === 'op'){
-					if (!(/^(1|2)$/.test(line[column])))
-						return '';
-					return line[column];
-				}
-				else if (columnName === 'vol' || columnName === 'cts'){
-					if (!(/^(\d+)$/.test(line[column])))
-						return '';
-					return line[column];
-				}
-				else if (columnName === 'escalada' || columnName === 'erro'){
-					if (!(/^(0|1)$/.test(line[column])))
-						return '';
-					return line[column];
-				}
-				else if (columnName === 'resultado'){
-					if (!(/^(\-?\d+|\-?\d+\.\d+|\-?\d+\,\d+)$/.test(line[column])))
-						return '';
-					if (line[column].indexOf(',') !== -1)
-						return str(line[column]).replace(/\,+/g, '.');
-					return line[column];
-				}
-				else if (columnName === 'cenario' || columnName === 'observacoes' || columnName === 'ativo_custo' || columnName === 'ativo_valor_tick' || columnName === 'ativo_pts_tick' || columnName === 'gerenciamento_acoes')
-					return line[column];
-			},
-			cleanData: function (obj){
-				let expected_header = ['data', 'hora', 'sequencia', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'escalada', 'erro', 'resultado', 'cenario', 'observacoes', 'ativo_custo', 'ativo_valor_tick', 'ativo_pts_tick', 'gerenciamento_acoes'],
-					required_header = ['data', 'hora', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'resultado', 'cenario'],
-					headerMap = [],
-					headerSize = 0,
-					error_lines = 0,
-					cleanedData = [];
-				for (let line=0; line<obj.length; line++){
-					//Identificacao e mapeamento dos headers
-					if (line === 0){
-						for (let h=0; h<obj[line].length; h++){
-							if (!expected_header.includes(obj[line][h])){
-								Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: `A coluna '${obj[line][h]}', não pode ser processada.`, delay: 4000});
-								return null;
-							}
-							headerMap[h] = obj[line][h];
-						}
-						for (let rh=0; rh<required_header.length; rh++){
-							if (!headerMap.includes(required_header[rh])){
-								Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: `A coluna '${required_header[rh]}' é obrigatória.`, delay: 4000});
-								return null;
-							}
-						}
-					}
-					else if (obj[line].length === headerMap.length){
-						cleanedData.push({
-							data: this.processCell(obj[line], headerMap.indexOf('data'), 'data'),
-							hora: this.processCell(obj[line], headerMap.indexOf('hora'), 'hora'),
-							sequencia: this.processCell(obj[line], headerMap.indexOf('sequencia'), 'sequencia'),
-							ativo: this.processCell(obj[line], headerMap.indexOf('ativo'), 'ativo'),
-							gerenciamento: this.processCell(obj[line], headerMap.indexOf('gerenciamento'), 'gerenciamento'),
-							op: this.processCell(obj[line], headerMap.indexOf('op'), 'op'),
-							vol: this.processCell(obj[line], headerMap.indexOf('vol'), 'vol'),
-							cts: this.processCell(obj[line], headerMap.indexOf('cts'), 'cts'),
-							escalada: this.processCell(obj[line], headerMap.indexOf('escalada'), 'escalada'),
-							erro: this.processCell(obj[line], headerMap.indexOf('erro'), 'erro'),
-							resultado: this.processCell(obj[line], headerMap.indexOf('resultado'), 'resultado'),
-							cenario: this.processCell(obj[line], headerMap.indexOf('cenario'), 'cenario'),
-							observacoes: this.processCell(obj[line], headerMap.indexOf('observacoes'), 'observacoes'),
-							ativo_custo: this.processCell(obj[line], headerMap.indexOf('ativo_custo'), 'ativo_custo'),
-							ativo_valor_tick: this.processCell(obj[line], headerMap.indexOf('ativo_valor_tick'), 'ativo_valor_tick'),
-							ativo_pts_tick: this.processCell(obj[line], headerMap.indexOf('ativo_pts_tick'), 'ativo_pts_tick'),
-							gerenciamento_acoes: this.processCell(obj[line], headerMap.indexOf('gerenciamento_acoes'), 'gerenciamento_acoes')
-						});
-					}
-					else
-						error_lines++;
-				}
-				if (error_lines)
-					Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'warning', body: `${error_lines} foram ignoradas, por quantidade de colunas diferente.`, delay: 4000});
-				return cleanedData;
-			}
-		},
 		writer: {
-			header: ['data', 'hora', 'sequencia', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'escalada', 'erro', 'resultado', 'cenario', 'observacoes', 'ativo_custo', 'ativo_valor_tick', 'ativo_pts_tick', 'gerenciamento_acoes'],
-			separator: ';',
 			write: function(stringData, filename){
 				let a = document.createElement('a'),
 					blob = null,
@@ -929,6 +816,14 @@ let Renda_variavel = (function(){
 	//Informa se o 'arcabouco_info' precisa ser reconstruido
 	let _arcabouco_info__needRebuild = false;
 	////////////////////////////////////////////////////////////////////////////////////
+	/*----------------------------------- Build --------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	let _builds__csv_handle = {
+		writer: {
+			separator: ';'
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Operações Adicionar -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
 	//Informa qual tipo de bloco deve construir seguindo o inicial: (Com ações do gerenciamento) | (Sem ações do gerenciamento)
@@ -936,6 +831,122 @@ let Renda_variavel = (function(){
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Operações Upload -------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Realiza a abertura e leitura do arquivo csv. (Importar operações)
+		IMPORTANTE:
+			- Primeira linha deve ser o Header contendo os nomes das colunas.
+			- O header deve seguir o padrão e ordem esperado.
+	*/
+	let _upload_operacoes__csv_handle = {
+		reader: {
+			instance: new FileReader(),
+			processData: function (allText, options){
+			 	let allTextLines = allText.split(/\r\n|\n/),
+			 		lines = [];
+			    for (let i=0; i<allTextLines.length; i++)
+		            lines.push(allTextLines[i].split(';'));
+		        return lines;
+			},
+			processCell: function (line, column, columnName){
+				if (!(column in line))
+					return '';
+				//Processa coluna Data
+				if (columnName === 'data'){
+					if (!(/^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/.test(line[column])) && !(/^(19|20)\d{2}\-(0[1-9]|1[0-2])\-(0[1-9]|1\d|2\d|3[01])$/.test(line[column])))
+						return '';
+					if (line[column].indexOf('-') !== -1){
+						let frag_date = line[column].split('-');
+						return `${frag_date[2]}/${frag_date[1]}/${frag_date[0]}`;
+					}
+					else
+						return line[column];
+				}
+				else if (columnName === 'hora'){
+					if (!(/^(0\d|1\d|2[0-3])\:([0-5]\d)(\:([0-5]\d))?$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'sequencia' || columnName === 'ativo' || columnName === 'gerenciamento')
+					return line[column];
+				else if (columnName === 'op'){
+					if (!(/^(1|2)$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'vol' || columnName === 'cts'){
+					if (!(/^(\d+)$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'escalada' || columnName === 'erro'){
+					if (!(/^(0|1)$/.test(line[column])))
+						return '';
+					return line[column];
+				}
+				else if (columnName === 'resultado'){
+					if (!(/^(\-?\d+|\-?\d+\.\d+|\-?\d+\,\d+)$/.test(line[column])))
+						return '';
+					if (line[column].indexOf(',') !== -1)
+						return str(line[column]).replace(/\,+/g, '.');
+					return line[column];
+				}
+				else if (columnName === 'cenario' || columnName === 'observacoes' || columnName === 'ativo_custo' || columnName === 'ativo_valor_tick' || columnName === 'ativo_pts_tick' || columnName === 'gerenciamento_acoes')
+					return line[column];
+			},
+			cleanData: function (obj){
+				let expected_header = ['data', 'hora', 'sequencia', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'escalada', 'erro', 'resultado', 'cenario', 'observacoes', 'ativo_custo', 'ativo_valor_tick', 'ativo_pts_tick', 'gerenciamento_acoes'],
+					required_header = ['data', 'hora', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'resultado', 'cenario'],
+					headerMap = [],
+					headerSize = 0,
+					error_lines = 0,
+					cleanedData = [];
+				for (let line=0; line<obj.length; line++){
+					//Identificacao e mapeamento dos headers
+					if (line === 0){
+						for (let h=0; h<obj[line].length; h++){
+							if (!expected_header.includes(obj[line][h])){
+								Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: `A coluna '${obj[line][h]}', não pode ser processada.`, delay: 4000});
+								return null;
+							}
+							headerMap[h] = obj[line][h];
+						}
+						for (let rh=0; rh<required_header.length; rh++){
+							if (!headerMap.includes(required_header[rh])){
+								Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: `A coluna '${required_header[rh]}' é obrigatória.`, delay: 4000});
+								return null;
+							}
+						}
+					}
+					else if (obj[line].length === headerMap.length){
+						cleanedData.push({
+							data: this.processCell(obj[line], headerMap.indexOf('data'), 'data'),
+							hora: this.processCell(obj[line], headerMap.indexOf('hora'), 'hora'),
+							sequencia: this.processCell(obj[line], headerMap.indexOf('sequencia'), 'sequencia'),
+							ativo: this.processCell(obj[line], headerMap.indexOf('ativo'), 'ativo'),
+							gerenciamento: this.processCell(obj[line], headerMap.indexOf('gerenciamento'), 'gerenciamento'),
+							op: this.processCell(obj[line], headerMap.indexOf('op'), 'op'),
+							vol: this.processCell(obj[line], headerMap.indexOf('vol'), 'vol'),
+							cts: this.processCell(obj[line], headerMap.indexOf('cts'), 'cts'),
+							escalada: this.processCell(obj[line], headerMap.indexOf('escalada'), 'escalada'),
+							erro: this.processCell(obj[line], headerMap.indexOf('erro'), 'erro'),
+							resultado: this.processCell(obj[line], headerMap.indexOf('resultado'), 'resultado'),
+							cenario: this.processCell(obj[line], headerMap.indexOf('cenario'), 'cenario'),
+							observacoes: this.processCell(obj[line], headerMap.indexOf('observacoes'), 'observacoes'),
+							ativo_custo: this.processCell(obj[line], headerMap.indexOf('ativo_custo'), 'ativo_custo'),
+							ativo_valor_tick: this.processCell(obj[line], headerMap.indexOf('ativo_valor_tick'), 'ativo_valor_tick'),
+							ativo_pts_tick: this.processCell(obj[line], headerMap.indexOf('ativo_pts_tick'), 'ativo_pts_tick'),
+							gerenciamento_acoes: this.processCell(obj[line], headerMap.indexOf('gerenciamento_acoes'), 'gerenciamento_acoes')
+						});
+					}
+					else
+						error_lines++;
+				}
+				if (error_lines)
+					Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'warning', body: `${error_lines} foram ignoradas, por quantidade de colunas diferente.`, delay: 4000});
+				return cleanedData;
+			}
+		}
+	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*---------------------------- Section Dashboard Ops -----------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -1115,6 +1126,12 @@ let Renda_variavel = (function(){
 		pagingType: 'input'
 	}
 	let _dashboard_ops__table_trades_DT__clickState = 0;
+	let _dashboard_ops__csv_handle = {
+		writer: {
+			header: ['data', 'hora', 'sequencia', 'ativo', 'gerenciamento', 'op', 'vol', 'cts', 'escalada', 'erro', 'resultado', 'cenario', 'observacoes', 'ativo_custo', 'ativo_valor_tick', 'ativo_pts_tick', 'gerenciamento_acoes'],
+			separator: ';'
+		}
+	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*----------------------------------- FUNCOES ------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -1863,6 +1880,111 @@ let Renda_variavel = (function(){
 			});
 		}
 		return data;
+	}
+	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------------ Builds ------------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Constroi o modal de builds.
+	*/
+	function buildBuildsModal(){
+		let modal = $(document.getElementById('builds_modal'));
+		modal.modal('show');
+	}
+	/*
+		Executa a Run em recursão da build 'tipo_parada__1'.
+	*/
+	function run__build__tipo_parada__1(run_vars_map, progress_bar, filters, simulations){
+		let iteration__run = async function (){
+			let stringData = '',
+				header_map = {
+					'sd1': 'Stop Dia (Total)',
+					'sd2': 'Stop Dia (Sequencia)',
+					'ss1': 'Stop Semana (Cheio)',
+					'ss2': 'Stop Semana (Total)',
+					'ss3': 'Stop Semana (Sequencia)',
+					'gd1': 'Gain Dia (Total)',
+					'gd2': 'Gain Dia (Sequencia)',
+					'gs1': 'Gain Semana (Cheio)',
+					'gs2': 'Gain Semana (Total)',
+					'gs3': 'Gain Semana (Sequencia)'
+				};
+			//Gera o Header do arquivo CSV
+			for (let h=0; h < vars_name_mapping.length; h++)
+				stringData += header_map[vars_name_mapping[h]] + _builds__csv_handle.writer['separator'];
+			stringData += 'R$' + _builds__csv_handle.writer['separator'] +
+							'Edge' + _builds__csv_handle.writer['separator'] +
+							'Fator Lucro' + _builds__csv_handle.writer['separator'] +
+							'Tx. Acerto' + _builds__csv_handle.writer['separator'] +
+							'Tx. Erro' + _builds__csv_handle.writer['separator'] +
+							'Trades' + _builds__csv_handle.writer['separator'] +
+							'Drawdown Medio' + _builds__csv_handle.writer['separator'] +
+							'Drawdown Qtd' + _builds__csv_handle.writer['separator'] + '\n';
+			for (; runs_stats.i < runs_stats.total; runs_stats.i++){
+				const promise = new Promise((resolve, _reject) => {
+					setTimeout(() => {
+						let break_run_key = generate__run(runs_stats.i).split('');
+						//Constroi os filtros da Run
+						simulations['tipo_parada'] = [];
+						for (let tp=0; tp < break_run_key.length; tp++){
+							if (break_run_key[tp] > 0)
+								simulations['tipo_parada'].push({ tipo_parada: vars_name_mapping[tp], valor_parada: break_run_key[tp] });
+							//Coloca os filtros de parada no resultado
+							stringData += `${break_run_key[tp]}` + _builds__csv_handle.writer['separator'];
+						}
+						run_result = RV_Statistics.get_stats__build__tipo_parada__1(_lista__operacoes.operacoes, filters, simulations);
+						//Insere os resultados
+						stringData += run_result['result__lucro_brl'].toFixed(2) + _builds__csv_handle.writer['separator'] +
+										run_result['stats__edge'].toFixed(2) + _builds__csv_handle.writer['separator'] +
+										run_result['stats__fatorLucro'].toFixed(2) + _builds__csv_handle.writer['separator'] +
+										run_result['trades__positivo_perc'].toFixed(2) + _builds__csv_handle.writer['separator'] +
+										run_result['trades__negativo_perc'].toFixed(2) + _builds__csv_handle.writer['separator'] +
+										run_result['trades__total'] + _builds__csv_handle.writer['separator'] +
+										run_result['stats__drawdown_medio'].toFixed(2) + _builds__csv_handle.writer['separator'] +
+										run_result['stats__drawdown_qtd'] + _builds__csv_handle.writer['separator'] + ((runs_stats.i + 1 < runs_stats.total) ? '\n' : '');
+						//Atualiza o progress bar caso haja necessidade
+						if (runs_stats.i % runs_stats.update_front_each === 0)
+							progress_bar.css('width', `${Math.ceil((runs_stats.i / runs_stats.total) * 100)}%`);
+						resolve();
+					}, 0);
+				});
+				await promise;
+			}
+			//Atualiza a ultima vez o progress bar
+			progress_bar.css('width', '100%');
+			_csv_handler.writer.write(stringData, `${_instancia_arcabouco.get('nome')} - Tipo Parada 1.csv`);
+		}
+		//Gera a combinação de uma Run
+		let generate__run = function (n){
+			let result = "", curArray;
+			for (let i=0; i < mapped_possibilites.length; i++) {
+				curArray = mapped_possibilites[i];
+				result += curArray[Math.floor(n / divisors[i]) % curArray.length];
+			}
+			return result;
+		}
+		//Gera arrays com todas as possibilidade de valores para cada var
+		let mapped_possibilites = [],
+			vars_name_mapping = [];
+		for (let mr=0; mr < run_vars_map['max'].length; mr++){
+			if (run_vars_map['max'][mr] > 0){
+				mapped_possibilites.push([...Array(run_vars_map['max'][mr] + 1).keys()]);
+				//Mapeia qual variavel é qual, para não perder a ordem quando forem excluidas por terem 0
+				vars_name_mapping.push(run_vars_map['names'][mr]);
+			}
+		}
+		let runs_stats = { i: 0, total: 1, update_front_each: 0 }
+		//Calcula o total de runs para fazer
+		for (let mp=0; mp < mapped_possibilites.length; mp++)
+			runs_stats['total'] *= mapped_possibilites[mp].length;
+		//Buscar fazer 30 atualizações no front do progress-bar apenas
+		runs_stats['update_front_each'] = Math.ceil(runs_stats['total'] / 30);
+		// Pre-calculate divisors (Usado no generate_run)
+		let divisors = [];
+		for (let i = mapped_possibilites.length - 1; i >= 0; i--)
+			divisors[i] = divisors[i + 1] ? divisors[i + 1] * mapped_possibilites[i + 1].length : 1;
+		console.log(`Total de Runs: ${runs_stats.total}   Update each: ${runs_stats.update_front_each}`);
+		iteration__run();
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------ Operações Adicionar -----------------------------*/
@@ -3605,10 +3727,10 @@ let Renda_variavel = (function(){
 			button_name = this.name;
 		_timeout_button__hold = setTimeout(() => {
 			if (button_name === 'extract_all'){
-				let stringData = `${_csv_handler.writer['header'].join(_csv_handler.writer['separator'])}\n`;
+				let stringData = `${_dashboard_ops__csv_handle.writer['header'].join(_dashboard_ops__csv_handle.writer['separator'])}\n`;
 				for (let op=0; op<_lista__operacoes.operacoes.length; op++){
-					for (let column_index=0; column_index<_csv_handler.writer['header'].length; column_index++)
-						stringData += _lista__operacoes.operacoes[op][_csv_handler.writer['header'][column_index]] + ((column_index + 1 < _csv_handler.writer['header'].length) ? _csv_handler.writer['separator'] : '');
+					for (let column_index=0; column_index<_dashboard_ops__csv_handle.writer['header'].length; column_index++)
+						stringData += _lista__operacoes.operacoes[op][_dashboard_ops__csv_handle.writer['header'][column_index]] + ((column_index + 1 < _dashboard_ops__csv_handle.writer['header'].length) ? _dashboard_ops__csv_handle.writer['separator'] : '');
 					if (op + 1 < _lista__operacoes.operacoes.length)
 						stringData += '\n';
 				}
@@ -3883,6 +4005,45 @@ let Renda_variavel = (function(){
 		let cenario_div = $(this).parentsUntil('#cenarios_modal__cenarios').last();
 		if (cenario_div[0].hasAttribute('cenario'))
 			cenario_div.find('button[salvar_cenario]').removeClass('disabled');
+	});
+	////////////////////////////////////////////////////////////////////////////////////
+	/*------------------------------------- Builds -----------------------------------*/
+	////////////////////////////////////////////////////////////////////////////////////
+	/*
+		Mostra ou esconde informações extra da Build.
+	*/
+	$(document.getElementById('builds_modal__runs')).on('click', 'button[info_build]', function (e){
+		let current_card_body = $(this).parent().parent().find('div.card-body');
+		current_card_body.toggleClass('d-none', !current_card_body.hasClass('d-none'));
+	});
+	/*
+		Executa a Run da Build.
+	*/
+	$(document.getElementById('builds_modal__runs')).on('click', 'button[run_build]', function (e){
+		let build = this.getAttribute('build'),
+			progress_bar = $(this).parent().find('div.progress-bar');
+		//Build para gerar combinações com os filtros em N° de Stops e Gains no 'Dia' e 'Semana'
+		if (build === 'tipo_parada__1'){
+			let run_vars_map = {
+				names: ['sd1', 'sd2', 'ss1', 'ss2', 'ss3', 'gd1', 'gd2', 'gs1', 'gs2', 'gd3'],
+				max: [
+						parseInt(this.getAttribute('sd1')),
+						parseInt(this.getAttribute('sd2')),
+						parseInt(this.getAttribute('ss1')),
+						parseInt(this.getAttribute('ss2')),
+						parseInt(this.getAttribute('ss3')),
+						parseInt(this.getAttribute('gd1')),
+						parseInt(this.getAttribute('gd2')),
+						parseInt(this.getAttribute('gs1')),
+						parseInt(this.getAttribute('gs2')),
+						parseInt(this.getAttribute('gs3'))
+					]
+				},
+				filters = _instancia_arcabouco.get('filters'),
+				simulations = _instancia_arcabouco.get('simulations');
+			//Inicia a Run
+			run__build__tipo_parada__1(run_vars_map, progress_bar, filters, simulations);
+		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- Operações Adicionar ----------------------------*/
@@ -4374,11 +4535,11 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('upload_operacoes_modal_file')).change(function (){
 		let file_import = this;
-		_csv_handler.reader['instance'].onload = function fileReadCompleted(){
-			let data_lines = _csv_handler.reader.processData(_csv_handler.reader['instance'].result),
+		_upload_operacoes__csv_handle.reader['instance'].onload = function fileReadCompleted(){
+			let data_lines = _upload_operacoes__csv_handle.reader.processData(_upload_operacoes__csv_handle.reader['instance'].result),
 				csvData = null;
 			if (data_lines.length){
-				csvData = _csv_handler.reader.cleanData(data_lines);
+				csvData = _upload_operacoes__csv_handle.reader.cleanData(data_lines);
 				if (csvData !== null && csvData.length)
 					buildUploadOperacaoTable(csvData);
 			}
@@ -4386,7 +4547,7 @@ let Renda_variavel = (function(){
 				Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'danger', body: 'Falha ao ler o arquivo. (Arquivo Vazio)', delay: 4000});
 			file_import.value = '';
 		};
-		_csv_handler.reader['instance'].readAsText(this.files[0], 'ISO-8859-2');
+		_upload_operacoes__csv_handle.reader['instance'].readAsText(this.files[0], 'ISO-8859-2');
 	});
 	/*
 		Envia as operações para serem registradas no BD.
@@ -4591,7 +4752,7 @@ let Renda_variavel = (function(){
 			let ops = RV_Statistics.generate__DashboardOps(_lista__operacoes.operacoes, _instancia_arcabouco.get('filters'), _instancia_arcabouco.get('simulations'), { only_FilterOps: true }),
 				selectedRows = {};
 			if (button_name === 'extract_sel'){
-				let stringData = `${_csv_handler.writer['header'].join(_csv_handler.writer['separator'])}\n`;
+				let stringData = `${_dashboard_ops__csv_handle.writer['header'].join(_dashboard_ops__csv_handle.writer['separator'])}\n`;
 				_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().rows('.selected').nodes().each(function (tr){
 					selectedRows[tr.getAttribute('operacao')] = null;
 				});
@@ -4600,8 +4761,8 @@ let Renda_variavel = (function(){
 						sel_i = 0;
 					for (let op=0; op<ops.filtered_ops.length; op++){
 						if (ops.filtered_ops[op].id in selectedRows){
-							for (let column_index=0; column_index<_csv_handler.writer['header'].length; column_index++)
-								stringData += ops.filtered_ops[op][_csv_handler.writer['header'][column_index]] + ((column_index + 1 < _csv_handler.writer['header'].length) ? _csv_handler.writer['separator'] : '');
+							for (let column_index=0; column_index<_dashboard_ops__csv_handle.writer['header'].length; column_index++)
+								stringData += ops.filtered_ops[op][_dashboard_ops__csv_handle.writer['header'][column_index]] + ((column_index + 1 < _dashboard_ops__csv_handle.writer['header'].length) ? _dashboard_ops__csv_handle.writer['separator'] : '');
 							if (sel_i < sel_total)
 								stringData += '\n';
 							sel_i++;
@@ -4610,8 +4771,8 @@ let Renda_variavel = (function(){
 				}
 				else{
 					for (let op=0; op<ops.filtered_ops.length; op++){
-						for (let column_index=0; column_index<_csv_handler.writer['header'].length; column_index++)
-							stringData += ops.filtered_ops[op][_csv_handler.writer['header'][column_index]] + ((column_index + 1 < _csv_handler.writer['header'].length) ? _csv_handler.writer['separator'] : '');
+						for (let column_index=0; column_index<_dashboard_ops__csv_handle.writer['header'].length; column_index++)
+							stringData += ops.filtered_ops[op][_dashboard_ops__csv_handle.writer['header'][column_index]] + ((column_index + 1 < _dashboard_ops__csv_handle.writer['header'].length) ? _dashboard_ops__csv_handle.writer['separator'] : '');
 						if (op + 1 < ops.filtered_ops.length)
 							stringData += '\n';
 					}
@@ -4676,10 +4837,12 @@ let Renda_variavel = (function(){
 			buildArcaboucoInfoOffcanvas();
 		else if (this.name === 'cenarios')
 			buildCenariosModal();
-		else if (this.name === 'upload_operacoes')
-			buildUploadOperacoesModal();
+		else if (this.name === 'builds')
+			buildBuildsModal();
 		else if (this.name === 'adicionar_operacoes')
 			buildAdicionarOperacoesOffcanvas(firstBuild = false, forceRebuild = false, show = true);
+		else if (this.name === 'upload_operacoes')
+			buildUploadOperacoesModal();
 	});
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------- INIT DO SISTEMA --------------------------------*/
