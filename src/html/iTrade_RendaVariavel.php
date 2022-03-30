@@ -312,7 +312,7 @@
 											</div>
 											<div class="col-12 mt-3">
 												<div class="row">
-													<div class="col-8"><button type="button" class="btn btn-sm btn-primary w-100" id="arcaboucos_modal_enviar">Enviar</button></div>
+													<div class="col-8"><button type="button" class="btn btn-sm btn-primary w-100" id="arcaboucos_modal_enviar"><i class="fas fa-angle-double-up me-2"></i>Enviar</button></div>
 													<div class="col-4"><button type="button" class="btn btn-sm btn-danger w-100" id="arcaboucos_modal_cancelar">Cancelar</button></div>
 												</div>
 											</div>
@@ -425,7 +425,7 @@
 													</div>
 													<div class="col-12 mt-3">
 														<div class="row">
-															<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="ativos_modal_enviar">Enviar</button></div>
+															<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="ativos_modal_enviar"><i class="fas fa-angle-double-up me-2"></i>Enviar</button></div>
 															<div class="col"><button type="button" class="btn btn-sm btn-danger w-100" id="ativos_modal_cancelar">Cancelar</button></div>
 														</div>
 													</div>
@@ -551,7 +551,7 @@
 											</div>
 											<div class="col-12 mt-3">
 												<div class="row">
-													<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="gerenciamentos_modal_enviar">Enviar</button></div>
+													<div class="col"><button type="button" class="btn btn-sm btn-primary w-100" id="gerenciamentos_modal_enviar"><i class="fas fa-angle-double-up me-2"></i>Enviar</button></div>
 													<div class="col"><button type="button" class="btn btn-sm btn-danger w-100" id="gerenciamentos_modal_cancelar">Cancelar</button></div>
 												</div>
 											</div>
@@ -596,8 +596,8 @@
 			</div>
 			<div class="row mt-2">
 				<div class="col p-0" id="arcabouco_info__actions">
-					<button class="btn btn-sm col-12 btn-outline-primary btn-nohover" type="button" name="extract_all" hold_time="1500"><span><i class="fas fa-file-export me-2" aria-hidden="true"></i>Exportar Tudo</span></button>
-					<button class="btn btn-sm col-12 mt-2 btn-outline-danger btn-nohover" type="button" name="remove_all" hold_time="3000"><span><i class="fas fa-trash me-2" aria-hidden="true"></i>Apagar Tudo</span></button>
+					<button class="btn btn-sm col-12 btn-outline-primary btn-nohover" type="button" name="extract_all" hold_time="1500"><span><i class="fas fa-angle-double-down me-2" aria-hidden="true"></i>Baixar Tudo</span></button>
+					<button class="btn btn-sm col-12 mt-2 btn-outline-danger btn-nohover" type="button" name="remove_all" hold_time="2000"><span><i class="fas fa-trash me-2" aria-hidden="true"></i>Apagar Tudo</span></button>
 				</div>
 			</div>
 		</div>
@@ -632,7 +632,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="modal-footer"></div>
+			<div class="modal-footer"><button type="button" class="btn btn-sm btn-success w-25" id="cenarios_modal_atualizar"><i class="fas fa-angle-double-up me-2"></i>Atualizar</button></div>
 		</div>
 	</div>
 </div>
@@ -648,44 +648,80 @@
 					<div class="row"><div class="col"><div id="builds_modal_toasts"></div></div></div>
 					<div class="row mt-3">
 						<div class="col" id="builds_modal__runs">
-							<div class="card text-center">
+							<div class="card text-center" name="tipo_parada__comb">
 								<div class="card-header d-flex align-items-center">
 									<div class="col-5">
-										<p class="m-1 text-start fw-bold"><code>Build Tipo Parada 1</code></p>
+										<p class="m-1 text-start fw-bold"><code>Build (Tipo Parada)</code></p>
 										<div class="progress"><div class="progress-bar bg-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div></div>
 									</div>
 									<button type="button" class="btn btn-sm btn-outline-secondary align-self-stretch ms-auto" info_build><i class="fas fa-info-circle" aria-hidden="true"></i></button>
-									<button type="button" class="btn btn-sm btn-primary ms-2" build="tipo_parada__1" run_build sd1="3" sd2="3" ss1="3" ss2="3" ss3="3" gd1="5" gd2="5" gs1="3" gs2="3" gs3="3">Rodar Build<i class="fas fa-vial ms-2" aria-hidden="true"></i></button>
+									<button type="button" class="btn btn-sm btn-primary ms-2" build="tipo_parada__comb" run_build>Run Build<i class="fas fa-vial ms-2" aria-hidden="true"></i></button>
 								</div>
-								<div class="card-body d-none">
-									<table class="table table-borderless text-muted m-0" name="tipo_parada__1">
-										<tbody>
-											<tr>
-												<td>Gerar dados para testar uma combinação de gerenciamentos de saida usando os filtros aplicados.</td>
-												<td>
-													<p><kbd>N (Total)</kbd></p>
-													<p><kbd>N (Sequencia)</kbd></p>
-													<p><kbd>N dias (Cheio)</kbd></p>
-													<p><kbd>N dias (Total)</kbd></p>
-													<p class="m-0"><kbd>N dias (Sequencia)</kbd></p>
-												</td>
-												<td>
-													<p><kbd class="bg-success">0 - Máx</kbd></p>
-													<p><kbd class="bg-success">0 - Máx</kbd></p>
-													<p><kbd class="bg-success">0 - 3</kbd></p>
-													<p><kbd class="bg-success">0 - 3</kbd></p>
-													<p class="m-0"><kbd class="bg-success">0 - 3</kbd></p>
-												</td>
-												<td>
-													<p><kbd class="bg-danger">0 - 3</kbd></p>
-													<p><kbd class="bg-danger">0 - 3</kbd></p>
-													<p><kbd class="bg-danger">0 - 3</kbd></p>
-													<p><kbd class="bg-danger">0 - 3</kbd></p>
-													<p class="m-0"><kbd class="bg-danger">0 - 3</kbd></p>
-												</td>
-											</tr>
-										</tbody>
-									</table>
+								<div class="card-body">
+									<div name="builds_modal__runs_vars">
+										<table class="table table-sm table-borderless text-muted m-0">
+											<thead>
+												<tr>
+													<th></th>
+													<th></th>
+													<th>Stop</th>
+													<th>Gain</th>
+												</tr>
+											</thead>
+											<tbody>
+												<tr>
+													<td rowspan="9">Gerar dados para testar uma combinação de gerenciamentos de saida usando os filtros aplicados.</td>
+													<td name="label"><kbd>N (Total)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="sd1" increment></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gd1" increment></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>N (Sequencia)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="sd2" increment></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gd2" increment></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>R$ (Final)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="sd3"></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gd3"></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>R$ (Bruto)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="sd4"></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gd4"></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>Quantidade R (Final)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="sd5"></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gd5"></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>Quantidade R (Bruto)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="sd6"></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gd6"></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>N dias (Cheio)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="ss1" increment></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gs1" increment></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>N dias (Total)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="ss2" increment></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gs2" increment></td>
+												</tr>
+												<tr>
+													<td name="label"><kbd>N dias (Sequencia)</kbd></td>
+													<td name="stop"><input type="text" class="form-control form-control-sm text-center" name="ss3" increment></td>
+													<td name="gain"><input type="text" class="form-control form-control-sm text-center" name="gs3" increment></td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+									<div class="d-none" name="builds_modal__runs_info">
+										<p class="text-muted text-start" name="run_stats"><span class="fw-bold">Total Runs: </span><span value></span></p>
+										<table class="table table-sm"></table>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -800,7 +836,7 @@
 			</div>
 			<div class="modal-footer d-flex">
 				<button type="button" class="btn btn-secondary btn-sm col-1" data-bs-dismiss="modal">Fechar</button>
-				<button type="button" class="btn btn-success btn-sm col-1 ms-auto" id="upload_operacoes_modal_enviar">Salvar</button>
+				<button type="button" class="btn btn-success btn-sm col-1 ms-auto" id="upload_operacoes_modal_enviar"><i class="fas fa-angle-double-up me-2"></i>Salvar</button>
 			</div>
 		</div>
 	</div>

@@ -2131,7 +2131,7 @@ let RV_Statistics = (function(){
 			- simulation: Dados de simulação para serem substituidos na lista de operações.
 			- options: Opções opcionais a serem passadas para a funcao.
 	*/
-	let get_stats__build__tipo_parada__1 = function (ops = [], filters = {}, simulation = {}){
+	let get_stats__build__tipo_parada__comb = function (ops = [], filters = {}, simulation = {}){
 		/*------------------------------------ Vars --------------------------------------*/
 		//Modifca alguns valores do 'filters' e 'simulation'
 		let _filters = {
@@ -2283,6 +2283,6 @@ let RV_Statistics = (function(){
 	/*--------------------------------------------------------------------------------*/
 	return {
 		generate__DashboardOps: generate__DashboardOps,
-		get_stats__build__tipo_parada__1: get_stats__build__tipo_parada__1
+		get_stats__build__tipo_parada__comb: get_stats__build__tipo_parada__comb
 	}
 })();

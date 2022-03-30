@@ -182,7 +182,7 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 	background: linear-gradient(to right, #dc35454d 50%, transparent 0);
 	background-size: 200% 100%;
 	background-position: right;
-	animation: makeItfadeIn 2.8s .2s forwards;
+	animation: makeItfadeIn 1.8s .2s forwards;
 }
 @keyframes makeItfadeIn {
   	100% {
@@ -296,11 +296,13 @@ div.dataTables_paginate.paging_input ul.pagination div.input input.paginate_inpu
 /*-------------------------------------- Builds --------------------------------------*/
 #builds_modal__runs div.progress {width: 100%; height: 4px}
 #builds_modal__runs div.card-header p {font-size: .8em}
-#builds_modal__runs table {font-size: .8em}
-#builds_modal__runs table tbody td {vertical-align: middle}
-#builds_modal__runs table[name='tipo_parada__1'] tbody td:nth-child(2) {width: 20%}
-#builds_modal__runs table[name='tipo_parada__1'] tbody td:nth-child(3) {width: 12%}
-#builds_modal__runs table[name='tipo_parada__1'] tbody td:nth-child(4) {width: 10%}
+#builds_modal__runs div table tbody td {vertical-align: middle}
+#builds_modal__runs div[name='tipo_parada__comb'] div[name='builds_modal__runs_vars'] table {font-size: .8em}
+#builds_modal__runs div[name='tipo_parada__comb'] div[name='builds_modal__runs_vars'] table tbody td[name='label'] {width: 21%}
+#builds_modal__runs div[name='tipo_parada__comb'] div[name='builds_modal__runs_vars'] table tbody td[name='stop'] {width: 15%}
+#builds_modal__runs div[name='tipo_parada__comb'] div[name='builds_modal__runs_vars'] table tbody td[name='gain'] {width: 15%}
+#builds_modal__runs div[name='tipo_parada__comb'] div[name='builds_modal__runs_vars'] table tbody td input {font-size: .7em}
+#builds_modal__runs div[name='tipo_parada__comb'] div[name='builds_modal__runs_info'] p[name='run_stats'] {font-size: .7em}
 /*--------------------------------- Upload Operações ---------------------------------*/
 #upload_operacoes_modal__tips {
 	font-size: .7em;

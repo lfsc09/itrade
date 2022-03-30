@@ -468,6 +468,8 @@ let Renda_variavel = (function(){
 						}
 					}
 				}
+				else
+					el.val('');
 			});
 			//////////////////////////////////
 			//Simulação de Simular Capital
@@ -478,6 +480,8 @@ let Renda_variavel = (function(){
 			//////////////////////////////////
 			me.simulations.R.val((('R' in dashboard_simulations) ? dashboard_simulations['R'] : ''));
 			me.simulations.R_filter_ops.prop('checked', (('R_filter_ops' in dashboard_simulations) ? dashboard_simulations['R_filter_ops'] == '1' : false));
+			//Desmarca necessidade de re-construir
+			_search_build__button.changeState(needRebuild = false);
 		}
 	}
 	let _search_build__button = {
@@ -570,10 +574,6 @@ let Renda_variavel = (function(){
 			this.cenarios = {};
 			for (let cn in data)
 				this.cenarios[data[cn].id] = data[cn];
-		},
-		update: function (data){
-			//Atualiza o objeto
-			this.cenarios[data.id] = data;
 		},
 		remove: function (id){
 			//Atualiza o objeto
@@ -1115,8 +1115,8 @@ let Renda_variavel = (function(){
 		},
 		initComplete: function (){
 			$(document.getElementById('dashboard_ops__table_trades__actions'))
-				.append(`<button class="btn btn-sm btn-outline-primary btn-nohover" type="button" name="extract_sel" hold_time="1500"><span><i class="fas fa-file-export me-2"></i>Exportar Toda</span></button>`)
-				.append(`<button class="btn btn-sm btn-outline-danger btn-nohover ms-2" type="button" name="remove_sel" hold_time="3000"><span><i class="fas fa-trash me-2"></i>Apagar Toda</span></button>`);
+				.append(`<button class="btn btn-sm btn-outline-primary btn-nohover" type="button" name="extract_sel" hold_time="1500"><span><i class="fas fa-angle-double-down me-2"></i>Baixar Toda</span></button>`)
+				.append(`<button class="btn btn-sm btn-outline-danger btn-nohover ms-2" type="button" name="remove_sel" hold_time="2000"><span><i class="fas fa-trash me-2"></i>Apagar Toda</span></button>`);
 		},
 		lengthChange: false,
 		info: false,
@@ -1587,8 +1587,8 @@ let Renda_variavel = (function(){
 	/*
 		Constroi o offcanvas de 'arcabouco_info'.
 	*/
-	function buildArcaboucoInfoOffcanvas(){
-		if (_arcabouco_info__needRebuild){
+	function buildArcaboucoInfoOffcanvas(forceRebuild = false, show = false){
+		if (_arcabouco_info__needRebuild || forceRebuild){
 			_arcabouco_info__needRebuild = false;
 			let id_arcabouco = _instancia_arcabouco.get('id'),
 				stats_data = buildArcaboucoInfo__Stats(),
@@ -1642,7 +1642,8 @@ let Renda_variavel = (function(){
 					`</div>`;
 			$(document.getElementById('arcabouco_info_place')).empty().append(html);
 		}
-		$(document.getElementById('arcabouco_info')).offcanvas('show');
+		if (show)
+			$(document.getElementById('arcabouco_info')).offcanvas('show');
 	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*-------------------------------- Lista Cenarios --------------------------------*/
@@ -1662,7 +1663,7 @@ let Renda_variavel = (function(){
 	/*
 		Reconstroi o select de Cenarios, para copiar ao criar um novo cenario.
 	*/
-	function rebuildCenarios_modal_copiar(){
+	function rebuildCenarios_modal__copiar(){
 		let id_arcabouco = _instancia_arcabouco.get('id');
 		if (_lista__arcaboucos.arcaboucos[id_arcabouco].sou_criador == 1)
 			$(document.getElementById('cenarios_modal_copiar')).empty().append(buildCenariosCopySelect());
@@ -1672,21 +1673,24 @@ let Renda_variavel = (function(){
 	/*
 		Constroi o modal de gerenciamento de cenarios.
 	*/
-	function buildCenariosModal(){
+	function buildCenariosModal(afterUpdate = false, show = false){
 		let id_arcabouco = _instancia_arcabouco.get('id'),
 			modal = $(document.getElementById('cenarios_modal'));
-		//Se sou criador do arcabouço
-		if (_lista__arcaboucos.arcaboucos[id_arcabouco].sou_criador == 1){
-			modal.find('#cenarios_modal_espelhar, #cenarios_modal_adicionar').removeClass('disabled');
-			modal.find('#cenarios_modal_espelhar__arcaboucos').empty().append(buildCenariosEspelhaSelect());
+		if (!afterUpdate){
+			//Se sou criador do arcabouço
+			if (_lista__arcaboucos.arcaboucos[id_arcabouco].sou_criador == 1){
+				modal.find('#cenarios_modal_espelhar, #cenarios_modal_adicionar').removeClass('disabled');
+				modal.find('#cenarios_modal_espelhar__arcaboucos').empty().append(buildCenariosEspelhaSelect());
+			}
+			else{
+				modal.find('#cenarios_modal_espelhar, #cenarios_modal_adicionar').addClass('disabled');
+				modal.find('#cenarios_modal_espelhar__arcaboucos').empty();
+			}
 		}
-		else{
-			modal.find('#cenarios_modal_espelhar, #cenarios_modal_adicionar').addClass('disabled');
-			modal.find('#cenarios_modal_espelhar__arcaboucos').empty();
-		}
-		rebuildCenarios_modal_copiar();
+		rebuildCenarios_modal__copiar();
 		modal.find('#cenarios_modal__cenarios').empty().append(buildCenariosPlace(_lista__cenarios.cenarios));
-		modal.modal('show');
+		if (show)
+			modal.modal('show');
 	}
 	/*
 		Constroi o select com os arcabouços, para espelhar seus cenários.
@@ -1739,13 +1743,12 @@ let Renda_variavel = (function(){
 		let id_arcabouco = _instancia_arcabouco.get('id'),
 			html = ('observacoes' in data) ? buildListaObservacoes(data['observacoes'], new_cenario) : buildListaObservacoes({}, new_cenario),
 			input_group = ``,
-			excluir_cenario = ``,
-			salvar_cenario = ``;
+			excluir_cenario = ``;
 		//Apenas o criador pode Adicionar / Alterar / Remover informações
+		$(document.getElementById('cenarios_modal_atualizar')).toggle(_lista__arcaboucos.arcaboucos[id_arcabouco].sou_criador == 1);
 		if (_lista__arcaboucos.arcaboucos[id_arcabouco].sou_criador == 1){
 			input_group = `<div class="input-group"><input type="text" name="cenario_nome" class="form-control form-control-sm" value="${(('nome' in data) ? data.nome : '')}"><button type="button" class="btn btn-sm btn-outline-primary" adicionar_observacao><i class="fas fa-plus me-2"></i>Observação</button></div>`;
-			excluir_cenario = `<button type="button" class="btn btn-sm btn-danger ms-auto" title="Duplo Clique" remover_cenario><i class="fas fa-trash-alt me-2"></i>Excluir Cenário</button>`;
-			salvar_cenario = (new_cenario) ? `<button type="button" class="btn btn-sm btn-success ms-2" salvar_novo_cenario>Adicionar Cenário</button>` : (('id' in data) ? `<button type="button" class="btn btn-sm btn-success ms-2 disabled" salvar_cenario>Salvar</button>` : ``);
+			excluir_cenario = `<button type="button" class="btn btn-sm btn-outline-danger btn-nohover ms-auto" hold_time="2000" remover_cenario><i class="fas fa-trash-alt me-2"></i>Excluir Cenário</button>`;
 		}
 		else
 			input_group = `<input type="text" name="cenario_nome" class="form-control form-control-sm" value="${(('nome' in data) ? data.nome : '')}" disabled>`;
@@ -1754,11 +1757,10 @@ let Renda_variavel = (function(){
 				`<div class="col-md-5">`+
 				`${input_group}`+
 				`</div>`+
-				`${(('observacoes' in data) ? ((new_cenario) ? ((data['observacoes'].length) ? `<button class="btn btn-sm btn-outline-primary disabled ms-2 fw-bold" num_obs__new>+${data['observacoes'].length}</button>` : ``) : `<button class="btn btn-sm btn-outline-secondary disabled ms-2 fw-bold" num_obs>${data['observacoes'].length}</button>`) : ``)}`+
+				`${(('observacoes' in data) ? ((new_cenario) ? ((data['observacoes'].length) ? `<button class="btn btn-sm btn-primary disabled ms-2 fw-bold" num_obs__new>+${data['observacoes'].length}</button>` : ``) : `<button class="btn btn-sm btn-secondary disabled ms-2 fw-bold" num_obs>${data['observacoes'].length}</button>`) : ``)}`+
 				`${excluir_cenario}`+
-				`${salvar_cenario}`+
 				`</div>`+
-				`<div class="card-body py-1 ${((!new_cenario) ? 'd-none' : '')}">`+
+				`<div class="card-body py-1 d-none">`+
 				`<table class="table m-0 me-3">`+
 				`<thead>${html.thead}</thead>`+
 				`<tbody>${html.tbody}</tbody>`+
@@ -1796,91 +1798,6 @@ let Renda_variavel = (function(){
 			}
 		}
 	}
-	/*
-		Coleta os dados para envio em Adicionar / Alterar / Remover cenarios e (Observacoes).
-	*/
-	function cenarioGetData(cenario){
-		let data = {};
-		//Cenarios novos
-		if (cenario[0].hasAttribute('new_cenario')){
-			data.nome = cenario.find('input[name="cenario_nome"]').val();
-			if (data.nome === '')
-				return {};
-			data.id_arcabouco = _instancia_arcabouco.get('id');
-			data.observacoes = [];
-			cenario.find('tr[new_observacao]').each(function (r, row){
-				let nome = row.querySelector('input[name="nome"]').value,
-					ref = row.querySelector('input[name="ref"]').value;
-				if (nome !== '' && ref !== ''){
-					data.observacoes.push({
-						nome: nome,
-						ref: ref,
-						inativo: ((row.querySelector('input[name="inativo"]').checked)?1:0)
-					});
-				}
-			});
-		}
-		//Cenario ja existe
-		else if (cenario[0].hasAttribute('cenario')){
-			data = {
-				id_arcabouco: _instancia_arcabouco.get('id'),
-				id_cenario: cenario.attr('cenario'),
-				insert: {
-					//Observacoes de cenarios ja exitentes
-					observacoes: []
-				},
-				update: {
-					//Dados do cenario
-					cenarios: [],
-					//Dados de observações de cenarios
-					observacoes: []
-				},
-				remove: {
-					//Observações de cenarios
-					observacoes: []
-				}
-			};
-			//Verifica mudancas no nome do cenario
-			let cenario_nome_input = cenario.find('input[name="cenario_nome"]');
-			if (cenario_nome_input[0].hasAttribute('changed') && cenario_nome_input.val() !== '')
-				data['update']['cenarios'].push({nome: cenario_nome_input.val()});
-			//Verifica novas observacoes
-			cenario.find('tr[new_observacao]').each(function (r, row){
-				let nome = row.querySelector('input[name="nome"]').value,
-					ref = row.querySelector('input[name="ref"]').value;
-				if (nome !== '' && ref !== ''){
-					data['insert']['observacoes'].push({
-						nome: nome,
-						ref: ref,
-						inativo: ((row.querySelector('input[name="inativo"]').checked)?1:0)
-					});
-				}
-			});
-			//Verifica mudancas/remocoes nas observacoes
-			cenario.find('tr[observacao]').each(function (r, row){
-				//Trata remocoes de observacoes
-				if (row.hasAttribute('remover'))
-					data['remove']['observacoes'].push({id: row.getAttribute('observacao')});
-				//Trata alteracoes em observacoes
-				else{
-					let info = {};
-					$(row).find('input[changed]').each(function (ip, input){
-						if (this.name === 'nome' && this.value === '')
-							return;
-						if (this.getAttribute('type') === 'checkbox')
-							info[this.name] = ((this.checked)?1:0);
-						else
-							info[this.name] = this.value;
-					});
-					if (!Global.isObjectEmpty(info)){
-						info['id'] = row.getAttribute('observacao');
-						data['update']['observacoes'].push(info);
-					}
-				}
-			});
-		}
-		return data;
-	}
 	////////////////////////////////////////////////////////////////////////////////////
 	/*------------------------------------ Builds ------------------------------------*/
 	////////////////////////////////////////////////////////////////////////////////////
@@ -1889,29 +1806,40 @@ let Renda_variavel = (function(){
 	*/
 	function buildBuildsModal(){
 		let modal = $(document.getElementById('builds_modal'));
+		$(document.getElementById('builds_modal__runs')).find('div[name="tipo_parada__comb"] table tbody input').val('');
 		modal.modal('show');
 	}
 	/*
-		Executa a Run em recursão da build 'tipo_parada__1'.
+		Executa a Run em recursão da build 'tipo_parada__comb'.
 	*/
-	function run__build__tipo_parada__1(run_vars_map, progress_bar, filters, simulations){
+	function run__build__tipo_parada__comb(run_vars_map, interface, filters, simulations){
+		let best__build_results = [],
+			span_stats = interface['build_div'].find('div[name="builds_modal__runs_info"] p[name="run_stats"] span[value]');
 		let iteration__run = async function (){
 			let stringData = '',
 				header_map = {
-					'sd1': 'Stop Dia (Total)',
-					'sd2': 'Stop Dia (Sequencia)',
+					'sd1': 'Stop Dia N (Total)',
+					'sd2': 'Stop Dia N (Sequencia)',
+					'sd3': 'Stop Dia R$ (Final)',
+					'sd4': 'Stop Dia R$ (Bruto)',
+					'sd5': 'Stop Dia R (Final)',
+					'sd6': 'Stop Dia R (Bruto)',
 					'ss1': 'Stop Semana (Cheio)',
 					'ss2': 'Stop Semana (Total)',
 					'ss3': 'Stop Semana (Sequencia)',
 					'gd1': 'Gain Dia (Total)',
 					'gd2': 'Gain Dia (Sequencia)',
+					'gd3': 'Gain Dia R$ (Final)',
+					'gd4': 'Gain Dia R$ (Bruto)',
+					'gd5': 'Gain Dia R (Final)',
+					'gd6': 'Gain Dia R (Bruto)',
 					'gs1': 'Gain Semana (Cheio)',
 					'gs2': 'Gain Semana (Total)',
 					'gs3': 'Gain Semana (Sequencia)'
 				};
 			//Gera o Header do arquivo CSV
-			for (let h=0; h < vars_name_mapping.length; h++)
-				stringData += header_map[vars_name_mapping[h]] + _builds__csv_handle.writer['separator'];
+			for (let h=0; h < run_vars_map.length; h++)
+				stringData += header_map[run_vars_map[h].name] + _builds__csv_handle.writer['separator'];
 			stringData += 'R$' + _builds__csv_handle.writer['separator'] +
 							'Edge' + _builds__csv_handle.writer['separator'] +
 							'Fator Lucro' + _builds__csv_handle.writer['separator'] +
@@ -1928,11 +1856,11 @@ let Renda_variavel = (function(){
 						simulations['tipo_parada'] = [];
 						for (let tp=0; tp < break_run_key.length; tp++){
 							if (break_run_key[tp] > 0)
-								simulations['tipo_parada'].push({ tipo_parada: vars_name_mapping[tp], valor_parada: break_run_key[tp] });
+								simulations['tipo_parada'].push({ tipo_parada: run_vars_map[tp].name, valor_parada: break_run_key[tp] });
 							//Coloca os filtros de parada no resultado
 							stringData += `${break_run_key[tp]}` + _builds__csv_handle.writer['separator'];
 						}
-						run_result = RV_Statistics.get_stats__build__tipo_parada__1(_lista__operacoes.operacoes, filters, simulations);
+						run_result = RV_Statistics.get_stats__build__tipo_parada__comb(_lista__operacoes.operacoes, filters, simulations);
 						//Insere os resultados
 						stringData += run_result['result__lucro_brl'].toFixed(2) + _builds__csv_handle.writer['separator'] +
 										run_result['stats__edge'].toFixed(2) + _builds__csv_handle.writer['separator'] +
@@ -1943,47 +1871,41 @@ let Renda_variavel = (function(){
 										run_result['stats__drawdown_medio'].toFixed(2) + _builds__csv_handle.writer['separator'] +
 										run_result['stats__drawdown_qtd'] + _builds__csv_handle.writer['separator'] + ((runs_stats.i + 1 < runs_stats.total) ? '\n' : '');
 						//Atualiza o progress bar caso haja necessidade
-						if (runs_stats.i % runs_stats.update_front_each === 0)
-							progress_bar.css('width', `${Math.ceil((runs_stats.i / runs_stats.total) * 100)}%`);
+						if (runs_stats.i % runs_stats.update_front_each === 0){
+							interface['progress_bar'].css('width', `${Math.ceil((runs_stats.i / runs_stats.total) * 100)}%`);
+							span_stats.html(`${runs_stats['i'].toLocaleString('pt-BR')} de ${runs_stats['total'].toLocaleString('pt-BR')}`);
+						}
 						resolve();
 					}, 0);
 				});
 				await promise;
 			}
+			//Fim da Run
 			//Atualiza a ultima vez o progress bar
-			progress_bar.css('width', '100%');
-			_csv_handler.writer.write(stringData, `${_instancia_arcabouco.get('nome')} - Tipo Parada 1.csv`);
+			interface['progress_bar'].css('width', '100%');
+			span_stats.html(`${runs_stats['i'].toLocaleString('pt-BR')} de ${runs_stats['total'].toLocaleString('pt-BR')}`);
+			interface['run_button'].removeAttribute('disabled');
+			_csv_handler.writer.write(stringData, `${_instancia_arcabouco.get('nome')} - Tipo Parada.csv`);
 		}
 		//Gera a combinação de uma Run
 		let generate__run = function (n){
 			let result = "", curArray;
-			for (let i=0; i < mapped_possibilites.length; i++) {
-				curArray = mapped_possibilites[i];
+			for (let i=0; i < run_vars_map.length; i++) {
+				curArray = run_vars_map[i]['values'];
 				result += curArray[Math.floor(n / divisors[i]) % curArray.length];
 			}
 			return result;
 		}
-		//Gera arrays com todas as possibilidade de valores para cada var
-		let mapped_possibilites = [],
-			vars_name_mapping = [];
-		for (let mr=0; mr < run_vars_map['max'].length; mr++){
-			if (run_vars_map['max'][mr] > 0){
-				mapped_possibilites.push([...Array(run_vars_map['max'][mr] + 1).keys()]);
-				//Mapeia qual variavel é qual, para não perder a ordem quando forem excluidas por terem 0
-				vars_name_mapping.push(run_vars_map['names'][mr]);
-			}
-		}
 		let runs_stats = { i: 0, total: 1, update_front_each: 0 }
 		//Calcula o total de runs para fazer
-		for (let mp=0; mp < mapped_possibilites.length; mp++)
-			runs_stats['total'] *= mapped_possibilites[mp].length;
+		for (let rvm=0; rvm < run_vars_map.length; rvm++)
+			runs_stats['total'] *= run_vars_map[rvm]['values'].length;
 		//Buscar fazer 30 atualizações no front do progress-bar apenas
 		runs_stats['update_front_each'] = Math.ceil(runs_stats['total'] / 30);
 		// Pre-calculate divisors (Usado no generate_run)
 		let divisors = [];
-		for (let i = mapped_possibilites.length - 1; i >= 0; i--)
-			divisors[i] = divisors[i + 1] ? divisors[i + 1] * mapped_possibilites[i + 1].length : 1;
-		console.log(`Total de Runs: ${runs_stats.total}   Update each: ${runs_stats.update_front_each}`);
+		for (let i = run_vars_map.length - 1; i >= 0; i--)
+			divisors[i] = divisors[i + 1] ? divisors[i + 1] * run_vars_map[i + 1]['values'].length : 1;
 		iteration__run();
 	}
 	////////////////////////////////////////////////////////////////////////////////////
@@ -3737,7 +3659,7 @@ let Renda_variavel = (function(){
 				_csv_handler.writer.write(stringData, `${_instancia_arcabouco.get('nome')}.csv`);
 			}
 			else if (button_name === 'remove_all'){
-				let remove_data = {id_arcabouco: _lista__instancias_arcabouco.getSelected('id'), operacoes: []};
+				let remove_data = {id_arcabouco: _instancia_arcabouco.get('id'), operacoes: []};
 				Global.connect({
 					data: {module: 'renda_variavel', action: 'remove_operacoes', params: remove_data},
 					success: function (result){
@@ -3745,6 +3667,7 @@ let Renda_variavel = (function(){
 							Global.toast.create({location: document.getElementById('master_toasts'), title: 'Sucesso', time: 'Now', body: 'Operações Apagadas.', delay: 4000});
 							_lista__operacoes.update(result['data']['operacoes']);
 							_lista__arcaboucos.update(result['data']['arcabouco'][0]);
+							buildArcaboucoInfoOffcanvas(forceRebuild = true, show = false);
 							buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
 							//Reconstroi o 'filters' e 'simulation' em 'renda_variavel__search' com a instancia de arcabouço selecionada
 							_renda_variavel__search.update();
@@ -3824,22 +3747,22 @@ let Renda_variavel = (function(){
 		if (Global.hasClass(e.target, 'card-header')){
 			let current_card_body = $(this).parent().find('div.card-body');
 			if (current_card_body.hasClass('d-none')){
-				//Fecha cenarios que estão abertos (Novos para criar não)
-				$(document.getElementById('cenarios_modal__cenarios')).find('div.card-body').filter(function (){ return !this.parentElement.hasAttribute('new_cenario'); }).addClass('d-none');
+				//Fecha cenarios que estão abertos
+				$(document.getElementById('cenarios_modal__cenarios')).find('div.card-body').addClass('d-none');
 				current_card_body.removeClass('d-none');
 				if ($(document.getElementById('cenarios_modal')).find('div.modal-body').scrollTop() != 0)
 					this.scrollIntoView();
 			}
 			else
-				$(document.getElementById('cenarios_modal__cenarios')).find('div.card-body').filter(function (){ return !this.parentElement.hasAttribute('new_cenario'); }).addClass('d-none');
+				$(document.getElementById('cenarios_modal__cenarios')).find('div.card-body').addClass('d-none');
 		}
 	});
 	/*
-		Processa a remocao de cenarios com double click.
+		Processa a remocao de cenarios.
 	*/
-	$(document.getElementById('cenarios_modal__cenarios')).on('dblclick', 'button', function (){
-		//Remove um cenario
-		if (this.hasAttribute('remover_cenario')){
+	$(document.getElementById('cenarios_modal__cenarios')).on('mousedown', 'button[remover_cenario]', function (){
+		let time_to_hold = parseInt(this.getAttribute('hold_time'));
+		_timeout_button__hold = setTimeout(() => {
 			let cenario_div = $(this).parentsUntil('#cenarios_modal__cenarios').last(),
 				cenarios_modal__cenarios = cenario_div.parent();
 			//Se é um novo cenario, apenas remove
@@ -3849,7 +3772,7 @@ let Renda_variavel = (function(){
 					cenarios_modal__cenarios.append(buildCenariosPlace());
 			}
 			else{
-				let remove_data = {id: cenario_div.attr('cenario')};
+				let remove_data = { id: cenario_div.attr('cenario'), id_arcabouco: _instancia_arcabouco.get('id') };
 				Global.connect({
 					data: {module: 'renda_variavel', action: 'remove_cenarios', params: remove_data},
 					success: function (result){
@@ -3858,23 +3781,22 @@ let Renda_variavel = (function(){
 							_arcabouco_info__needRebuild = true;
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Removido.', delay: 4000});
 							_lista__cenarios.remove(remove_data.id);
-							rebuildCenarios_modal_copiar();
-							cenario_div.remove();
-							if (cenarios_modal__cenarios.children().length === 0)
-								cenarios_modal__cenarios.append(buildCenariosPlace());
+							buildCenariosModal(afterUpdate = true, show = false);
 						}
 						else
 							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
 					}
 				});
 			}
-		}
+		}, time_to_hold);
+	}).on('mouseup', 'button[remover_cenario]', function (){
+		clearTimeout(_timeout_button__hold);
 	});
 	/*
 		Processa a adicao / remocao de linhas de observacoes.
 	*/
 	$(document.getElementById('cenarios_modal__cenarios')).on('click', 'button', function (e){
-		//Apenas insere uma nova observacao
+		//Insere uma nova observacao na tabela
 		if (this.hasAttribute('adicionar_observacao')){
 			let cenario = $(this).parentsUntil('#cenarios_modal__cenarios').last(),
 				empty_line = cenario.find('tbody tr[empty]');
@@ -3906,7 +3828,7 @@ let Renda_variavel = (function(){
 				if (num_obs__new.length)
 					num_obs__new.html(`+${qtd_new}`);
 				else
-					cenario.find('button[remover_cenario]').before(`<button class="btn btn-sm btn-outline-primary disabled ms-2 fw-bold" num_obs__new>+${qtd_new}</button>`);
+					cenario.find('button[remover_cenario]').before(`<button class="btn btn-sm btn-primary disabled ms-2 fw-bold" num_obs__new>+${qtd_new}</button>`);
 			});
 		}
 		//Remove uma observacao
@@ -3939,54 +3861,117 @@ let Renda_variavel = (function(){
 				$(this).parentsUntil('#cenarios_modal__cenarios').last().find('button[salvar_cenario]').removeClass('disabled');
 			}
 		}
-		//Processa a adição de um cenário no BD
-		if (this.hasAttribute('salvar_novo_cenario')){
-			let cenario_div = $(this).parentsUntil('#cenarios_modal__cenarios').last(),
-				insert_data = cenarioGetData(cenario_div);
-			if (!Global.isObjectEmpty(insert_data)){
-				Global.connect({
-					data: {module: 'renda_variavel', action: 'insert_cenarios', params: insert_data},
-					success: function (result){
-						if (result.status){
-							_dashboard_ops__needRebuild = true;
-							_arcabouco_info__needRebuild = true;
-							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Adicionado.', delay: 4000});
-							cenario_div.replaceWith(buildCenario(result.data[0], false));
-							_lista__cenarios.update(result.data[0]);
-							rebuildCenarios_modal_copiar();
-						}
-						else
-							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+	});
+	/*
+		Processa a atualização dos dados de um ou mais cenários.
+	*/
+	$(document.getElementById('cenarios_modal_atualizar')).click(function (){
+		let data = { id_arcabouco: _instancia_arcabouco.get('id'), cenarios: [] };
+		//Verifica os novos cenarios e cenarios que tiveram mudanças
+		$(document.getElementById('cenarios_modal__cenarios')).children().each(function (){
+			let me = $(this),
+				collected_data = {};
+			//Novos cenarios
+			if (this.hasAttribute('new_cenario')){
+				//Pega o nome do cenario
+				let cenario_nome = me.find('input[name="cenario_nome"]').val();
+				if (cenario_nome !== '')
+					collected_data['nome'] = cenario_nome;
+				//Captura as novas observações
+				me.find('table tbody tr[new_observacao]').each(function (i, new_obs){
+					let ref = new_obs.querySelector('input[name="ref"]').value,
+						nome = new_obs.querySelector('input[name="nome"]').value;
+					if (ref !== '' && nome !== ''){
+						if (!('obs_insert' in collected_data))
+							collected_data['obs_insert'] = [];
+						collected_data['obs_insert'].push({
+							ref: ref,
+							nome: nome,
+							inativo: ((new_obs.querySelector('input[name="inativo"]').checked) ? 1 : 0)
+						});
 					}
 				});
 			}
-		}
-		//Processa a alteração de um cenário no BD
-		if (this.hasAttribute('salvar_cenario')){
-			let cenario_div = $(this).parentsUntil('#cenarios_modal__cenarios').last(),
-				update_data = cenarioGetData(cenario_div);
-			if (update_data['insert']['observacoes'].length || update_data['update']['cenarios'].length || update_data['update']['observacoes'].length || update_data['remove']['observacoes'].length){
-				Global.connect({
-					data: {module: 'renda_variavel', action: 'update_cenarios', params: update_data},
-					success: function (result){
-						if (result.status){
-							_dashboard_ops__needRebuild = true;
-							_arcabouco_info__needRebuild = true;
-							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenário Atualizado.', delay: 4000});
-							cenario_div.replaceWith(buildCenario(result['data']['cenario'], false));
-							_lista__cenarios.update(result['data']['cenario']);
-							_lista__operacoes.update(result['data']['operacoes']);
-							rebuildCenarios_modal_copiar();
+			//Alteração de cenarios
+			if (this.hasAttribute('cenario')){
+				//Pega o nome do cenario
+				let cenario_nome__input = me.find('input[name="cenario_nome"]');
+				if (cenario_nome__input[0].hasAttribute('changed') && cenario_nome__input.val() !== '')
+					collected_data['nome'] = cenario_nome__input.val();
+				//Captura mudanças nas observações
+				me.find('table tbody tr').each(function (i, obs){
+					//Captura novas
+					if (obs.hasAttribute('new_observacao')){
+						let ref = obs.querySelector('input[name="ref"]').value,
+							nome = obs.querySelector('input[name="nome"]').value;
+						if (ref !== '' && nome !== ''){
+							if (!('obs_insert' in collected_data))
+								collected_data['obs_insert'] = [];
+							collected_data['obs_insert'].push({
+								ref: ref,
+								nome: nome,
+								inativo: ((obs.querySelector('input[name="inativo"]').checked) ? 1 : 0)
+							});
 						}
-						else
-							Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+					}
+					//Captura remoções
+					else if (obs.hasAttribute('remover')){
+						if (!('obs_remove' in collected_data))
+							collected_data['obs_remove'] = [];
+						collected_data['obs_remove'].push({
+							id: obs.getAttribute('observacao')
+						});
+					}
+					//Captura possiveis alterações
+					else if (obs.hasAttribute('observacao')){
+						let obs_collected_data = {},
+							ref__input = obs.querySelector('input[name="ref"]'),
+							nome__input = obs.querySelector('input[name="nome"]'),
+							inativo__input = obs.querySelector('input[name="inativo"]');
+						if (ref__input.hasAttribute('changed') && ref__input.value !== '')
+							obs_collected_data['ref'] = ref__input.value;
+						if (nome__input.hasAttribute('changed') && nome__input.value !== '')
+							obs_collected_data['nome'] = nome__input.value;
+						if (inativo__input.hasAttribute('changed'))
+							obs_collected_data['inativo'] = ((inativo__input.checked) ? 1 : 0);
+						if (!Global.isObjectEmpty(obs_collected_data)){
+							obs_collected_data['id'] = obs.getAttribute('observacao');
+							if (!('obs_update' in collected_data))
+								collected_data['obs_update'] = [];
+							collected_data['obs_update'].push(obs_collected_data);
+						}
 					}
 				});
 			}
+			if (!Global.isObjectEmpty(collected_data)){
+				//Pega o id do cenario
+				if (this.hasAttribute('cenario'))
+					collected_data['id'] = this.getAttribute('cenario');
+				data['cenarios'].push(collected_data);
+			}
+		});
+		if (!Global.isObjectEmpty(data) && data['cenarios'].length){
+			Global.connect({
+				data: {module: 'renda_variavel', action: 'insert_update_cenarios', params: data},
+				success: function (result){
+					if (result.status){
+						_dashboard_ops__needRebuild = true;
+						_arcabouco_info__needRebuild = true;
+						Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'success', body: 'Cenários Atualizados.', delay: 4000});
+						//Recria a lista de cenarios
+						_lista__cenarios.create(result['data']['cenarios']);
+						_lista__operacoes.update(result['data']['operacoes']);
+						//Atualiza o html de cenarios
+						buildCenariosModal(afterUpdate = true, show = false);
+					}
+					else
+						Global.toast.create({location: document.getElementById('cenarios_modal_toasts'), color: 'danger', body: result.error, delay: 4000});
+				}
+			});
 		}
 	});
 	/*
-		Facilita o seletor de obrigatoria e inativo, clicando tambem no TD.
+		Facilita o seletor de inativo, clicando tambem no TD.
 	*/
 	$(document.getElementById('cenarios_modal__cenarios')).on('click', 'td[name="inativo"]', function (e){
 		if (e.target.tagName === 'INPUT')
@@ -4021,28 +4006,92 @@ let Renda_variavel = (function(){
 	*/
 	$(document.getElementById('builds_modal__runs')).on('click', 'button[run_build]', function (e){
 		let build = this.getAttribute('build'),
-			progress_bar = $(this).parent().find('div.progress-bar');
+			progress_bar = null;
+		if (this.hasAttribute('disabled'))
+			return false;
 		//Build para gerar combinações com os filtros em N° de Stops e Gains no 'Dia' e 'Semana'
-		if (build === 'tipo_parada__1'){
-			let run_vars_map = {
-				names: ['sd1', 'sd2', 'ss1', 'ss2', 'ss3', 'gd1', 'gd2', 'gs1', 'gs2', 'gd3'],
-				max: [
-						parseInt(this.getAttribute('sd1')),
-						parseInt(this.getAttribute('sd2')),
-						parseInt(this.getAttribute('ss1')),
-						parseInt(this.getAttribute('ss2')),
-						parseInt(this.getAttribute('ss3')),
-						parseInt(this.getAttribute('gd1')),
-						parseInt(this.getAttribute('gd2')),
-						parseInt(this.getAttribute('gs1')),
-						parseInt(this.getAttribute('gs2')),
-						parseInt(this.getAttribute('gs3'))
-					]
-				},
-				filters = _instancia_arcabouco.get('filters'),
-				simulations = _instancia_arcabouco.get('simulations');
-			//Inicia a Run
-			run__build__tipo_parada__1(run_vars_map, progress_bar, filters, simulations);
+		if (build === 'tipo_parada__comb'){
+			let build_div = $(document.getElementById('builds_modal__runs')).find('>div[name="tipo_parada__comb"]');
+			progress_bar = build_div.find('div.progress-bar');
+			if (this.hasAttribute('restart')){
+				//Retorna o botão de Rodar
+				$(this).removeAttr('restart').html(`Run Build<i class="fas fa-vial ms-2"></i>`);
+				//Muda a aba para 'vars' e esconde a aba de 'info'
+				build_div.find('div[name="builds_modal__runs_info"]').addClass('d-none').end().find('div[name="builds_modal__runs_vars"]').removeClass('d-none');
+				//Zera a progress-bar
+				progress_bar.css('width', '0%');
+			}
+			else{
+				let run_vars_map = [],
+					filters = _instancia_arcabouco.get('filters'),
+					simulations = _instancia_arcabouco.get('simulations');
+				//Torna o botão de Rodar, um botão de Restart
+				$(this).attr('disabled', '').attr('restart', '').html(`Restart Build<i class="fas fa-undo ms-2"></i>`);
+				//Muda a aba para 'info' e esconde a aba de 'vars'
+				build_div.find('div[name="builds_modal__runs_vars"]').addClass('d-none').end().find('div[name="builds_modal__runs_info"]').removeClass('d-none');
+				//Processa os valores passados
+				build_div.find('input[name]').each(function (){
+					let value = this.value;
+					if (value !== ''){
+						//Faz a leitura de intervalos ou lista de valores de inteiros ou decimais
+						if (/^(((\d+\.\d+)|(\d+))\;)+((\d+\.\d+)|(\d+))$/.test(value)){
+							let value_frag = value.split(';'),
+								values = [];
+							//Se for input de incremento automatico
+							if (this.hasAttribute('increment')){
+								//Se tiver apenas 2 valores, calcula todos os valores entre n1...n2 com incrementos de 1
+								if (value_frag.length === 2){
+									let init = (/^\d+\.\d+$/.test(value_frag[0])) ? Math.floor(parseFloat(value_frag[0])) : parseInt(value_frag[0]);
+										end = (/^\d+\.\d+$/.test(value_frag[1])) ? Math.ceil(parseFloat(value_frag[1])) : parseInt(value_frag[1]);
+									for (let i=init; i <= end; i++)
+										values.push(i);
+								}
+								//Senao apenas jogas os valores na lista
+								else{
+									for (let vf=0; vf < value_frag.length; vf++){
+										if (/^\d+\.\d+$/.test(value_frag[vf]))
+											values.push(parseFloat(value_frag[vf].toFixed(2)));
+										else
+											values.push(parseInt(value_frag[vf]));
+									}
+								}
+							}
+							else{
+								for (let vf=0; vf < value_frag.length; vf++){
+									if (/^\d+\.\d+$/.test(value_frag[vf]))
+										values.push(parseFloat(value_frag[vf].toFixed(2)));
+									else
+										values.push(parseInt(value_frag[vf]));
+								}
+							}
+							run_vars_map.push({ name: this.name, values: values});
+						}
+						//Se apenas 1 valor é passado
+						else if (!isNaN(value) && value != 0){
+							//Se for decimal
+							if (/^\d+\.\d+$/.test(value))
+								value = parseFloat(value.toFixed(2));
+							//Se for decimal porem com ,
+							else if (/^\d+\,\d+$/.test(value))
+								value = parseFloat(value.replace(',', '.').toFixed(2));
+							else
+								value = parseInt(value);
+							//Se for um input de incremento, gera as possibilidades de 0...value
+							if (this.hasAttribute('increment'))
+								run_vars_map.push({ name: this.name, values: [...Array(value + 1).keys()]});
+							else
+								run_vars_map.push({ name: this.name, values: [value]});
+						}
+						else
+							this.value = '';
+					}
+					else
+						this.value = '';
+				});
+				//Inicia a Run
+				if (run_vars_map.length)
+					run__build__tipo_parada__comb(run_vars_map, { progress_bar: progress_bar, build_div: build_div, run_button: this }, filters, simulations);
+			}
 		}
 	});
 	////////////////////////////////////////////////////////////////////////////////////
@@ -4616,8 +4665,6 @@ let Renda_variavel = (function(){
 						if (result.hold_ops.length === 0){
 							Global.toast.create({location: document.getElementById('upload_operacoes_modal_toasts'), color: 'success', body: 'Operações Adicionadas.', delay: 4000});
 							document.getElementById('upload_operacoes_modal_file').value = '';
-							document.getElementById('file_format').selectedIndex = 0;
-							document.getElementById('table_layout').selectedIndex = 0;
 							resetUploadOperacaoTable();
 						}
 						else{
@@ -4737,12 +4784,12 @@ let Renda_variavel = (function(){
 		_dashboard_ops__table_trades_DT__clickState = 0;
 		if (_dashboard_ops__elements['tables']['dashboard_ops__table_trades'].DataTable().rows('.selected').count() > 0){
 			$(document.getElementById('dashboard_ops__table_trades__actions'))
-				.find('button[name="extract_sel"] span').html(`<i class="fas fa-file-export me-2"></i>Exportar Selecionado`).end()
+				.find('button[name="extract_sel"] span').html(`<i class="fas fa-angle-double-down me-2"></i>Baixar Selecionado`).end()
 				.find('button[name="remove_sel"] span').html(`<i class="fas fa-trash me-2"></i>Apagar Selecionado`);
 		}
 		else{
 			$(document.getElementById('dashboard_ops__table_trades__actions'))
-				.find('button[name="extract_sel"] span').html(`<i class="fas fa-file-export me-2"></i>Exportar Toda`).end()
+				.find('button[name="extract_sel"] span').html(`<i class="fas fa-angle-double-down me-2"></i>Baixar Toda`).end()
 				.find('button[name="remove_sel"] span').html(`<i class="fas fa-trash me-2"></i>Apagar Toda`);
 		}
 	}).on('mousedown', '#dashboard_ops__table_trades__actions button[name]', function (){
@@ -4803,6 +4850,9 @@ let Renda_variavel = (function(){
 					success: function (result){
 						if (result.status){
 							Global.toast.create({location: document.getElementById('master_toasts'), title: 'Sucesso', time: 'Now', body: 'Operações Apagadas.', delay: 4000});
+							$(document.getElementById('dashboard_ops__table_trades__actions'))
+								.find('button[name="extract_sel"] span').html(`<i class="fas fa-angle-double-down me-2"></i>Baixar Toda`).end()
+								.find('button[name="remove_sel"] span').html(`<i class="fas fa-trash me-2"></i>Apagar Toda`);
 							_lista__operacoes.update(result['data']['operacoes']);
 							_lista__arcaboucos.update(result['data']['arcabouco'][0]);
 							buildArcaboucosModal(firstBuild = false, forceRebuild = true, show = false);
@@ -4834,9 +4884,9 @@ let Renda_variavel = (function(){
 		else if (this.name === 'gerenciamentos')
 			buildGerenciamentosModal(forceRebuild = false, show = true);
 		else if (this.name === 'arcabouco_info')
-			buildArcaboucoInfoOffcanvas();
+			buildArcaboucoInfoOffcanvas(forceRebuild = false, show = true);
 		else if (this.name === 'cenarios')
-			buildCenariosModal();
+			buildCenariosModal(afterUpdate = false, show = true);
 		else if (this.name === 'builds')
 			buildBuildsModal();
 		else if (this.name === 'adicionar_operacoes')

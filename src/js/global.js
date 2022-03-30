@@ -198,6 +198,8 @@ let Global = (function(){
 						((!('delay' in obj)) ? `<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>` : ``)+
 						`</div>`;
 				$(obj.location).append(html).promise().done(function (){
+					if (obj.color === 'warning' || obj.color === 'danger')
+						obj.location.scrollIntoView();
 					if ('delay' in obj){
 						setTimeout(function (){
 							$('div.alert:last', obj.location).alert('close');
