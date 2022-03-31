@@ -798,6 +798,10 @@ let Renda_variavel = (function(){
 			{name: 'editar', orderable: false},
 			{name: 'remover', orderable: false}
 		],
+		createdRow: function (row, data, index){
+			if (row.getAttribute('arcabouco') === _instancia_arcabouco.get('id'))
+				row.className += ' selected';
+		},
 		lengthChange: false,
 		order: [[ 4, 'desc' ]],
 		pageLength: 10,
@@ -1261,8 +1265,8 @@ let Renda_variavel = (function(){
 					`<td name="data_atualizacao" class="fw-bold text-muted">${((_lista__arcaboucos.arcaboucos[ar].data_atualizacao !== '0000-00-00 00:00:00') ? Global.convertDatetime(_lista__arcaboucos.arcaboucos[ar].data_atualizacao) : '')}</td>`+
 					`<td name="qtd_ops" class="fw-bold text-center">${_lista__arcaboucos.arcaboucos[ar].qtd_ops}</td>`+
 					`<td name="usuarios">${usuarios_html}</td>`+
-					((_lista__arcaboucos.arcaboucos[ar].sou_criador == 1) ? `<td name="editar" class="text-center"><button class="btn btn-sm btn-light" type="button" name="editar"><i class="fas fa-edit"></i></button></td>` : `<td></td>`)+
-					((_lista__arcaboucos.arcaboucos[ar].sou_criador == 1) ? `<td name="remover" class="text-center"><button class="btn btn-sm btn-light" type="button" name="remover"><i class="fas fa-trash text-danger"></i></button></td>` : `<td></td>`)+
+					((_lista__arcaboucos.arcaboucos[ar].sou_criador == 1) ? `<td name="editar" class="text-center"><button class="btn btn-sm" type="button" name="editar"><i class="fas fa-edit"></i></button></td>` : `<td></td>`)+
+					((_lista__arcaboucos.arcaboucos[ar].sou_criador == 1) ? `<td name="remover" class="text-center"><button class="btn btn-sm" type="button" name="remover"><i class="fas fa-trash text-danger"></i></button></td>` : `<td></td>`)+
 					`</tr>`;
 		}
 		table.find('tbody').empty().append(html).promise().then(function (){
@@ -2917,8 +2921,8 @@ let Renda_variavel = (function(){
 					`<td class="text-center divider"><span name="stats__expect_R" class="data-tiny">${((line_data.stats__expect_R !== '--') ? `${line_data.stats__expect_R.toFixed(3)}R` : line_data.stats__expect_R )}</span><span name="stats__expect_brl" class="data-tiny ms-2">R$ ${line_data.stats__expect_brl.toFixed(2)}</span><span name="stats__expect_perc" class="data-tiny ms-2">${((line_data.stats__expect_perc !== '--') ? `${line_data.stats__expect_perc.toFixed(2)}%` : line_data.stats__expect_perc )}</span></td>`+
 					//DP
 					`<td class="text-center"><span name="stats__dp_R" class="data-tiny">${((line_data.stats__dp_R !== '--') ? `${line_data.stats__dp_R.toFixed(3)}R` : line_data.stats__dp_R )}</span><span name="stats__dp_brl" class="data-tiny ms-2">R$ ${line_data.stats__dp_brl.toFixed(2)}</span><span name="stats__dp_perc" class="data-tiny ms-2">${((line_data.stats__dp_perc !== '--') ? `${line_data.stats__dp_perc.toFixed(2)}%` : line_data.stats__dp_perc )}</span></td>`+
-					//SQN
-					`<td class="text-center"><span name="stats__sqn" class="data-small">${((line_data.stats__sqn !== '--') ? line_data.stats__sqn.toFixed(2) : line_data.stats__sqn )}</span></td>`+
+					//FL
+					`<td class="text-center"><span name="stats__fatorLucro" class="data-small">${line_data.stats__fatorLucro.toFixed(2)}</span></td>`+
 					//Edge
 					`<td class="text-center"><span name="stats__breakeven" class="data-tiny text-muted">${line_data.stats__breakeven.toFixed(2)}%</span></td>`+
 					`<td class="text-center"><span name="stats__edge" class="data-small">${line_data.stats__edge.toFixed(2)}%</span></td>`+
@@ -2947,8 +2951,8 @@ let Renda_variavel = (function(){
 					`<td class="text-center divider"><span name="stats__expect_R" class="data-tiny">${((line_data.stats__expect_R !== '--') ? `${line_data.stats__expect_R.toFixed(3)}R` : line_data.stats__expect_R )}</span><span name="stats__expect_brl" class="data-tiny ms-2">R$ ${line_data.stats__expect_brl.toFixed(2)}</span><span name="stats__expect_perc" class="data-tiny ms-2">${((line_data.stats__expect_perc !== '--') ? `${line_data.stats__expect_perc.toFixed(2)}%` : line_data.stats__expect_perc )}</span></td>`+
 					//DP
 					`<td class="text-center"><span name="stats__dp_R" class="data-tiny">${((line_data.stats__dp_R !== '--') ? `${line_data.stats__dp_R.toFixed(3)}R` : line_data.stats__dp_R )}</span><span name="stats__dp_brl" class="data-tiny ms-2">R$ ${line_data.stats__dp_brl.toFixed(2)}</span><span name="stats__dp_perc" class="data-tiny ms-2">${((line_data.stats__dp_perc !== '--') ? `${line_data.stats__dp_perc.toFixed(2)}%` : line_data.stats__dp_perc )}</span></td>`+
-					//SQN
-					`<td class="text-center"><span name="stats__sqn" class="data-small">${((line_data.stats__sqn !== '--') ? line_data.stats__sqn.toFixed(2) : line_data.stats__sqn )}</span></td>`+
+					//FL
+					`<td class="text-center"><span name="stats__fatorLucro" class="data-small">${line_data.stats__fatorLucro.toFixed(2)}</span></td>`+
 					//Edge
 					`<td class="text-center"><span name="stats__breakeven" class="data-tiny text-muted">${line_data.stats__breakeven.toFixed(2)}%</span></td>`+
 					`<td class="text-center"><span name="stats__edge" class="data-small">${line_data.stats__edge.toFixed(2)}%</span></td>`+
@@ -3018,7 +3022,7 @@ let Renda_variavel = (function(){
 					`<th colspan="3" class="text-center mainheader">R:G</th>`+
 					`<th rowspan="2" class="text-center">Expect.</th>`+
 					`<th rowspan="2" class="text-center">DP</th>`+
-					`<th rowspan="2" class="text-center">SQN</th>`+
+					`<th rowspan="2" class="text-center">FL</th>`+
 					`<th rowspan="2" colspan="2" class="text-center">Edge</th>`+
 					`</tr>`+
 					`<tr class="align-middle">`+
@@ -3258,6 +3262,9 @@ let Renda_variavel = (function(){
 				if (_instancia_arcabouco.select({id: id_arcabouco, nome: _lista__arcaboucos.arcaboucos[id_arcabouco].nome, selected: true})){
 					_dashboard_ops__needRebuild = true;
 					_arcabouco_info__needRebuild = true;
+					//De-seleciona a linha e seleciona o novo arcabouço
+					$(document.getElementById('table_arcaboucos')).DataTable().rows('.selected').nodes().to$().removeClass('selected');
+					this.className += ' selected';
 					Global.connect({
 						data: {module: 'renda_variavel', action: 'get_arcabouco_data', params: {id_arcabouco: id_arcabouco}},
 						success: function (result){

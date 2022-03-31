@@ -109,59 +109,60 @@
 			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			//Checa para ver se o usuario tem acesso ao arcabouço (E se é o criador)
+			$stmt = $mysqli->prepare("SELECT rva.id_usuario_criador FROM rv__arcabouco__usuario rvau INNER JOIN rv__arcabouco rva ON rvau.id_arcabouco=rva.id WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
+		 	$stmt->bind_param('i', $id_arcabouco);
+		 	$stmt->execute();
+	 		$result_raw = $stmt->get_result();
+	 		$id_criador = $result_raw->fetch_row()[0] ?? -1;
+	 		if ($id_criador !== $id_usuario)
+	 			return ['status' => 0, 'error' => 'Apenas o criador pode alterar este arcabouço.'];
 			$mysqli->begin_transaction();
 			try{
-				//Checa para ver se o usuario tem acesso ao arcabouço
-				$stmt = $mysqli->prepare("SELECT rvau.id_arcabouco FROM rv__arcabouco__usuario rvau WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
-			 	$stmt->bind_param('i', $id_arcabouco);
-			 	$stmt->execute();
-		 		$result_raw = $stmt->get_result();
-		 		if ($result_raw->num_rows > 0){
-					$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
-					//Prepara apenas os dados a serem atualizados
-					foreach ($params as $data_name => $new_data_value){
-						//Pula o ID do Arcabouco e lista de Usuarios com acesso
-						if ($data_name === 'id' || $data_name === 'usuarios')
-							continue;
-						$update_data['wildcards'] .= ",{$data_name}=?";
-						$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'observacao') ? 's' : 'd';
-						$update_data['values'][] = $new_data_value;
+				$update_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
+				//Prepara apenas os dados a serem atualizados
+				foreach ($params as $data_name => $new_data_value){
+					//Pula o ID do Arcabouco e lista de Usuarios com acesso
+					if ($data_name === 'id' || $data_name === 'usuarios')
+						continue;
+					$update_data['wildcards'] .= ",{$data_name}=?";
+					$update_data['bind'] .= ($data_name === 'nome' || $data_name === 'observacao') ? 's' : 'd';
+					$update_data['values'][] = $new_data_value;
+				}
+				$update_data['bind'] .= 'i';
+				$update_data['values'][] = $id_arcabouco;
+				$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR){$update_data['wildcards']} WHERE id=? AND id_usuario_criador='{$id_usuario}'");
+				$stmt->bind_param($update_data['bind'], ...$update_data['values']);
+				$stmt->execute();
+				//Remove todos os usuarios com acesso ao arcabouço
+				$stmt = $mysqli->prepare("DELETE FROM rv__arcabouco__usuario WHERE id_arcabouco=?");
+		 		$stmt->bind_param('i', $id_arcabouco);
+				$stmt->execute();
+				//Coloca por padrão o id do usuario criador
+				$ids_usuarios = [$id_usuario];
+		 		//Atualiza os usuarios com acesso ao arcabouço (Próprio usuario incluso)
+				if (array_key_exists('usuarios', $params)){
+					//Busca os ids dos usuarios pelo login
+					$select_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
+					foreach ($params['usuarios'] as $login){
+						$select_data['wildcards'] .= (($select_data['wildcards'] !== '') ? ' OR ' : '') . 'usuario=?';
+						$select_data['bind'] .= 's';
+						$select_data['values'][] = $login;
 					}
-					$update_data['bind'] .= 'i';
-					$update_data['values'][] = $id_arcabouco;
-					$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR){$update_data['wildcards']} WHERE id=? AND id_usuario_criador='{$id_usuario}'");
-					$stmt->bind_param($update_data['bind'], ...$update_data['values']);
+					$stmt = $mysqli->prepare("SELECT id FROM usuario WHERE {$select_data['wildcards']}");
+					$stmt->bind_param($select_data['bind'], ...$select_data['values']);
 					$stmt->execute();
-					//Remove todos os usuarios com acesso ao arcabouço
-					$stmt = $mysqli->prepare("DELETE FROM rv__arcabouco__usuario WHERE id_arcabouco=?");
-			 		$stmt->bind_param('i', $id_arcabouco);
-					$stmt->execute();
-					//Coloca por padrão o id do usuario criador
-					$ids_usuarios = [$id_usuario];
-			 		//Atualiza os usuarios com acesso ao arcabouço (Próprio usuario incluso)
-					if (array_key_exists('usuarios', $params)){
-						//Busca os ids dos usuarios pelo login
-						$select_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
-						foreach ($params['usuarios'] as $login){
-							$select_data['wildcards'] .= (($select_data['wildcards'] !== '') ? ' OR ' : '') . 'usuario=?';
-							$select_data['bind'] .= 's';
-							$select_data['values'][] = $login;
-						}
-						$stmt = $mysqli->prepare("SELECT id FROM usuario WHERE {$select_data['wildcards']}");
-						$stmt->bind_param($select_data['bind'], ...$select_data['values']);
-						$stmt->execute();
-					 	$result_raw = $stmt->get_result();
-						while($row = $result_raw->fetch_assoc())
-							$ids_usuarios[] = $row['id'];
-						$stmt->free_result();
-					}
-					//Insere todos os usuarios para acesso no arcabouço
-					$insert_data = preg_replace('/^,/', '', array_reduce($ids_usuarios, function($result, $item) use ($id_arcabouco){
-	    				return $result . ",('{$id_arcabouco}','{$item}')";
-	    			}));
-					//Me adiciona como usuario do arcabouço
-					$mysqli->query("INSERT INTO rv__arcabouco__usuario (id_arcabouco,id_usuario) VALUES {$insert_data}");
-			 	}
+				 	$result_raw = $stmt->get_result();
+					while($row = $result_raw->fetch_assoc())
+						$ids_usuarios[] = $row['id'];
+					$stmt->free_result();
+				}
+				//Insere todos os usuarios para acesso no arcabouço
+				$insert_data = preg_replace('/^,/', '', array_reduce($ids_usuarios, function($result, $item) use ($id_arcabouco){
+    				return $result . ",('{$id_arcabouco}','{$item}')";
+    			}));
+				//Me adiciona como usuario do arcabouço
+				$mysqli->query("INSERT INTO rv__arcabouco__usuario (id_arcabouco,id_usuario) VALUES {$insert_data}");
 				$mysqli->commit();
 		 		$mysqli->close();
 		 		return ['status' => 1, 'data' => ['id' => $id_arcabouco]];
@@ -184,27 +185,28 @@
 			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			//Checa para ver se o usuario tem acesso ao arcabouço (E se é o criador)
+			$stmt = $mysqli->prepare("SELECT rva.id_usuario_criador FROM rv__arcabouco__usuario rvau INNER JOIN rv__arcabouco rva ON rvau.id_arcabouco=rva.id WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
+		 	$stmt->bind_param('i', $params['id']);
+		 	$stmt->execute();
+	 		$result_raw = $stmt->get_result();
+	 		$id_criador = $result_raw->fetch_row()[0] ?? -1;
+	 		if ($id_criador !== $id_usuario)
+	 			return ['status' => 0, 'error' => 'Apenas o criador pode remover este arcabouço.'];
 			$mysqli->begin_transaction();
 			try {
-				//Checa para ver se o usuario tem acesso ao arcabouço
-				$stmt = $mysqli->prepare("SELECT rvau.id_arcabouco FROM rv__arcabouco__usuario rvau WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
-			 	$stmt->bind_param('i', $params['id']);
-			 	$stmt->execute();
-		 		$result_raw = $stmt->get_result();
-		 		if ($result_raw->num_rows > 0){
-					//Remove o arcabouço
-					$stmt = $mysqli->prepare("DELETE rva,rvau FROM rv__arcabouco rva LEFT JOIN rv__arcabouco__usuario rvau ON rva.id=rvau.id_arcabouco WHERE rva.id=?");
-			 		$stmt->bind_param('i', $params['id']);
-					$stmt->execute();
-					//Remove os cenarios
-					$stmt = $mysqli->prepare("DELETE rvc,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id_arcabouco=?");
-			 		$stmt->bind_param('i', $params['id']);
-					$stmt->execute();
-					//Remove as operações
-					$stmt = $mysqli->prepare("DELETE FROM rv__operacoes WHERE id_arcabouco=?");
-			 		$stmt->bind_param('i', $params['id']);
-					$stmt->execute();
-				}
+				//Remove o arcabouço
+				$stmt = $mysqli->prepare("DELETE rva,rvau FROM rv__arcabouco rva LEFT JOIN rv__arcabouco__usuario rvau ON rva.id=rvau.id_arcabouco WHERE rva.id=?");
+		 		$stmt->bind_param('i', $params['id']);
+				$stmt->execute();
+				//Remove os cenarios
+				$stmt = $mysqli->prepare("DELETE rvc,rvco FROM rv__cenario rvc LEFT JOIN rv__cenario_obs rvco ON rvc.id=rvco.id_cenario WHERE rvc.id_arcabouco=?");
+		 		$stmt->bind_param('i', $params['id']);
+				$stmt->execute();
+				//Remove as operações
+				$stmt = $mysqli->prepare("DELETE FROM rv__operacoes WHERE id_arcabouco=?");
+		 		$stmt->bind_param('i', $params['id']);
+				$stmt->execute();
 				$mysqli->commit();
 		 		$mysqli->close();
 		 		return ['status' => 1];
@@ -479,8 +481,8 @@
 		 	$stmt->bind_param('i', $params['id_arcabouco']);
 		 	$stmt->execute();
 	 		$result_raw = $stmt->get_result();
-	 		$sou_criador = $result_raw->fetch_row()[0] ?? FALSE;
-	 		if (!$sou_criador)
+	 		$id_criador = $result_raw->fetch_row()[0] ?? -1;
+	 		if ($id_criador !== $id_usuario)
 	 			return ['status' => 0, 'error' => 'Apenas o criador pode fazer mudanças nos Cenários.'];
 			foreach ($params['cenarios'] as $cenario){
 				if (!array_key_exists('id', $cenario) && !array_key_exists('nome', $cenario))
@@ -671,8 +673,8 @@
 		 	$stmt->bind_param('i', $params['id_arcabouco']);
 		 	$stmt->execute();
 	 		$result_raw = $stmt->get_result();
-	 		$sou_criador = $result_raw->fetch_row()[0] ?? FALSE;
-	 		if (!$sou_criador)
+	 		$id_criador = $result_raw->fetch_row()[0] ?? -1;
+	 		if ($id_criador !== $id_usuario)
 	 			return ['status' => 0, 'error' => 'Apenas o criador pode fazer mudanças nos Cenários.'];
 			$mysqli->begin_transaction();
 			try {
@@ -739,90 +741,91 @@
 			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			//Checa para ver se o usuario tem acesso ao arcabouço e pegar a ultima 'sequencia'
+			$stmt = $mysqli->prepare("SELECT rva.id_usuario_criador,IFNULL(rvo.ult_seq+1,1) AS ult_seq FROM rv__arcabouco__usuario rvau INNER JOIN rv__arcabouco rva ON rvau.id_arcabouco=rva.id LEFT JOIN (SELECT id_arcabouco,MAX(sequencia) AS ult_seq FROM rv__operacoes WHERE id_arcabouco=?) rvo ON rvau.id_arcabouco=rvo.id_arcabouco WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
+		 	$stmt->bind_param('ii', $params['id_arcabouco'], $params['id_arcabouco']);
+		 	$stmt->execute();
+	 		$result_raw = $stmt->get_result();
+	 		$sys_info = $result_raw->fetch_assoc() ?? [];
+	 		//O usuario não é o criador do arcabouço
+	 		if (empty($sys_info) || $sys_info['id_usuario_criador'] !== $id_usuario)
+	 			return ['status' => 0, 'error' => 'Apenas o criador pode adicionar operações.'];
 			$mysqli->begin_transaction();
 			try {
-				//Checa para ver se o usuario tem acesso ao arcabouço e pegar a ultima 'sequencia'
-				$stmt = $mysqli->prepare("SELECT IFNULL(rvo.ult_seq+1,1) AS ult_seq FROM rv__arcabouco__usuario rvau LEFT JOIN (SELECT id_arcabouco,MAX(sequencia) AS ult_seq FROM rv__operacoes WHERE id_arcabouco=?) rvo ON rvau.id_arcabouco=rvo.id_arcabouco WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
-			 	$stmt->bind_param('ii', $params['id_arcabouco'], $params['id_arcabouco']);
-			 	$stmt->execute();
-		 		$result_raw = $stmt->get_result();
-		 		//O usuario tem acesso
-		 		if ($result_raw->num_rows > 0){
-		 			//Adiciona automaticamente os ativos (Vindos do Upload de Arquivo)
-		 			if (array_key_exists('ativos', $params) && !empty($params['ativos'])){
-		 				foreach ($params['ativos'] as $ativo){
-		 					$stmt = $mysqli->prepare("INSERT INTO rv__ativos (id_usuario,nome,custo,valor_tick,pts_tick) VALUES (?,?,?,?,?)");
-							$stmt->bind_param('isddd', $id_usuario, $ativo['nome'], $ativo['custo'], $ativo['valor_tick'], $ativo['pts_tick']);
-							$stmt->execute();
-		 				}
-		 			}
-		 			$ult_seq = $result_raw->fetch_assoc()['ult_seq'];
-		 			$operacoes_ja_cadastradas = [];
-		 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, resultado, cenario, observacoes)
-	 				$stmt = $mysqli->prepare("SELECT gerenciamento,data,ativo,op,hora,resultado,cenario,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
-			 		$stmt->bind_param('i', $params['id_arcabouco']);
-			 		$stmt->execute();
-	 				$result_raw = $stmt->get_result();
-	 				while($row = $result_raw->fetch_assoc()){
-	 					$key = "{$row['gerenciamento']}{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . rtrim((strpos($row['resultado'], '.') !== false ? rtrim($row['resultado'], '0') : $row['resultado']), '.') . "{$row['cenario']}{$row['observacoes']}";
-						$operacoes_ja_cadastradas[$key] = NULL;
-					}
-					$block_size = 50;
-					$block_i = 0;
-					$insert_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
-		 			foreach ($params['operacoes'] as $operacao){
-		 				//Se fechou o bloco
-		 				if ($block_i === $block_size){
-		 					//Faz a inserção do Bloco
-		 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,escalada,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
-							$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
-							$stmt->execute();
-							//Reseta o Bloco de inserção
-							$block_i = 0;
-							$insert_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
-		 				}
-		 				$find_by_key = "{$operacao['gerenciamento']}{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['resultado'], '.') !== false ? rtrim($operacao['resultado'], '0') : $operacao['resultado']), '.') . "{$operacao['cenario']}{$operacao['observacoes']}";
-				 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
-				 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
-					 		$insert_data['bind'] .= 'iiisissisisisssssss';
-					 		$insert_data['values'] = array_merge($insert_data['values'], [
-					 			$params['id_arcabouco'],
-					 			$id_usuario,
-					 			$ult_seq,
-					 			$operacao['gerenciamento'],
-					 			$operacao['escalada'],
-					 			$operacao['data'],
-					 			$operacao['ativo'],
-					 			$operacao['op'],
-					 			$operacao['vol'],
-					 			$operacao['cts'],
-					 			$operacao['hora'],
-					 			$operacao['erro'],
-					 			$operacao['resultado'],
-					 			$operacao['cenario'],
-					 			$operacao['observacoes'],
-					 			$operacao['ativo_custo'],
-					 			$operacao['ativo_valor_tick'],
-					 			$operacao['ativo_pts_tick'],
-					 			$operacao['gerenciamento_acoes']
-					 		]);
-							$ult_seq++;
-							$block_i++;
-				 		}
-				 		else
-				 			$hold_ops[] = $operacao['sequencia'];
-		 			}
-			 		//Insere caso não tenha fechado o bloco
-			 		if ($block_i > 0){
-			 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,escalada,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
+	 			//Adiciona automaticamente os ativos (Vindos do Upload de Arquivo)
+	 			if (array_key_exists('ativos', $params) && !empty($params['ativos'])){
+	 				foreach ($params['ativos'] as $ativo){
+	 					$stmt = $mysqli->prepare("INSERT INTO rv__ativos (id_usuario,nome,custo,valor_tick,pts_tick) VALUES (?,?,?,?,?)");
+						$stmt->bind_param('isddd', $id_usuario, $ativo['nome'], $ativo['custo'], $ativo['valor_tick'], $ativo['pts_tick']);
+						$stmt->execute();
+	 				}
+	 			}
+	 			$ult_seq = $sys_info['ult_seq'];
+	 			$operacoes_ja_cadastradas = [];
+	 			//Busca operacoes ja cadastradas para evitar duplicatas (id_arcabouco, data, ativo, op, hora, resultado, cenario, observacoes)
+ 				$stmt = $mysqli->prepare("SELECT gerenciamento,data,ativo,op,hora,resultado,cenario,observacoes FROM rv__operacoes WHERE id_arcabouco=?");
+		 		$stmt->bind_param('i', $params['id_arcabouco']);
+		 		$stmt->execute();
+ 				$result_raw = $stmt->get_result();
+ 				while($row = $result_raw->fetch_assoc()){
+ 					$key = "{$row['gerenciamento']}{$row['data']}{$row['ativo']}{$row['op']}{$row['hora']}" . rtrim((strpos($row['resultado'], '.') !== false ? rtrim($row['resultado'], '0') : $row['resultado']), '.') . "{$row['cenario']}{$row['observacoes']}";
+					$operacoes_ja_cadastradas[$key] = NULL;
+				}
+				$block_size = 50;
+				$block_i = 0;
+				$insert_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
+	 			foreach ($params['operacoes'] as $operacao){
+	 				//Se fechou o bloco
+	 				if ($block_i === $block_size){
+	 					//Faz a inserção do Bloco
+	 					$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,escalada,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
 						$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 						$stmt->execute();
+						//Reseta o Bloco de inserção
+						$block_i = 0;
+						$insert_data = ['wildcards' => '', 'values' => [], 'bind' => ''];
+	 				}
+	 				$find_by_key = "{$operacao['gerenciamento']}{$operacao['data']}{$operacao['ativo']}{$operacao['op']}{$operacao['hora']}" . rtrim((strpos($operacao['resultado'], '.') !== false ? rtrim($operacao['resultado'], '0') : $operacao['resultado']), '.') . "{$operacao['cenario']}{$operacao['observacoes']}";
+			 		if (!array_key_exists($find_by_key, $operacoes_ja_cadastradas)){
+			 			$insert_data['wildcards'] .= (($insert_data['wildcards'] !== '') ? ',' : '').'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)';
+				 		$insert_data['bind'] .= 'iiisissisisisssssss';
+				 		$insert_data['values'] = array_merge($insert_data['values'], [
+				 			$params['id_arcabouco'],
+				 			$id_usuario,
+				 			$ult_seq,
+				 			$operacao['gerenciamento'],
+				 			$operacao['escalada'],
+				 			$operacao['data'],
+				 			$operacao['ativo'],
+				 			$operacao['op'],
+				 			$operacao['vol'],
+				 			$operacao['cts'],
+				 			$operacao['hora'],
+				 			$operacao['erro'],
+				 			$operacao['resultado'],
+				 			$operacao['cenario'],
+				 			$operacao['observacoes'],
+				 			$operacao['ativo_custo'],
+				 			$operacao['ativo_valor_tick'],
+				 			$operacao['ativo_pts_tick'],
+				 			$operacao['gerenciamento_acoes']
+				 		]);
+						$ult_seq++;
+						$block_i++;
 			 		}
-			 		//Atualiza a data de atualização no arcabouço
-			 		$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR) WHERE id=?");
-					$stmt->bind_param('i', $params['id_arcabouco']);
+			 		else
+			 			$hold_ops[] = $operacao['sequencia'];
+	 			}
+		 		//Insere caso não tenha fechado o bloco
+		 		if ($block_i > 0){
+		 			$stmt = $mysqli->prepare("INSERT INTO rv__operacoes (id_arcabouco,id_usuario,sequencia,gerenciamento,escalada,data,ativo,op,vol,cts,hora,erro,resultado,cenario,observacoes,ativo_custo,ativo_valor_tick,ativo_pts_tick,gerenciamento_acoes) VALUES {$insert_data['wildcards']}");
+					$stmt->bind_param($insert_data['bind'], ...$insert_data['values']);
 					$stmt->execute();
 		 		}
+		 		//Atualiza a data de atualização no arcabouço
+		 		$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR) WHERE id=?");
+				$stmt->bind_param('i', $params['id_arcabouco']);
+				$stmt->execute();
 				$mysqli->commit();
 		 		$mysqli->close();
 		 		return ['status' => 1, 'hold_ops' => $hold_ops];
@@ -841,37 +844,37 @@
 			$mysqli = new mysqli(DB_Config::$PATH, DB_Config::$USER, DB_Config::$PASS, DB_Config::$DB);
 			if ($mysqli->connect_errno)
 				return ['status' => 0, 'error' => 'Failed to connect to MySQL: ' . $mysqli->connect_errno];
+			//Checa para ver se o usuario tem acesso ao arcabouço (E se é o criador)
+			$stmt = $mysqli->prepare("SELECT rva.id_usuario_criador FROM rv__arcabouco__usuario rvau INNER JOIN rv__arcabouco rva ON rvau.id_arcabouco=rva.id WHERE rvau.id_arcabouco=? AND rvau.id_usuario='{$id_usuario}'");
+		 	$stmt->bind_param('i', $params['id_arcabouco']);
+		 	$stmt->execute();
+	 		$result_raw = $stmt->get_result();
+	 		$id_criador = $result_raw->fetch_row()[0] ?? -1;
+	 		if ($id_criador !== $id_usuario)
+	 			return ['status' => 0, 'error' => 'Apenas o criador pode remover operações.'];
 			$mysqli->begin_transaction();
 			try {
-				//Checa para ver se o usuario tem acesso ao arcabouço
-				$stmt = $mysqli->prepare("SELECT id_arcabouco FROM rv__arcabouco__usuario WHERE id_arcabouco=? AND id_usuario='{$id_usuario}'");
-			 	$stmt->bind_param('i', $params['id_arcabouco']);
-			 	$stmt->execute();
-		 		$result_raw = $stmt->get_result();
-		 		if ($result_raw->num_rows > 0){
-					$where = 'id_arcabouco=?';
-					if (array_key_exists('operacoes', $params) && !empty($params['operacoes'])){
-						$where .= ' AND ('.preg_replace('/^ OR /', '', array_reduce($params['operacoes'], function($result, $item) use ($mysqli){
-		    				return $result . " OR id='" . $mysqli->real_escape_string($item) . "'";
-		    			})).')';
-					}
-					//Remove as operacoes
-					$stmt = $mysqli->prepare("DELETE FROM rv__operacoes WHERE {$where}");
-			 		$stmt->bind_param('i', $params['id_arcabouco']);
-					$stmt->execute();
-					//Refaz a contagem de sequencia, para deixar sempre em ordem de inserção
-					$stmt = $mysqli->prepare("UPDATE rv__operacoes JOIN (SELECT @seq := 0) s SET sequencia=@seq:=@seq+1 WHERE id_arcabouco=? ORDER BY id");
-					$stmt->bind_param('i', $params['id_arcabouco']);
-			 		$stmt->execute();
-			 		//Atualiza a data de atualização no arcabouço
-			 		$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR) WHERE id=?");
-					$stmt->bind_param('i', $params['id_arcabouco']);
-					$stmt->execute();
-					$mysqli->commit();
-			 		$mysqli->close();
-		 			return ['status' => 1];
-		 		}
-	 			return ['status' => 0, 'error' => 'Arcabouço não existe.'];
+				$where = 'id_arcabouco=?';
+				if (array_key_exists('operacoes', $params) && !empty($params['operacoes'])){
+					$where .= ' AND ('.preg_replace('/^ OR /', '', array_reduce($params['operacoes'], function($result, $item) use ($mysqli){
+	    				return $result . " OR id='" . $mysqli->real_escape_string($item) . "'";
+	    			})).')';
+				}
+				//Remove as operacoes
+				$stmt = $mysqli->prepare("DELETE FROM rv__operacoes WHERE {$where}");
+		 		$stmt->bind_param('i', $params['id_arcabouco']);
+				$stmt->execute();
+				//Refaz a contagem de sequencia, para deixar sempre em ordem de inserção
+				$stmt = $mysqli->prepare("UPDATE rv__operacoes JOIN (SELECT @seq := 0) s SET sequencia=@seq:=@seq+1 WHERE id_arcabouco=? ORDER BY id");
+				$stmt->bind_param('i', $params['id_arcabouco']);
+		 		$stmt->execute();
+		 		//Atualiza a data de atualização no arcabouço
+		 		$stmt = $mysqli->prepare("UPDATE rv__arcabouco SET data_atualizacao=(NOW() - INTERVAL 3 HOUR) WHERE id=?");
+				$stmt->bind_param('i', $params['id_arcabouco']);
+				$stmt->execute();
+				$mysqli->commit();
+		 		$mysqli->close();
+	 			return ['status' => 1];
 			}
 			catch (mysqli_sql_exception $exception){
 				$mysqli->rollback();

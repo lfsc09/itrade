@@ -21,6 +21,7 @@ let iTrade = (function(){
 			Global.connect({
 				data: {module: 'login', action: 'logout'},
 				success: function (result){
+					Global.browserStorage__Sync.remove('instancia', 'sessionStorage');
 					window.location.href = window.location.href;
 				}
 			});

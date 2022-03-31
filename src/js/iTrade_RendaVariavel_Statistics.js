@@ -1379,7 +1379,9 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__rrMedio']                 = divide(_temp__table_stats['mediaGain'], Math.abs(_temp__table_stats['mediaLoss']));
 			_dashboard_ops__table_stats['stats__breakeven']               = (divide(Math.abs(_temp__table_stats['mediaLoss']), (_temp__table_stats['mediaGain'] + Math.abs(_temp__table_stats['mediaLoss']))) * 100);
 			_dashboard_ops__table_stats['stats__edge']                    = _dashboard_ops__table_stats['trades__positivo_perc'] - _dashboard_ops__table_stats['stats__breakeven'];
-			_dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _temp__table_stats['mediaGain']), (_dashboard_ops__table_stats['trades__negativo_perc'] * _temp__table_stats['mediaLoss']));
+			//Calculado da forma do Tainan
+			_dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _dashboard_ops__table_stats['stats__rrMedio']), (100 - _dashboard_ops__table_stats['trades__positivo_perc']));
+			// _dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _temp__table_stats['mediaGain']), Math.abs(_dashboard_ops__table_stats['trades__negativo_perc'] * _temp__table_stats['mediaLoss']));
 			_dashboard_ops__table_stats['stats__expect_brl']              = divide(_temp__table_stats['lucro_corrente']['brl'], _dashboard_ops__table_stats['trades__total']);
 			_dashboard_ops__table_stats['stats__expect_R']                = (_simulation['R'] !== null) ? divide(_dashboard_ops__table_stats['stats__expect_brl'], _simulation['R']) : '--';
 			_dashboard_ops__table_stats['stats__expect_perc']             = (_simulation['valor_inicial'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_brl'], _simulation['valor_inicial']) * 100) : '--';
@@ -1430,7 +1432,9 @@ let RV_Statistics = (function(){
 					_dashboard_ops__table_stats__byCenario[cenario]['stats__rrMedio']         = divide(_temp__table_stats__byCenario[cenario]['mediaGain'], Math.abs(_temp__table_stats__byCenario[cenario]['mediaLoss']));
 					_dashboard_ops__table_stats__byCenario[cenario]['stats__breakeven']       = (divide(Math.abs(_temp__table_stats__byCenario[cenario]['mediaLoss']), (_temp__table_stats__byCenario[cenario]['mediaGain'] + Math.abs(_temp__table_stats__byCenario[cenario]['mediaLoss']))) * 100);
 					_dashboard_ops__table_stats__byCenario[cenario]['stats__edge']            = _dashboard_ops__table_stats__byCenario[cenario]['trades__positivo_perc'] - _dashboard_ops__table_stats__byCenario[cenario]['stats__breakeven'];
-					_dashboard_ops__table_stats__byCenario[cenario]['stats__fatorLucro']      = divide((_dashboard_ops__table_stats__byCenario[cenario]['trades__positivo_perc'] * _temp__table_stats__byCenario[cenario]['mediaGain']), (_dashboard_ops__table_stats__byCenario[cenario]['trades__negativo_perc'] * _temp__table_stats__byCenario[cenario]['mediaLoss']));
+					//Calculado da forma do Tainan
+					_dashboard_ops__table_stats__byCenario[cenario]['stats__fatorLucro']      = divide((_dashboard_ops__table_stats__byCenario[cenario]['trades__positivo_perc'] * _dashboard_ops__table_stats__byCenario[cenario]['stats__rrMedio']), (100 - _dashboard_ops__table_stats__byCenario[cenario]['trades__positivo_perc']));
+					// _dashboard_ops__table_stats__byCenario[cenario]['stats__fatorLucro']      = divide((_dashboard_ops__table_stats__byCenario[cenario]['trades__positivo_perc'] * _temp__table_stats__byCenario[cenario]['mediaGain']), Math.abs(_dashboard_ops__table_stats__byCenario[cenario]['trades__negativo_perc'] * _temp__table_stats__byCenario[cenario]['mediaLoss']));
 					_dashboard_ops__table_stats__byCenario[cenario]['stats__expect_brl']      = divide(_temp__table_stats__byCenario[cenario]['lucro_corrente']['brl'], _dashboard_ops__table_stats__byCenario[cenario]['trades__total']);
 					_dashboard_ops__table_stats__byCenario[cenario]['stats__expect_R']        = (_simulation['R'] !== null) ? divide(_dashboard_ops__table_stats__byCenario[cenario]['stats__expect_brl'], _simulation['R']) : '--';
 					_dashboard_ops__table_stats__byCenario[cenario]['stats__expect_perc']     = (_simulation['valor_inicial'] !== null) ? (divide(_dashboard_ops__table_stats__byCenario[cenario]['stats__expect_brl'], _simulation['valor_inicial']) * 100) : '--';
@@ -1712,7 +1716,9 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__rrMedio']                 = divide(_temp__table_stats['mediaGain'], Math.abs(_temp__table_stats['mediaLoss']));
 			_dashboard_ops__table_stats['stats__breakeven']               = (divide(Math.abs(_temp__table_stats['mediaLoss']), (_temp__table_stats['mediaGain'] + Math.abs(_temp__table_stats['mediaLoss']))) * 100);
 			_dashboard_ops__table_stats['stats__edge']                    = _dashboard_ops__table_stats['trades__positivo_perc'] - _dashboard_ops__table_stats['stats__breakeven'];
-			_dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _temp__table_stats['mediaGain']), (_dashboard_ops__table_stats['trades__negativo_perc'] * _temp__table_stats['mediaLoss']));
+			//Calculado da forma do Tainan
+			_dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _dashboard_ops__table_stats['stats__rrMedio']), (100 - _dashboard_ops__table_stats['trades__positivo_perc']));
+			// _dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _temp__table_stats['mediaGain']), Math.abs(_dashboard_ops__table_stats['trades__negativo_perc'] * _temp__table_stats['mediaLoss']));
 			_dashboard_ops__table_stats['stats__expect_brl']              = divide(_temp__table_stats['lucro_corrente']['brl'], _dashboard_ops__table_stats['trades__total']);
 			_dashboard_ops__table_stats['stats__expect_R']                = (_simulation['R'] !== null) ? divide(_dashboard_ops__table_stats['stats__expect_brl'], _simulation['R']) : '--';
 			_dashboard_ops__table_stats['stats__expect_perc']             = (_simulation['valor_inicial'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_brl'], _simulation['valor_inicial']) * 100) : '--';
@@ -2000,7 +2006,9 @@ let RV_Statistics = (function(){
 			_dashboard_ops__table_stats['stats__rrMedio']                 = divide(_temp__table_stats['mediaGain'], Math.abs(_temp__table_stats['mediaLoss']));
 			_dashboard_ops__table_stats['stats__breakeven']               = (divide(Math.abs(_temp__table_stats['mediaLoss']), (_temp__table_stats['mediaGain'] + Math.abs(_temp__table_stats['mediaLoss']))) * 100);
 			_dashboard_ops__table_stats['stats__edge']                    = _dashboard_ops__table_stats['trades__positivo_perc'] - _dashboard_ops__table_stats['stats__breakeven'];
-			_dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _temp__table_stats['mediaGain']), (_dashboard_ops__table_stats['trades__negativo_perc'] * _temp__table_stats['mediaLoss']));
+			//Calculado da forma do Tainan
+			_dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _dashboard_ops__table_stats['stats__rrMedio']), (100 - _dashboard_ops__table_stats['trades__positivo_perc']));
+			// _dashboard_ops__table_stats['stats__fatorLucro']              = divide((_dashboard_ops__table_stats['trades__positivo_perc'] * _temp__table_stats['mediaGain']), Math.abs(_dashboard_ops__table_stats['trades__negativo_perc'] * _temp__table_stats['mediaLoss']));
 			_dashboard_ops__table_stats['stats__expect_brl']              = divide(_temp__table_stats['lucro_corrente']['brl'], _dashboard_ops__table_stats['trades__total']);
 			_dashboard_ops__table_stats['stats__expect_R']                = (_simulation['R'] !== null) ? divide(_dashboard_ops__table_stats['stats__expect_brl'], _simulation['R']) : '--';
 			_dashboard_ops__table_stats['stats__expect_perc']             = (_simulation['valor_inicial'] !== null) ? (divide(_dashboard_ops__table_stats['stats__expect_brl'], _simulation['valor_inicial']) * 100) : '--';

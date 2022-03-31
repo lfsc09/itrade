@@ -130,6 +130,12 @@ let Global = (function(){
 			if (data !== null)
 				parsed_data = JSON.parse(data);
 			return parsed_data;
+		},
+		remove: function (mKey, method){
+			if (method === 'localStorage')
+				localStorage.removeItem(mKey);
+			else if (method === 'sessionStorage')
+				sessionStorage.removeItem(mKey);
 		}
 	}
 	/*
@@ -199,7 +205,7 @@ let Global = (function(){
 						`</div>`;
 				$(obj.location).append(html).promise().done(function (){
 					if (obj.color === 'warning' || obj.color === 'danger')
-						obj.location.scrollIntoView();
+						obj.location.querySelector('div.alert:last-child').scrollIntoView();
 					if ('delay' in obj){
 						setTimeout(function (){
 							$('div.alert:last', obj.location).alert('close');
