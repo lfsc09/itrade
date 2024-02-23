@@ -31,7 +31,7 @@ DEALLOCATE PREPARE stmt;
 4 - Importar o BD:
 **_Powershell_**
 ```
-cmd.exe /c "mysql.exe -u root -pitrade@124 u631028490_iTrade < C:\local_do_arquivo\nome_do_arquivo.sql"
+cmd.exe /c "mysql.exe -u root -p%PASSWORD% u631028490_iTrade < C:\local_do_arquivo\nome_do_arquivo.sql"
 ```
 <br>
 
@@ -41,7 +41,7 @@ cmd.exe /c "mysql.exe -u root -pitrade@124 u631028490_iTrade < C:\local_do_arqui
 	class DB_Config {
 		public static $PATH = "localhost";
 		public static $USER = "root";
-		public static $PASS = "itrade@124";
+		public static $PASS = "%PASSWORD%";
 		public static $DB = "u631028490_iTrade";
 	}
 ?>
